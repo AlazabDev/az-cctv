@@ -175,6 +175,7 @@ export function PlanCanvas({
               .filter((d) => d.kind === "camera")
               .map((d) => {
                 const spec = cameraById(d.specId);
+                if (!spec) return null;
                 return (
                   <g key={`cov-${d.id}`}>
                     {ppmLevels.map((lvl) => {
@@ -207,7 +208,7 @@ export function PlanCanvas({
 
           {cableDraft.length > 0 && (
             <polyline
-              points={[...cableDraft, hoverPoint ?? cableDraft[cableDraft.length - 1]]
+              points={[...cableDraft, hoverPoint ?? cableDraft[cableDraft.length - 1]!]
                 .map((p) => `${p.x},${p.y}`)
                 .join(" ")}
               fill="none"
@@ -219,7 +220,7 @@ export function PlanCanvas({
 
           {scaleDraft.length > 0 && (
             <polyline
-              points={[...scaleDraft, hoverPoint ?? scaleDraft[0]].map((p) => `${p.x},${p.y}`).join(" ")}
+              points={[...scaleDraft, hoverPoint ?? scaleDraft[0]!].map((p) => `${p.x},${p.y}`).join(" ")}
               fill="none"
               stroke="var(--color-accent)"
               strokeWidth={2 / zoom}

@@ -154,7 +154,7 @@ export const storageOptions = [
 ];
 
 export function cameraById(id: string) {
-  return cameraCatalog.find((c) => c.id === id) ?? cameraCatalog[0];
+  return cameraCatalog.find((c) => c.id === id) ?? cameraCatalog[0]!;
 }
 
 export function hardwareById(id: string) {

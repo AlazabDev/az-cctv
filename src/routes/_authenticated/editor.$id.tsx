@@ -56,9 +56,9 @@ function EditorPage() {
   const [retention, setRetention] = useState(14);
   const [mode, setMode] = useState<CanvasMode>("select");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0].id);
-  const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0].id);
-  const [cableType, setCableType] = useState(cableTypes[0].id);
+  const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]!.id);
+  const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]!.id);
+  const [cableType, setCableType] = useState(cableTypes[0]!.id);
   const [cableDraft, setCableDraft] = useState<{ x: number; y: number }[]>([]);
   const [scaleDraft, setScaleDraft] = useState<{ x: number; y: number }[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -131,7 +131,7 @@ function EditorPage() {
         setScaleDraft(pts);
         return;
       }
-      const px = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const px = Math.hypot(pts[1]!.x - pts[0]!.x, pts[1]!.y - pts[0]!.y);
       const answer = window.prompt("كم يساوي هذا الخط بالأمتار على الطبيعة؟", "5");
       setScaleDraft([]);
       setMode("select");
@@ -416,7 +416,7 @@ function EditorPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">مدة التخزين المطلوبة: {retention} يوم</Label>
-                    <Slider min={3} max={90} step={1} value={[retention]} onValueChange={(v) => setRetention(v[0])} />
+                    <Slider min={3} max={90} step={1} value={[retention]} onValueChange={(v) => setRetention(v[0] ?? retention)} />
                   </div>
                 </div>
               ) : (
@@ -571,7 +571,7 @@ function SelectedPanel({
               max={180}
               step={1}
               value={[device.rotation]}
-              onValueChange={(v) => onChange({ rotation: v[0] })}
+              onValueChange={(v) => onChange({ rotation: v[0] ?? device.rotation })}
             />
           </div>
 
@@ -582,7 +582,7 @@ function SelectedPanel({
               max={12}
               step={0.1}
               value={[device.heightM]}
-              onValueChange={(v) => onChange({ heightM: v[0] })}
+              onValueChange={(v) => onChange({ heightM: v[0] ?? device.heightM })}
             />
           </div>
 

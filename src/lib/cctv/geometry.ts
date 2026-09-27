@@ -41,8 +41,8 @@ export function sectorPath(cx: number, cy: number, radius: number, rotationDeg: 
 export function cableLengthMeters(cable: CableRun, pxPerMeter: number) {
   let total = 0;
   for (let i = 1; i < cable.points.length; i++) {
-    const a = cable.points[i - 1];
-    const b = cable.points[i];
+    const a = cable.points[i - 1]!;
+    const b = cable.points[i]!;
     total += Math.hypot(b.x - a.x, b.y - a.y);
   }
   return pxPerMeter > 0 ? total / pxPerMeter : 0;
