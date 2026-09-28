@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { emptyPlan } from "@/lib/cctv/types";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const Route = createFileRoute("/_authenticated/projects")({
   head: () => ({
