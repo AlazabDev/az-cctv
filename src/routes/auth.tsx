@@ -125,6 +125,22 @@ function AuthPage() {
             </Button>
           </form>
 
+          {mode === "signin" && (
+            <button
+              type="button"
+              className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+              onClick={async () => {
+                if (!email) return toast.error("اكتب بريدك أولاً");
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+                if (error) toast.error(error.message);
+                else toast.success("أرسلنا رابط استعادة كلمة المرور إلى بريدك");
+              }}
+            >
+              نسيت كلمة المرور؟
+            </button>
+          )}
           <button
             type="button"
             className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground"

@@ -68,16 +68,7 @@ function ProjectsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-          <Link to="/" className="flex items-center gap-2 font-[family-name:var(--font-display)] text-lg font-extrabold">
-            <Camera className="h-5 w-5 text-primary" /> كاميرا بلان
-          </Link>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="ml-1 h-4 w-4" /> خروج
-          </Button>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="mx-auto max-w-5xl px-5 py-10">
         <div className="mb-6 flex items-center justify-between">
