@@ -130,7 +130,10 @@ function AuthPage() {
               type="button"
               className="mt-3 w-full text-center text-xs text-muted-foreground hover:text-foreground"
               onClick={async () => {
-                if (!email) return toast.error("اكتب بريدك أولاً");
+                if (!email) {
+                  toast.error("اكتب بريدك أولاً");
+                  return;
+                }
                 const { error } = await supabase.auth.resetPasswordForEmail(email, {
                   redirectTo: `${window.location.origin}/reset-password`,
                 });
