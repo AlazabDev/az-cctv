@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Store walls, cable routes, and room labels inside each project's JSON plan so existing Supabase rows need no schema migration.

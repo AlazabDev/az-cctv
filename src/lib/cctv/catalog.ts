@@ -142,11 +142,11 @@ export const hardwareCatalog: HardwareSpec[] = [
 ];
 
 export const cableTypes = [
-  { id: "cat6-utp", label: "CAT6 UTP", pricePerMeter: 3.2 },
-  { id: "cat6-stp", label: "CAT6 STP", pricePerMeter: 4.5 },
-  { id: "cat6a-stp", label: "CAT6A STP", pricePerMeter: 6.8 },
-  { id: "fiber-2", label: "فايبر 2 كور", pricePerMeter: 5.5 },
-];
+  { id: "cat6-utp", label: "CAT6 UTP", category: "network", color: "var(--color-cable)", pricePerMeter: 3.2 },
+  { id: "cat6-stp", label: "CAT6 STP", category: "network", color: "var(--color-cable)", pricePerMeter: 4.5 },
+  { id: "cat6a-stp", label: "CAT6A STP", category: "network", color: "var(--color-cable)", pricePerMeter: 6.8 },
+  { id: "fiber-2", label: "فايبر 2 كور", category: "fiber", color: "var(--color-fiber)", pricePerMeter: 5.5 },
+] as const;
 
 export interface WallMaterialSpec {
   id: "brick" | "glass" | "fence";
