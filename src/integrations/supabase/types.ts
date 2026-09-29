@@ -14,6 +14,88 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_messages: {
+        Row: {
+          agent_name: string | null
+          agent_version: string | null
+          content: string
+          created_at: string
+          id: string
+          response_id: string | null
+          role: string
+          thread_id: string
+          user_id: string
+        }
+        Insert: {
+          agent_name?: string | null
+          agent_version?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          response_id?: string | null
+          role: string
+          thread_id: string
+          user_id?: string
+        }
+        Update: {
+          agent_name?: string | null
+          agent_version?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          response_id?: string | null
+          role?: string
+          thread_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "agent_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_response_id: string | null
+          project_id: string | null
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_response_id?: string | null
+          project_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_response_id?: string | null
+          project_id?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_threads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cctv_projects: {
         Row: {
           client_name: string | null
