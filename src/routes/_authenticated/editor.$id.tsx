@@ -73,7 +73,7 @@ function EditorPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]!.id);
   const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]!.id);
-  const [cableType, setCableType] = useState(cableTypes[0]!.id);
+  const [cableType, setCableType] = useState<string>(cableTypes[0]?.id ?? "cat6-utp");
   const [cableDraft, setCableDraft] = useState<{ x: number; y: number }[]>([]);
   const [wallMaterial, setWallMaterial] = useState(wallMaterials[0]!.id);
   const [wallCurved, setWallCurved] = useState(false);
