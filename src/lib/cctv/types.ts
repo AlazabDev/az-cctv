@@ -47,10 +47,30 @@ export interface CableRun {
   points: { x: number; y: number }[];
 }
 
+export type WallMaterial = "brick" | "glass" | "fence";
+
+export interface WallSegment {
+  id: string;
+  material: WallMaterial;
+  points: { x: number; y: number }[];
+  curved: boolean;
+  note?: string;
+}
+
+export interface RoomLabel {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  fontSize: number;
+}
+
 export interface PlanData {
   pxPerMeter: number;
   devices: PlacedDevice[];
   cables: CableRun[];
+  walls: WallSegment[];
+  roomLabels: RoomLabel[];
   showCoverage: boolean;
   imageWidth?: number;
   imageHeight?: number;
@@ -60,5 +80,7 @@ export const emptyPlan: PlanData = {
   pxPerMeter: 40,
   devices: [],
   cables: [],
+  walls: [],
+  roomLabels: [],
   showCoverage: true,
 };
