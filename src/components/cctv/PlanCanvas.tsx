@@ -1,22 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlanData, PlacedDevice } from "@/lib/cctv/types";
-import { cameraById } from "@/lib/cctv/catalog";
-import { distanceForPpm, ppmLevels, sectorPath } from "@/lib/cctv/geometry";
+import { cameraById, wallMaterialById } from "@/lib/cctv/catalog";
+import { distanceForPpm, ppmLevels, sectorPath, wallPath } from "@/lib/cctv/geometry";
 import { Camera, HardDrive, Network, Server } from "lucide-react";
 
-export type CanvasMode = "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "scale";
+export type CanvasMode = "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "scale";
 
 interface Props {
   plan: PlanData;
   imageUrl: string | null;
   mode: CanvasMode;
   selectedId: string | null;
+  selectedWallId: string | null;
   cableDraft: { x: number; y: number }[];
+  wallDraft: { x: number; y: number }[];
+  wallCurved: boolean;
   scaleDraft: { x: number; y: number }[];
   onSelect: (id: string | null) => void;
+  onSelectWall: (id: string | null) => void;
   onCanvasPoint: (p: { x: number; y: number }) => void;
   onMoveDevice: (id: string, p: { x: number; y: number }) => void;
   onFinishCable: () => void;
+  onFinishWall: () => void;
 }
 
 const MIN_ZOOM = 0.15;
@@ -35,12 +40,17 @@ export function PlanCanvas({
   imageUrl,
   mode,
   selectedId,
+  selectedWallId,
   cableDraft,
+  wallDraft,
+  wallCurved,
   scaleDraft,
   onSelect,
+  onSelectWall,
   onCanvasPoint,
   onMoveDevice,
   onFinishCable,
+  onFinishWall,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
@@ -85,11 +95,13 @@ export function PlanCanvas({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onFinishCable();
+      if (e.key !== "Escape") return;
+      if (mode === "wall") onFinishWall();
+      else onFinishCable();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onFinishCable]);
+  }, [mode, onFinishCable, onFinishWall]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button === 1 || (mode === "select" && e.target === e.currentTarget) || e.shiftKey) {
@@ -118,7 +130,10 @@ export function PlanCanvas({
 
   const handleClick = (e: React.MouseEvent) => {
     if (mode === "select") {
-      if (e.target === e.currentTarget) onSelect(null);
+      if (e.target === e.currentTarget) {
+        onSelect(null);
+        onSelectWall(null);
+      }
       return;
     }
     onCanvasPoint(toPlan(e.clientX, e.clientY));
@@ -151,10 +166,14 @@ export function PlanCanvas({
         onPointerUp={endPointer}
         onPointerLeave={endPointer}
         onClick={handleClick}
-        onDoubleClick={() => mode === "cable" && onFinishCable()}
+        onDoubleClick={() => {
+          if (mode === "cable") onFinishCable();
+          if (mode === "wall") onFinishWall();
+        }}
         onContextMenu={(e) => {
           e.preventDefault();
-          onFinishCable();
+          if (mode === "wall") onFinishWall();
+          else onFinishCable();
         }}
       >
         <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`} style={{ pointerEvents: "none" }}>
@@ -195,6 +214,23 @@ export function PlanCanvas({
                 );
               })}
 
+          {plan.walls.map((w) => {
+            const spec = wallMaterialById(w.material);
+            return (
+              <path
+                key={`wall-bg-${w.id}`}
+                d={wallPath(w.points, w.curved)}
+                fill="none"
+                stroke={spec.color}
+                strokeOpacity={spec.opaque ? 1 : 0.75}
+                strokeWidth={spec.strokeWidth / zoom}
+                strokeDasharray={spec.dash ? spec.dash.map((n) => n / zoom).join(" ") : undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            );
+          })}
+
           {plan.cables.map((c) => (
             <polyline
               key={c.id}
@@ -218,6 +254,17 @@ export function PlanCanvas({
             />
           )}
 
+          {wallDraft.length > 0 && (
+            <path
+              d={wallPath([...wallDraft, hoverPoint ?? wallDraft[wallDraft.length - 1]!], wallCurved)}
+              fill="none"
+              stroke="var(--color-warning)"
+              strokeDasharray={`${6 / zoom} ${4 / zoom}`}
+              strokeWidth={4 / zoom}
+              strokeLinecap="round"
+            />
+          )}
+
           {scaleDraft.length > 0 && (
             <polyline
               points={[...scaleDraft, hoverPoint ?? scaleDraft[0]!].map((p) => `${p.x},${p.y}`).join(" ")}
@@ -229,6 +276,40 @@ export function PlanCanvas({
         </g>
 
         <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}>
+          {plan.walls.map((w) => {
+            const spec = wallMaterialById(w.material);
+            const selected = w.id === selectedWallId;
+            return (
+              <g key={`wall-${w.id}`}>
+                {/* شريط عريض شفاف لتسهيل النقر على الجدار عند التحديد */}
+                <path
+                  d={wallPath(w.points, w.curved)}
+                  fill="none"
+                  stroke="transparent"
+                  strokeWidth={Math.max(spec.strokeWidth, 16) / zoom}
+                  style={{ cursor: mode === "select" ? "pointer" : "default", pointerEvents: mode === "select" ? "stroke" : "none" }}
+                  onPointerDown={(e) => {
+                    if (mode !== "select") return;
+                    e.stopPropagation();
+                    onSelectWall(w.id);
+                    onSelect(null);
+                  }}
+                />
+                {selected && (
+                  <path
+                    d={wallPath(w.points, w.curved)}
+                    fill="none"
+                    stroke="var(--color-foreground)"
+                    strokeWidth={(spec.strokeWidth + 5) / zoom}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ pointerEvents: "none" }}
+                  />
+                )}
+              </g>
+            );
+          })}
+
           {plan.devices.map((d) => {
             const selected = d.id === selectedId;
             const s = 1 / zoom;

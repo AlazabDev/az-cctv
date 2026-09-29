@@ -4,9 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowRight,
+  BrickWall,
   Cable as CableIcon,
   Camera,
   Download,
+  Fence,
+  GlassWater,
   Image as ImageIcon,
   MousePointer2,
   Network,
@@ -14,6 +17,8 @@ import {
   Ruler,
   Save,
   Server,
+  Sparkles,
+  Spline,
   Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,18 +29,25 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlanCanvas, type CanvasMode } from "@/components/cctv/PlanCanvas";
+import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
-import { cableTypes, cameraById, cameraCatalog, hardwareCatalog } from "@/lib/cctv/catalog";
-import { distanceForPpm, formatMoney, ppmLevels } from "@/lib/cctv/geometry";
-import { emptyPlan, type PlanData, type PlacedDevice } from "@/lib/cctv/types";
+import { cableTypes, cameraById, cameraCatalog, hardwareCatalog, wallMaterialById, wallMaterials } from "@/lib/cctv/catalog";
+import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
+import { emptyPlan, type PlanData, type PlacedDevice, type WallSegment } from "@/lib/cctv/types";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   head: () => ({
     meta: [
       { title: "محرر التصميم — كاميرا بلان" },
-      { name: "description", content: "وزّع الكاميرات على المخطط واحسب التغطية والكابلات وقائمة الأسعار." },
+      {
+        name: "description",
+        content: "وزّع الكاميرات على المخطط واحسب التغطية والكابلات وقائمة الأسعار.",
+      },
       { property: "og:title", content: "محرر التصميم — كاميرا بلان" },
-      { property: "og:description", content: "محرر مخططات أنظمة المراقبة مع حساب التغطية والتسعير." },
+      {
+        property: "og:description",
+        content: "محرر مخططات أنظمة المراقبة مع حساب التغطية والتسعير.",
+      },
     ],
   }),
   component: EditorPage,
@@ -60,6 +72,10 @@ function EditorPage() {
   const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]!.id);
   const [cableType, setCableType] = useState(cableTypes[0]!.id);
   const [cableDraft, setCableDraft] = useState<{ x: number; y: number }[]>([]);
+  const [wallMaterial, setWallMaterial] = useState(wallMaterials[0]!.id);
+  const [wallCurved, setWallCurved] = useState(false);
+  const [wallDraft, setWallDraft] = useState<{ x: number; y: number }[]>([]);
+  const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [scaleDraft, setScaleDraft] = useState<{ x: number; y: number }[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -68,7 +84,11 @@ function EditorPage() {
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("cctv_projects").select("*").eq("id", id).maybeSingle();
+      const { data, error } = await supabase
+        .from("cctv_projects")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -77,7 +97,13 @@ function EditorPage() {
   useEffect(() => {
     if (!project) return;
     const stored = (project.data ?? {}) as Partial<PlanData>;
-    setPlan({ ...emptyPlan, ...stored, devices: stored.devices ?? [], cables: stored.cables ?? [] });
+    setPlan({
+      ...emptyPlan,
+      ...stored,
+      devices: stored.devices ?? [],
+      cables: stored.cables ?? [],
+      walls: stored.walls ?? [],
+    });
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "SAR");
@@ -90,6 +116,7 @@ function EditorPage() {
   }, [project]);
 
   const selected = plan.devices.find((d) => d.id === selectedId) ?? null;
+  const selectedWall = plan.walls.find((w) => w.id === selectedWallId) ?? null;
   const boq = useMemo(() => buildBoq(plan, retention), [plan, retention]);
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
@@ -100,7 +127,14 @@ function EditorPage() {
   function addDevice(kind: PlacedDevice["kind"], p: { x: number; y: number }) {
     const specId = kind === "camera" ? newCameraSpec : newHardwareSpec;
     const count = plan.devices.filter((d) => d.kind === kind).length + 1;
-    const prefix = kind === "camera" ? "كاميرا" : kind === "nvr" ? "مسجل" : kind === "switch" ? "سويتش" : "كابينة";
+    const prefix =
+      kind === "camera"
+        ? "كاميرا"
+        : kind === "nvr"
+          ? "مسجل"
+          : kind === "switch"
+            ? "سويتش"
+            : "كابينة";
     const device: PlacedDevice = {
       id: uid(),
       kind,
@@ -123,6 +157,10 @@ function EditorPage() {
     }
     if (mode === "cable") {
       setCableDraft((prev) => [...prev, p]);
+      return;
+    }
+    if (mode === "wall") {
+      setWallDraft((prev) => [...prev, p]);
       return;
     }
     if (mode === "scale") {
@@ -153,23 +191,40 @@ function EditorPage() {
     setScaleDraft([]);
   }
 
+  function finishWall() {
+    if (mode === "wall" && wallDraft.length >= 2) {
+      const wall: WallSegment = { id: uid(), material: wallMaterial, points: wallDraft, curved: wallCurved };
+      update((prev) => ({ ...prev, walls: [...prev.walls, wall] }));
+      setSelectedWallId(wall.id);
+    }
+    setWallDraft([]);
+  }
+
   async function uploadPlan(file: File) {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
     const path = `${u.user.id}/${id}-${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
-    const { error } = await supabase.storage.from("floorplans").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage
+      .from("floorplans")
+      .upload(path, file, { upsert: true });
     if (error) {
       toast.error("تعذّر رفع المخطط");
       return;
     }
-    const { data: signed } = await supabase.storage.from("floorplans").createSignedUrl(path, 60 * 60 * 8);
+    const { data: signed } = await supabase.storage
+      .from("floorplans")
+      .createSignedUrl(path, 60 * 60 * 8);
     const url = signed?.signedUrl ?? null;
     setImageUrl(url);
     await supabase.from("cctv_projects").update({ floorplan_path: path }).eq("id", id);
     if (url) {
       const img = new Image();
       img.onload = () =>
-        update((prev) => ({ ...prev, imageWidth: img.naturalWidth, imageHeight: img.naturalHeight }));
+        update((prev) => ({
+          ...prev,
+          imageWidth: img.naturalWidth,
+          imageHeight: img.naturalHeight,
+        }));
       img.src = url;
     }
     toast.success("تم رفع المخطط");
@@ -192,7 +247,13 @@ function EditorPage() {
   function exportCsv() {
     const rows = [
       ["البند", "الكمية", "الوحدة", "سعر الوحدة", "الإجمالي"],
-      ...boq.lines.map((l) => [l.label, String(l.qty), l.unit, String(l.unitPrice), String(l.total)]),
+      ...boq.lines.map((l) => [
+        l.label,
+        String(l.qty),
+        l.unit,
+        String(l.unitPrice),
+        String(l.total),
+      ]),
       ["الإجمالي الكلي", "", "", "", String(boq.grand)],
     ];
     const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
@@ -219,6 +280,7 @@ function EditorPage() {
     { id: "nvr", label: "مسجل", icon: Server },
     { id: "switch", label: "سويتش", icon: Network },
     { id: "cable", label: "كابل", icon: CableIcon },
+    { id: "wall", label: "جدار", icon: BrickWall },
     { id: "scale", label: "معايرة", icon: Ruler },
   ];
 
@@ -229,7 +291,11 @@ function EditorPage() {
           <Link to="/projects" className="text-muted-foreground hover:text-foreground">
             <ArrowRight className="h-5 w-5" />
           </Link>
-          <Input value={name} onChange={(e) => setName(e.target.value)} className="h-8 w-56 font-bold" />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="h-8 w-56 font-bold"
+          />
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -264,6 +330,7 @@ function EditorPage() {
                 onClick={() => {
                   setMode(t.id);
                   setCableDraft([]);
+                  setWallDraft([]);
                   setScaleDraft([]);
                 }}
                 className={`flex flex-col items-center gap-1 rounded-md border p-2 text-[11px] transition-colors ${
@@ -334,6 +401,40 @@ function EditorPage() {
             </div>
           )}
 
+          {mode === "wall" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs">نوع الجدار</Label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {wallMaterials.map((m) => {
+                  const Icon = m.id === "brick" ? BrickWall : m.id === "glass" ? GlassWater : Fence;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setWallMaterial(m.id)}
+                      className={`flex flex-col items-center gap-1 rounded-md border p-2 text-[10px] transition-colors ${
+                        wallMaterial === m.id
+                          ? "border-primary bg-primary/15 text-primary"
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" style={{ color: wallMaterial === m.id ? undefined : m.color }} />
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between rounded-md border border-border p-2">
+                <span className="flex items-center gap-1.5 text-xs">
+                  <Spline className="h-3.5 w-3.5" /> رسم منحني
+                </span>
+                <Switch checked={wallCurved} onCheckedChange={setWallCurved} />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                انقر لإضافة نقاط الجدار، ثم نقرة مزدوجة أو Esc للإنهاء. فعّل «رسم منحني» لجدار دائري أو ركن مُقوّس.
+              </p>
+            </div>
+          )}
+
           {mode === "scale" && (
             <p className="rounded-md bg-accent/15 p-2 text-[11px] text-accent">
               انقر نقطتين على مسافة معلومة في المخطط ثم أدخل طولها بالأمتار.
@@ -354,7 +455,9 @@ function EditorPage() {
               type="number"
               className="h-8"
               value={Number(plan.pxPerMeter.toFixed(2))}
-              onChange={(e) => update((prev) => ({ ...prev, pxPerMeter: Number(e.target.value) || 1 }))}
+              onChange={(e) =>
+                update((prev) => ({ ...prev, pxPerMeter: Number(e.target.value) || 1 }))
+              }
             />
           </div>
 
@@ -379,9 +482,16 @@ function EditorPage() {
             imageUrl={imageUrl}
             mode={mode}
             selectedId={selectedId}
+            selectedWallId={selectedWallId}
             cableDraft={cableDraft}
+            wallDraft={wallDraft}
+            wallCurved={wallCurved}
             scaleDraft={scaleDraft}
-            onSelect={setSelectedId}
+            onSelect={(sid) => {
+              setSelectedId(sid);
+              if (sid) setSelectedWallId(null);
+            }}
+            onSelectWall={setSelectedWallId}
             onCanvasPoint={onCanvasPoint}
             onMoveDevice={(did, p) =>
               update((prev) => ({
@@ -390,33 +500,54 @@ function EditorPage() {
               }))
             }
             onFinishCable={finishCable}
+            onFinishWall={finishWall}
           />
         </main>
 
         {/* اللوحة الجانبية */}
-        <aside className="w-[21rem] shrink-0 overflow-y-auto border-r border-border bg-sidebar">
-          <Tabs defaultValue="props" className="w-full">
-            <TabsList className="no-print grid w-full grid-cols-3 rounded-none">
+        <aside className="flex w-[21rem] shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar">
+          <Tabs defaultValue="props" className="flex min-h-0 flex-1 flex-col">
+            <TabsList className="no-print grid w-full shrink-0 grid-cols-4 rounded-none">
               <TabsTrigger value="props">الخصائص</TabsTrigger>
               <TabsTrigger value="devices">الأجهزة</TabsTrigger>
               <TabsTrigger value="boq">التسعير</TabsTrigger>
+              <TabsTrigger value="agent" className="gap-1">
+                <Sparkles className="h-3.5 w-3.5" />
+                المساعد
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="props" className="space-y-4 p-4">
+            <TabsContent value="props" className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
               {!selected ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">اختر جهازاً من المخطط لعرض خصائصه.</p>
+                  <p className="text-sm text-muted-foreground">
+                    اختر جهازاً من المخطط لعرض خصائصه.
+                  </p>
                   <div className="space-y-1.5">
                     <Label className="text-xs">اسم العميل</Label>
-                    <Input value={clientName} onChange={(e) => setClientName(e.target.value)} className="h-8" />
+                    <Input
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      className="h-8"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">العملة</Label>
-                    <Input value={currency} onChange={(e) => setCurrency(e.target.value)} className="h-8" />
+                    <Input
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                      className="h-8"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">مدة التخزين المطلوبة: {retention} يوم</Label>
-                    <Slider min={3} max={90} step={1} value={[retention]} onValueChange={(v) => setRetention(v[0] ?? retention)} />
+                    <Slider
+                      min={3}
+                      max={90}
+                      step={1}
+                      value={[retention]}
+                      onValueChange={(v) => setRetention(v[0] ?? retention)}
+                    />
                   </div>
                 </div>
               ) : (
@@ -426,25 +557,34 @@ function EditorPage() {
                   onChange={(patch) =>
                     update((prev) => ({
                       ...prev,
-                      devices: prev.devices.map((d) => (d.id === selected.id ? { ...d, ...patch } : d)),
+                      devices: prev.devices.map((d) =>
+                        d.id === selected.id ? { ...d, ...patch } : d,
+                      ),
                     }))
                   }
                   onDelete={() => {
-                    update((prev) => ({ ...prev, devices: prev.devices.filter((d) => d.id !== selected.id) }));
+                    update((prev) => ({
+                      ...prev,
+                      devices: prev.devices.filter((d) => d.id !== selected.id),
+                    }));
                     setSelectedId(null);
                   }}
                 />
               )}
             </TabsContent>
 
-            <TabsContent value="devices" className="space-y-2 p-4">
-              {plan.devices.length === 0 && <p className="text-sm text-muted-foreground">لا توجد أجهزة بعد.</p>}
+            <TabsContent value="devices" className="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
+              {plan.devices.length === 0 && (
+                <p className="text-sm text-muted-foreground">لا توجد أجهزة بعد.</p>
+              )}
               {plan.devices.map((d) => (
                 <button
                   key={d.id}
                   onClick={() => setSelectedId(d.id)}
                   className={`flex w-full items-center justify-between rounded-md border p-2 text-right text-sm ${
-                    d.id === selectedId ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
+                    d.id === selectedId
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:bg-muted"
                   }`}
                 >
                   <span>{d.name}</span>
@@ -457,12 +597,20 @@ function EditorPage() {
                 <div className="pt-3">
                   <p className="mb-2 text-xs font-bold">مسارات الكابلات</p>
                   {plan.cables.map((c, i) => (
-                    <div key={c.id} className="flex items-center justify-between border-b border-border py-1.5 text-xs">
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between border-b border-border py-1.5 text-xs"
+                    >
                       <span>
                         مسار {i + 1} — {cableTypes.find((t) => t.id === c.type)?.label}
                       </span>
                       <button
-                        onClick={() => update((prev) => ({ ...prev, cables: prev.cables.filter((x) => x.id !== c.id) }))}
+                        onClick={() =>
+                          update((prev) => ({
+                            ...prev,
+                            cables: prev.cables.filter((x) => x.id !== c.id),
+                          }))
+                        }
                         className="text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -473,7 +621,7 @@ function EditorPage() {
               )}
             </TabsContent>
 
-            <TabsContent value="boq" className="space-y-3 p-4">
+            <TabsContent value="boq" className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <Stat label="عدد الكاميرات" value={`${boq.cameras}`} />
                 <Stat label="حمل PoE" value={`${boq.poeLoad} واط`} />
@@ -509,6 +657,10 @@ function EditorPage() {
                 <span>{formatMoney(boq.grand, currency)}</span>
               </div>
             </TabsContent>
+
+            <TabsContent value="agent" className="min-h-0 flex-1 overflow-hidden">
+              <AgentPanel projectId={id} projectName={name} />
+            </TabsContent>
           </Tabs>
         </aside>
       </div>
@@ -541,7 +693,11 @@ function SelectedPanel({
     <div className="space-y-4">
       <div className="space-y-1.5">
         <Label className="text-xs">الاسم</Label>
-        <Input className="h-8" value={device.name} onChange={(e) => onChange({ name: e.target.value })} />
+        <Input
+          className="h-8"
+          value={device.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+        />
       </div>
 
       {spec && (
@@ -595,7 +751,9 @@ function SelectedPanel({
               </div>
             ))}
             <p className="mt-1 text-muted-foreground">مدى الأشعة تحت الحمراء: {spec.irRange} م</p>
-            <p className="text-muted-foreground">مقياس المخطط: {plan.pxPerMeter.toFixed(1)} بكسل/م</p>
+            <p className="text-muted-foreground">
+              مقياس المخطط: {plan.pxPerMeter.toFixed(1)} بكسل/م
+            </p>
           </div>
         </>
       )}

@@ -148,6 +148,47 @@ export const cableTypes = [
   { id: "fiber-2", label: "فايبر 2 كور", pricePerMeter: 5.5 },
 ];
 
+export interface WallMaterialSpec {
+  id: "brick" | "glass" | "fence";
+  label: string;
+  /** لون خط الرسم على المخطط */
+  color: string;
+  /** سماكة خط الرسم بالبكسل عند تكبير 100% */
+  strokeWidth: number;
+  /** نمط تقطيع الخط؛ فارغ = خط متصل (جدار صلب) */
+  dash?: number[];
+  /** فقد الإشارة/الرؤية التقريبي بالديسيبل — أساس لحساب حجب مخروط الكاميرا لاحقاً */
+  attenuationDb: number;
+  /** هل يحجب الجدار الرؤية بصرياً بشكل كامل (طوب) أم جزئي/معدوم (زجاج، سياج) */
+  opaque: boolean;
+}
+
+export const wallMaterials: WallMaterialSpec[] = [
+  { id: "brick", label: "جدار طوب", color: "#b45309", strokeWidth: 7, attenuationDb: 18, opaque: true },
+  {
+    id: "glass",
+    label: "جدار زجاج",
+    color: "#38bdf8",
+    strokeWidth: 4,
+    dash: [10, 4],
+    attenuationDb: 4,
+    opaque: false,
+  },
+  {
+    id: "fence",
+    label: "سياج",
+    color: "#65a30d",
+    strokeWidth: 3,
+    dash: [3, 5],
+    attenuationDb: 2,
+    opaque: false,
+  },
+];
+
+export function wallMaterialById(id: string) {
+  return wallMaterials.find((w) => w.id === id) ?? wallMaterials[0]!;
+}
+
 export const storageOptions = [
   { id: "hdd-4", label: "هارد ديسك 4TB (مراقبة)", price: 620, tb: 4 },
   { id: "hdd-8", label: "هارد ديسك 8TB (مراقبة)", price: 1150, tb: 8 },
