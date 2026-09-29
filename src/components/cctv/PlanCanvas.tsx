@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlanData, PlacedDevice } from "@/lib/cctv/types";
-import { cameraById, wallMaterialById } from "@/lib/cctv/catalog";
+import { cableTypes, cameraById, wallMaterialById } from "@/lib/cctv/catalog";
 import { distanceForPpm, ppmLevels, sectorPath, wallPath } from "@/lib/cctv/geometry";
 import { Camera, HardDrive, Network, Server } from "lucide-react";
 
-export type CanvasMode = "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "scale";
+export type CanvasMode = "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "label" | "scale";
 
 interface Props {
   plan: PlanData;
@@ -12,14 +12,17 @@ interface Props {
   mode: CanvasMode;
   selectedId: string | null;
   selectedWallId: string | null;
+  selectedLabelId: string | null;
   cableDraft: { x: number; y: number }[];
   wallDraft: { x: number; y: number }[];
   wallCurved: boolean;
   scaleDraft: { x: number; y: number }[];
   onSelect: (id: string | null) => void;
   onSelectWall: (id: string | null) => void;
+  onSelectLabel: (id: string | null) => void;
   onCanvasPoint: (p: { x: number; y: number }) => void;
   onMoveDevice: (id: string, p: { x: number; y: number }) => void;
+  onMoveLabel: (id: string, p: { x: number; y: number }) => void;
   onFinishCable: () => void;
   onFinishWall: () => void;
 }
@@ -41,14 +44,17 @@ export function PlanCanvas({
   mode,
   selectedId,
   selectedWallId,
+  selectedLabelId,
   cableDraft,
   wallDraft,
   wallCurved,
   scaleDraft,
   onSelect,
   onSelectWall,
+  onSelectLabel,
   onCanvasPoint,
   onMoveDevice,
+  onMoveLabel,
   onFinishCable,
   onFinishWall,
 }: Props) {
@@ -57,7 +63,7 @@ export function PlanCanvas({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [hoverPoint, setHoverPoint] = useState<{ x: number; y: number } | null>(null);
   const panRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
-  const dragRef = useRef<{ id: string } | null>(null);
+  const dragRef = useRef<{ id: string; kind: "device" | "label" } | null>(null);
   const stateRef = useRef({ zoom, offset });
   stateRef.current = { zoom, offset };
 
@@ -120,7 +126,8 @@ export function PlanCanvas({
       });
       return;
     }
-    if (dragRef.current) onMoveDevice(dragRef.current.id, p);
+    if (dragRef.current?.kind === "device") onMoveDevice(dragRef.current.id, p);
+    if (dragRef.current?.kind === "label") onMoveLabel(dragRef.current.id, p);
   };
 
   const endPointer = () => {
@@ -133,6 +140,7 @@ export function PlanCanvas({
       if (e.target === e.currentTarget) {
         onSelect(null);
         onSelectWall(null);
+        onSelectLabel(null);
       }
       return;
     }
@@ -231,16 +239,21 @@ export function PlanCanvas({
             );
           })}
 
-          {plan.cables.map((c) => (
-            <polyline
-              key={c.id}
-              points={c.points.map((p) => `${p.x},${p.y}`).join(" ")}
-              fill="none"
-              stroke="var(--color-cable)"
-              strokeWidth={2 / zoom}
-              strokeLinejoin="round"
-            />
-          ))}
+          {plan.cables.map((c) => {
+            const cable = cableTypes.find((item) => item.id === c.type);
+            const isFiber = cable?.category === "fiber";
+            return (
+              <polyline
+                key={c.id}
+                points={c.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                fill="none"
+                stroke={cable?.color ?? "var(--color-cable)"}
+                strokeDasharray={isFiber ? `${8 / zoom} ${4 / zoom}` : undefined}
+                strokeWidth={(isFiber ? 3 : 2) / zoom}
+                strokeLinejoin="round"
+              />
+            );
+          })}
 
           {cableDraft.length > 0 && (
             <polyline
@@ -248,7 +261,7 @@ export function PlanCanvas({
                 .map((p) => `${p.x},${p.y}`)
                 .join(" ")}
               fill="none"
-              stroke="var(--color-cable)"
+              stroke={cableTypes.find((item) => item.id === plan.cables.at(-1)?.type)?.color ?? "var(--color-cable)"}
               strokeDasharray={`${6 / zoom} ${4 / zoom}`}
               strokeWidth={2 / zoom}
             />
@@ -321,7 +334,7 @@ export function PlanCanvas({
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   onSelect(d.id);
-                  dragRef.current = { id: d.id };
+                  dragRef.current = { id: d.id, kind: "device" };
                   (e.target as Element).setPointerCapture?.(e.pointerId);
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -357,6 +370,53 @@ export function PlanCanvas({
                   strokeWidth={3}
                 >
                   {d.name}
+                </text>
+              </g>
+            );
+          })}
+
+          {plan.roomLabels.map((label) => {
+            const selected = label.id === selectedLabelId;
+            const scale = 1 / zoom;
+            return (
+              <g
+                key={label.id}
+                transform={`translate(${label.x} ${label.y}) scale(${scale})`}
+                style={{ cursor: "move" }}
+                onPointerDown={(e) => {
+                  if (mode !== "select") return;
+                  e.stopPropagation();
+                  onSelectLabel(label.id);
+                  onSelect(null);
+                  onSelectWall(null);
+                  dragRef.current = { id: label.id, kind: "label" };
+                  (e.target as Element).setPointerCapture?.(e.pointerId);
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {selected && (
+                  <rect
+                    x={-(label.text.length * label.fontSize * 0.34) - 8}
+                    y={-label.fontSize}
+                    width={label.text.length * label.fontSize * 0.68 + 16}
+                    height={label.fontSize + 12}
+                    rx={4}
+                    fill="var(--color-primary)"
+                    fillOpacity={0.14}
+                    stroke="var(--color-primary)"
+                    strokeWidth={1.5}
+                  />
+                )}
+                <text
+                  textAnchor="middle"
+                  fontSize={label.fontSize}
+                  fontWeight={700}
+                  fill="var(--color-foreground)"
+                  stroke="var(--color-background)"
+                  strokeWidth={3}
+                  style={{ paintOrder: "stroke" }}
+                >
+                  {label.text}
                 </text>
               </g>
             );
