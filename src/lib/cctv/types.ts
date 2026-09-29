@@ -45,9 +45,17 @@ export interface CableRun {
   id: string;
   type: string;
   points: { x: number; y: number }[];
+  /** Optional installer allowance in metres for vertical drops / rises. */
+  verticalAllowanceM?: number;
+  /** Extra installation slack. Defaults to 15% in commercial calculations. */
+  slackPercent?: number;
 }
 
-export type WallMaterial = "brick" | "glass" | "fence";
+/**
+ * Wall material IDs are catalog-driven. Keeping this as a string lets the
+ * editor add new construction materials without a database schema migration.
+ */
+export type WallMaterial = string;
 
 export interface WallSegment {
   id: string;
