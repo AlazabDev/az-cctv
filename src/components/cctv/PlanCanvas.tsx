@@ -14,6 +14,7 @@ interface Props {
   selectedWallId: string | null;
   selectedLabelId: string | null;
   cableDraft: { x: number; y: number }[];
+  cableDraftType: string;
   wallDraft: { x: number; y: number }[];
   wallCurved: boolean;
   scaleDraft: { x: number; y: number }[];
@@ -46,6 +47,7 @@ export function PlanCanvas({
   selectedWallId,
   selectedLabelId,
   cableDraft,
+  cableDraftType,
   wallDraft,
   wallCurved,
   scaleDraft,
@@ -261,7 +263,7 @@ export function PlanCanvas({
                 .map((p) => `${p.x},${p.y}`)
                 .join(" ")}
               fill="none"
-              stroke={cableTypes.find((item) => item.id === plan.cables.at(-1)?.type)?.color ?? "var(--color-cable)"}
+              stroke={cableTypes.find((item) => item.id === cableDraftType)?.color ?? "var(--color-cable)"}
               strokeDasharray={`${6 / zoom} ${4 / zoom}`}
               strokeWidth={2 / zoom}
             />
