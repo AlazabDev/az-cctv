@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CctvProjectEditor } from "@/components/cctv/CctvProjectEditor";
+import { CctvProjectEditorV2 } from "@/components/cctv/CctvProjectEditorV2";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   head: () => ({
@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated/editor/$id")({
       { title: "CCTV Project Designer — كاميرا بلان" },
       {
         name: "description",
-        content: "محرر متكامل لتصميم أنظمة كاميرات المراقبة والكابلات والجدران والتغطية.",
+        content: "محرر متكامل لتصميم أنظمة كاميرات المراقبة والكابلات والجدران والتغطية وعروض الأسعار.",
       },
     ],
   }),
@@ -16,5 +16,5 @@ export const Route = createFileRoute("/_authenticated/editor/$id")({
 
 function EditorRoutePage() {
   const { id } = Route.useParams();
-  return <CctvProjectEditor projectId={id} />;
+  return <CctvProjectEditorV2 projectId={id} />;
 }
