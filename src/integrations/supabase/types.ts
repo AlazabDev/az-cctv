@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_design_proposals: {
+        Row: {
+          cameras: Json
+          created_at: string
+          decided_at: string | null
+          id: string
+          iterations: number
+          project_id: string
+          status: string
+          summary: string | null
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cameras?: Json
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          iterations?: number
+          project_id: string
+          status?: string
+          summary?: string | null
+          thread_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          cameras?: Json
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          iterations?: number
+          project_id?: string
+          status?: string
+          summary?: string | null
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_design_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_design_proposals_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "agent_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_messages: {
         Row: {
           agent_name: string | null
