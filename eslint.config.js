@@ -36,5 +36,13 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: ["supabase/functions/az-design-agent/**/*.ts"],
+    rules: {
+      // Azure Foundry Responses and Supabase JSON columns are runtime-validated
+      // external payloads; keep `any` localized to this integration boundary.
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
   eslintPluginPrettier,
 );
