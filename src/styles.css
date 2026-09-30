@@ -1,3 +1,4 @@
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
@@ -57,7 +58,7 @@
   --card-foreground: oklch(0.96 0.005 250);
   --popover: oklch(0.225 0.028 258);
   --popover-foreground: oklch(0.96 0.005 250);
-  --primary: oklch(0.72 0.15 231);
+  --primary: oklch(85.349% 0.17558 96.205);
   --primary-foreground: oklch(0.16 0.03 258);
   --secondary: oklch(0.3 0.03 258);
   --secondary-foreground: oklch(0.95 0.005 250);
@@ -69,19 +70,19 @@
   --destructive-foreground: oklch(0.98 0.005 250);
   --border: oklch(0.32 0.028 258);
   --input: oklch(0.32 0.028 258);
-  --ring: oklch(0.72 0.15 231);
-  --coverage: oklch(0.65 0.17 245);
+  --ring: oklch(85.349% 0.17558 96.205);
+  --coverage: oklch(78.981% 0.16272 81.897);
   --cable: oklch(0.72 0.19 150);
   --fiber: oklch(0.74 0.18 50);
   --warning: oklch(0.78 0.16 70);
   --sidebar: oklch(0.2 0.027 258);
   --sidebar-foreground: oklch(0.95 0.005 250);
-  --sidebar-primary: oklch(0.72 0.15 231);
+  --sidebar-primary: oklch(85.349% 0.17558 96.205);
   --sidebar-primary-foreground: oklch(0.16 0.03 258);
   --sidebar-accent: oklch(0.28 0.025 258);
   --sidebar-accent-foreground: oklch(0.95 0.005 250);
   --sidebar-border: oklch(0.32 0.028 258);
-  --sidebar-ring: oklch(0.72 0.15 231);
+  --sidebar-ring: oklch(91.91% 0.19871 108.519);
 }
 
 @layer base {
