@@ -255,7 +255,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     if (!auth.user) return;
     const path = `${auth.user.id}/${projectId}-${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
     const { error } = await supabase.storage.from("floorplans").upload(path, file, { upsert: true });
-    if (error) return toast.error("تعذّر رفع المخطط");
+    if (error) {
+      toast.error("تعذّر رفع المخطط");
+      return;
+    }
     const { data: signed } = await supabase.storage.from("floorplans").createSignedUrl(path, 60 * 60 * 8);
     const url = signed?.signedUrl ?? null;
     setImageUrl(url);
@@ -273,7 +276,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const data = { ...plan, offer };
     const { error } = await supabase.from("cctv_projects").update({ name, client_name: clientName, currency, data: data as never }).eq("id", projectId);
     setSaving(false);
-    if (error) return toast.error("تعذّر الحفظ");
+    if (error) {
+      toast.error("تعذّر الحفظ");
+      return;
+    }
     toast.success("تم حفظ المشروع");
   }
 
