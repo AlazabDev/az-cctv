@@ -20,8 +20,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const ENDPOINT = (Deno.env.get("AZURE_AGENT_ENDPOINT") ??
   "https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway").replace(/\/$/, "");
-const AGENT_NAME = Deno.env.get("AZURE_AGENT_NAME") ?? "az-agent-sol";
-const AGENT_VERSION = Deno.env.get("AZURE_AGENT_VERSION") ?? "3";
+const AGENT_NAME = Deno.env.get("AZURE_AGENT_NAME") ?? "az-agent-bim";
+const AGENT_VERSION = Deno.env.get("AZURE_AGENT_VERSION") ?? "8";
 const MAX_TURNS = 8;
 const MAX_EVALUATIONS = 60;
 
