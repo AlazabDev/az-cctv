@@ -6,7 +6,8 @@ const ENDPOINT = "https://az-ai-resource.services.ai.azure.com/api/projects/az-a
 const AGENT_NAME = "az-agent-bim";
 const AGENT_VERSION = "8";
 
-type Json = Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Json = Record<string, any>;
 
 function extractText(resp: Json): string {
   if (typeof resp.output_text === "string" && resp.output_text) return resp.output_text;
