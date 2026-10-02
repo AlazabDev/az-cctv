@@ -463,8 +463,10 @@ Deno.serve(async (req) => {
 async function handleGenerate(
   body: { project_id?: string },
   userId: string,
-  userClient: ReturnType<typeof createClient>,
-  admin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  userClient: any,
+  // deno-lint-ignore no-explicit-any
+  admin: any,
   apiKey: string,
 ) {
   const projectId = body.project_id;
@@ -629,7 +631,8 @@ async function handleGenerate(
 async function handleApply(
   body: { proposal_id?: string; project_id?: string; cameras?: unknown },
   userId: string,
-  admin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  admin: any,
 ) {
   const proposalId = body.proposal_id;
   if (!proposalId) return json({ error: "proposal_id_required" }, 400);
@@ -695,7 +698,8 @@ async function handleApply(
   return json({ applied: newDevices.length, devices: newDevices });
 }
 
-async function handleReject(body: { proposal_id?: string }, userId: string, admin: ReturnType<typeof createClient>) {
+// deno-lint-ignore no-explicit-any
+async function handleReject(body: { proposal_id?: string }, userId: string, admin: any) {
   const proposalId = body.proposal_id;
   if (!proposalId) return json({ error: "proposal_id_required" }, 400);
   const { data: proposal } = await admin.from("agent_design_proposals").select("id, user_id, status").eq("id", proposalId).maybeSingle();

@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowRight,
+  Bot,
   BrickWall,
+  FileText,
   Cable,
   Camera,
   ChevronDown,
@@ -33,6 +35,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { PlanCanvas, type CanvasMode } from "@/components/cctv/PlanCanvas";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { AgentPanel } from "@/components/cctv/AgentPanel";
+import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import {
   cableTypes,
@@ -117,6 +122,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState(false);
   const [wallCurved, setWallCurved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [agentOpen, setAgentOpen] = useState(false);
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
@@ -303,6 +309,34 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     URL.revokeObjectURL(url);
   }
 
+  async function exportPdf() {
+    const summary = calculateOffer(boq, offer);
+    const { data: auth } = await supabase.auth.getUser();
+    const { data: profile } = auth.user
+      ? await supabase.from("profiles").select("company, full_name").eq("id", auth.user.id).maybeSingle()
+      : { data: null };
+    const ok = openOfferPdf({
+      companyName: profile?.company || "كاميرا بلان",
+      preparedBy: profile?.full_name ? `إعداد: ${profile.full_name}` : "",
+      projectName: name,
+      clientName,
+      currency,
+      lines: summary.lines,
+      fees: offer.fees,
+      subtotal: summary.subtotal,
+      globalDiscountPercent: offer.globalDiscountPercent,
+      globalDiscountValue: summary.globalDiscountValue,
+      taxPercent: offer.taxPercent,
+      taxValue: summary.taxValue,
+      total: summary.total,
+      cameras: boq.cameras,
+      storageTb: boq.neededTb,
+      poeWatt: boq.poeLoad,
+    });
+    if (!ok) toast.error("اسمح بالنوافذ المنبثقة لفتح عرض السعر");
+    else if (!profile?.company) toast.info("أضف اسم شركتك من صفحة حسابي ليظهر في العرض");
+  }
+
   useEffect(() => {
     const onDelete = (event: KeyboardEvent) => {
       if (event.key !== "Delete" || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
@@ -340,7 +374,9 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         </nav>
         <div className="flex min-w-[310px] items-center justify-end gap-2">
           <div className="relative"><select value={currency} onChange={(event) => setCurrency(event.target.value)} className="h-8 appearance-none rounded-md border border-border bg-background py-1 pl-7 pr-3 text-xs font-semibold"><option value="EGP">EGP</option><option value="SAR">SAR</option><option value="USD">USD</option></select><ChevronDown className="pointer-events-none absolute left-2 top-2 h-4 w-4 text-muted-foreground" /></div>
-          <Button variant="secondary" size="sm" onClick={exportCsv}><Download className="h-4 w-4" />Export</Button>
+          <Button variant="outline" size="sm" onClick={() => setAgentOpen(true)}><Bot className="h-4 w-4" />المساعد</Button>
+          <Button variant="secondary" size="sm" onClick={exportPdf}><FileText className="h-4 w-4" />PDF</Button>
+          <Button variant="ghost" size="sm" onClick={exportCsv} title="تصدير CSV"><Download className="h-4 w-4" /></Button>
           <Button size="sm" onClick={save} disabled={saving}><Save className="h-4 w-4" />{saving ? "Saving" : "Save"}</Button>
         </div>
       </header>
