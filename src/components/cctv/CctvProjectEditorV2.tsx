@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,8 +11,6 @@ import {
   Camera,
   ChevronDown,
   Download,
-  Fence,
-  GlassWater,
   Image as ImageIcon,
   Layers3,
   Map,
@@ -44,8 +42,6 @@ import {
   cameraById,
   cameraCatalog,
   hardwareCatalog,
-  wallMaterialById,
-  wallMaterials,
 } from "@/lib/cctv/catalog";
 import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
 import {
@@ -54,6 +50,7 @@ import {
   type PlacedDevice,
   type RoomLabel,
   type WallSegment,
+  type WallThicknessCm,
 } from "@/lib/cctv/types";
 
 type ModuleId = "plan" | "map" | "offer" | "topology";
@@ -114,15 +111,19 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]!.id);
   const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]!.id);
   const [cableType, setCableType] = useState(cableTypes.find((c) => c.id === "cat6-stp")?.id ?? cableTypes[0]!.id);
-  const [wallMaterial, setWallMaterial] = useState(wallMaterials.find((w) => w.id === "medium-wall")?.id ?? wallMaterials[0]!.id);
+  const [wallThicknessCm, setWallThicknessCm] = useState<WallThicknessCm>(10);
   const [cableDraft, setCableDraft] = useState<{ x: number; y: number }[]>([]);
   const [wallDraft, setWallDraft] = useState<{ x: number; y: number }[]>([]);
   const [scaleDraft, setScaleDraft] = useState<{ x: number; y: number }[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [wallCurved, setWallCurved] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const [agentOpen, setAgentOpen] = useState(false);
+  const [layoutDialogOpen, setLayoutDialogOpen] = useState(false);
+  const [pendingLayoutName, setPendingLayoutName] = useState("");
+  const [pendingCeilingHeight, setPendingCeilingHeight] = useState("3");
+  const [pendingLayoutFile, setPendingLayoutFile] = useState<File | null>(null);
+  const [uploadingLayout, setUploadingLayout] = useState(false);
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
@@ -139,9 +140,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setPlan({
       ...emptyPlan,
       ...stored,
+      layoutName: stored.layoutName ?? "",
+      ceilingHeightM: stored.ceilingHeightM ?? 3,
       devices: stored.devices ?? [],
       cables: stored.cables ?? [],
-      walls: stored.walls ?? [],
+      walls: (stored.walls ?? []).map((wall) => ({ ...wall, thicknessCm: wall.thicknessCm === 20 ? 20 : 10 })),
       roomLabels: stored.roomLabels ?? [],
     });
     setOffer({
@@ -186,13 +189,20 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     clearDrafts();
   }
 
+  function openLayoutDialog() {
+    setPendingLayoutName(plan.layoutName.trim() || name);
+    setPendingCeilingHeight(String(plan.ceilingHeightM || 3));
+    setPendingLayoutFile(null);
+    setLayoutDialogOpen(true);
+  }
+
   function addDevice(kind: PlacedDevice["kind"], point: { x: number; y: number }) {
     const specId = kind === "camera" ? newCameraSpec : newHardwareSpec;
     const count = plan.devices.filter((device) => device.kind === kind).length + 1;
     const names: Record<PlacedDevice["kind"], string> = { camera: "Camera", nvr: "NVR", switch: "Switch", rack: "Rack" };
     const device: PlacedDevice = {
       id: uid(), kind, specId, name: `${names[kind]}${count}`, x: point.x, y: point.y,
-      rotation: -90, heightM: 3, tilt: 15,
+      rotation: -90, heightM: plan.ceilingHeightM || 3, tilt: 15,
     };
     update((prev) => ({ ...prev, devices: [...prev.devices, device] }));
     clearSelection();
@@ -248,7 +258,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
 
   function finishWall() {
     if (mode === "wall" && wallDraft.length >= 2) {
-      const wall: WallSegment = { id: uid(), material: wallMaterial, points: wallDraft, curved: wallCurved, note: "" };
+      const wall: WallSegment = {
+        id: uid(),
+        material: "medium-wall",
+        thicknessCm: wallThicknessCm,
+        points: wallDraft,
+        curved: wallCurved,
+        note: "",
+      };
       update((prev) => ({ ...prev, walls: [...prev.walls, wall] }));
       clearSelection();
       setSelectedWallId(wall.id);
@@ -256,25 +273,56 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setWallDraft([]);
   }
 
-  async function uploadPlan(file: File) {
+  async function uploadPlan(file: File, layoutName: string, ceilingHeightM: number) {
     const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) return;
+    if (!auth.user) return false;
     const path = `${auth.user.id}/${projectId}-${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
     const { error } = await supabase.storage.from("floorplans").upload(path, file, { upsert: true });
     if (error) {
       toast.error("تعذّر رفع المخطط");
-      return;
+      return false;
     }
     const { data: signed } = await supabase.storage.from("floorplans").createSignedUrl(path, 60 * 60 * 8);
     const url = signed?.signedUrl ?? null;
+    const nextPlan = { ...plan, layoutName, ceilingHeightM };
+    setPlan(nextPlan);
     setImageUrl(url);
-    await supabase.from("cctv_projects").update({ floorplan_path: path }).eq("id", projectId);
+    const { error: projectError } = await supabase
+      .from("cctv_projects")
+      .update({ floorplan_path: path, data: { ...nextPlan, offer } as never })
+      .eq("id", projectId);
+    if (projectError) {
+      toast.error("تم رفع الملف لكن تعذّر حفظ بيانات المخطط");
+      return false;
+    }
     if (url) {
       const image = new Image();
       image.onload = () => update((prev) => ({ ...prev, imageWidth: image.naturalWidth, imageHeight: image.naturalHeight }));
       image.src = url;
     }
-    toast.success("تم رفع المخطط");
+    toast.success(`تم رفع المخطط «${layoutName}»`);
+    return true;
+  }
+
+  async function confirmLayoutUpload() {
+    const layoutName = pendingLayoutName.trim();
+    const ceilingHeightM = Number(pendingCeilingHeight);
+    if (!layoutName) {
+      toast.error("اسم المخطط مطلوب");
+      return;
+    }
+    if (!Number.isFinite(ceilingHeightM) || ceilingHeightM <= 0) {
+      toast.error("ارتفاع السقف مطلوب ويجب أن يكون أكبر من صفر");
+      return;
+    }
+    if (!pendingLayoutFile) {
+      toast.error("اختر ملف المخطط أولاً");
+      return;
+    }
+    setUploadingLayout(true);
+    const ok = await uploadPlan(pendingLayoutFile, layoutName, ceilingHeightM);
+    setUploadingLayout(false);
+    if (ok) setLayoutDialogOpen(false);
   }
 
   async function save() {
@@ -361,9 +409,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   return (
     <div className="flex h-screen min-h-0 flex-col bg-background">
       <header className="no-print flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
-        <div className="flex min-w-[260px] items-center gap-2">
+        <div className="flex min-w-[300px] items-center gap-2">
           <Link to="/projects" className="text-muted-foreground hover:text-foreground" aria-label="العودة للمشاريع"><ArrowRight className="h-5 w-5" /></Link>
-          <Input value={name} onChange={(event) => setName(event.target.value)} className="h-8 w-56 border-0 bg-transparent px-1 font-bold shadow-none" />
+          <Input value={name} onChange={(event) => setName(event.target.value)} className="h-8 w-48 border-0 bg-transparent px-1 font-bold shadow-none" />
+          <span className="text-muted-foreground">/</span>
+          <span className="max-w-36 truncate rounded-md bg-muted px-2 py-1 text-xs font-semibold" title={plan.layoutName || name}>{plan.layoutName || name}</span>
         </div>
         <nav className="flex h-full flex-1 items-stretch justify-center" aria-label="Project modules">
           {moduleItems.map(({ id, label, icon: Icon }) => (
@@ -386,11 +436,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           plan={plan} imageUrl={imageUrl} mode={mode} drawer={drawer}
           selectedId={selectedId} selectedWallId={selectedWallId} selectedLabelId={selectedLabelId}
           newCameraSpec={newCameraSpec} newHardwareSpec={newHardwareSpec} cableType={cableType}
-          wallMaterial={wallMaterial} wallCurved={wallCurved} cableDraft={cableDraft} wallDraft={wallDraft} scaleDraft={scaleDraft}
-          fileRef={fileRef} selected={selected} selectedWall={selectedWall} selectedLabel={selectedLabel}
-          onUploadPlan={uploadPlan} onChooseTool={chooseTool} onDrawerChange={setDrawer}
+          wallThicknessCm={wallThicknessCm} wallCurved={wallCurved} cableDraft={cableDraft} wallDraft={wallDraft} scaleDraft={scaleDraft}
+          selected={selected} selectedWall={selectedWall} selectedLabel={selectedLabel}
+          onOpenLayoutDialog={openLayoutDialog} onChooseTool={chooseTool} onDrawerChange={setDrawer}
           onCameraSpecChange={setNewCameraSpec} onHardwareSpecChange={setNewHardwareSpec} onCableTypeChange={setCableType}
-          onWallMaterialChange={setWallMaterial} onWallCurvedChange={setWallCurved} onCanvasPoint={onCanvasPoint}
+          onWallThicknessChange={setWallThicknessCm} onWallCurvedChange={setWallCurved} onCanvasPoint={onCanvasPoint}
           onSelect={(id) => { clearSelection(); setSelectedId(id); }}
           onSelectWall={(id) => { clearSelection(); setSelectedWallId(id); }}
           onSelectLabel={(id) => { clearSelection(); setSelectedLabelId(id); }}
@@ -409,6 +459,44 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           <AgentPanel projectId={projectId} projectName={name} />
         </SheetContent>
       </Sheet>
+
+      {layoutDialogOpen && (
+        <div className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="layout-upload-title">
+          <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div>
+                <h2 id="layout-upload-title" className="text-lg font-bold">إضافة مخطط</h2>
+                <p className="mt-1 text-xs text-muted-foreground">حدد اسم المخطط وارتفاع السقف ثم اختر الملف. لا يبدأ الرفع قبل اكتمال البيانات.</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => !uploadingLayout && setLayoutDialogOpen(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-4 p-5">
+              <div>
+                <Label htmlFor="layout-name">اسم المخطط</Label>
+                <Input id="layout-name" className="mt-1" value={pendingLayoutName} onChange={(event) => setPendingLayoutName(event.target.value)} autoFocus />
+              </div>
+              <div>
+                <Label htmlFor="ceiling-height">ارتفاع السقف</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <Input id="ceiling-height" type="number" min={0.1} step={0.1} value={pendingCeilingHeight} onChange={(event) => setPendingCeilingHeight(event.target.value)} />
+                  <span className="rounded-md border border-border bg-muted px-3 py-2 text-sm">m</span>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="layout-file">ملف المخطط</Label>
+                <Input id="layout-file" className="mt-1" type="file" accept="image/*" onChange={(event) => setPendingLayoutFile(event.target.files?.[0] ?? null)} />
+                <p className="mt-1 text-[11px] text-muted-foreground">PNG / JPG / WEBP — دعم PDF سيضاف عند ربط عارض PDF بالمحرر.</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
+              <Button variant="outline" disabled={uploadingLayout} onClick={() => setLayoutDialogOpen(false)}>إلغاء</Button>
+              <Button disabled={uploadingLayout || !pendingLayoutName.trim() || !pendingLayoutFile || !(Number(pendingCeilingHeight) > 0)} onClick={() => void confirmLayoutUpload()}>
+                {uploadingLayout ? "جارٍ الرفع…" : "رفع المخطط"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -416,12 +504,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
 type PlanWorkspaceProps = {
   plan: PlanData; imageUrl: string | null; mode: CanvasMode; drawer: DrawerId;
   selectedId: string | null; selectedWallId: string | null; selectedLabelId: string | null;
-  newCameraSpec: string; newHardwareSpec: string; cableType: string; wallMaterial: string; wallCurved: boolean;
+  newCameraSpec: string; newHardwareSpec: string; cableType: string; wallThicknessCm: WallThicknessCm; wallCurved: boolean;
   cableDraft: { x: number; y: number }[]; wallDraft: { x: number; y: number }[]; scaleDraft: { x: number; y: number }[];
-  fileRef: React.RefObject<HTMLInputElement | null>; selected: PlacedDevice | null; selectedWall: WallSegment | null; selectedLabel: EditableRoomLabel | null;
-  onUploadPlan: (file: File) => void; onChooseTool: (mode: CanvasMode, drawer: DrawerId) => void; onDrawerChange: (drawer: DrawerId) => void;
+  selected: PlacedDevice | null; selectedWall: WallSegment | null; selectedLabel: EditableRoomLabel | null;
+  onOpenLayoutDialog: () => void; onChooseTool: (mode: CanvasMode, drawer: DrawerId) => void; onDrawerChange: (drawer: DrawerId) => void;
   onCameraSpecChange: (id: string) => void; onHardwareSpecChange: (id: string) => void; onCableTypeChange: (id: string) => void;
-  onWallMaterialChange: (id: string) => void; onWallCurvedChange: (value: boolean) => void; onCanvasPoint: (point: { x: number; y: number }) => void;
+  onWallThicknessChange: (value: WallThicknessCm) => void; onWallCurvedChange: (value: boolean) => void; onCanvasPoint: (point: { x: number; y: number }) => void;
   onSelect: (id: string | null) => void; onSelectWall: (id: string | null) => void; onSelectLabel: (id: string | null) => void;
   onMoveDevice: (id: string, point: { x: number; y: number }) => void; onMoveLabel: (id: string, point: { x: number; y: number }) => void;
   onFinishCable: () => void; onFinishWall: () => void; onUpdate: (updater: (plan: PlanData) => PlanData) => void;
@@ -439,11 +527,14 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
   return (
     <div className="flex min-h-0 flex-1 overflow-hidden">
       <aside className="no-print w-64 shrink-0 border-r border-border bg-surface p-3">
-        <div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-bold">Layouts</p><p className="text-[11px] text-muted-foreground">Project plans & scale</p></div><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => props.fileRef.current?.click()}><Plus className="h-4 w-4" /></Button></div>
-        <input ref={props.fileRef} type="file" accept="image/*" hidden onChange={(event) => event.target.files?.[0] && props.onUploadPlan(event.target.files[0])} />
-        <button type="button" onClick={() => props.fileRef.current?.click()} className="w-full rounded-lg border-2 border-primary bg-primary/5 p-2 text-right">
-          <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-muted">{props.imageUrl ? <img src={props.imageUrl} alt="Current layout" className="h-full w-full object-contain" /> : <ImageIcon className="h-8 w-8 text-muted-foreground" />}</div>
-          <p className="truncate text-xs font-semibold">Current Layout</p><p className="mt-1 text-[11px] text-muted-foreground">1m : {props.plan.pxPerMeter.toFixed(2)}px</p>
+        <div className="mb-3 flex items-center justify-between">
+          <div><p className="text-sm font-bold">Layouts</p><p className="text-[11px] text-muted-foreground">Project plans & scale</p></div>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={props.onOpenLayoutDialog} title="إضافة مخطط"><Plus className="h-4 w-4" /></Button>
+        </div>
+        <button type="button" onClick={props.onOpenLayoutDialog} className="w-full rounded-lg border-2 border-primary bg-primary/5 p-2 text-right">
+          <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-muted">{props.imageUrl ? <img src={props.imageUrl} alt={props.plan.layoutName || "Current layout"} className="h-full w-full object-contain" /> : <ImageIcon className="h-8 w-8 text-muted-foreground" />}</div>
+          <p className="truncate text-xs font-semibold">{props.plan.layoutName || "إضافة مخطط"}</p>
+          <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span>H: {props.plan.ceilingHeightM.toFixed(1)}m</span><span>1m : {props.plan.pxPerMeter.toFixed(2)}px</span></div>
         </button>
         <div className="mt-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between text-xs"><span>Scale Calibration</span><Ruler className="h-4 w-4 text-muted-foreground" /></div><Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => props.onChooseTool("scale", null)}>Calibrate on plan</Button><Input type="number" value={Number(props.plan.pxPerMeter.toFixed(2))} onChange={(event) => props.onUpdate((prev) => ({ ...prev, pxPerMeter: Number(event.target.value) || 1 }))} className="mt-2 h-8" /></div>
         <div className="mt-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between text-xs"><span>DORI/PPM Coverage</span><Switch checked={props.plan.showCoverage} onCheckedChange={(value) => props.onUpdate((prev) => ({ ...prev, showCoverage: value }))} /></div><div className="mt-2 space-y-1 text-[10px] text-muted-foreground">{ppmLevels.map((level) => <div key={level.id} className="flex justify-between"><span>{level.label}</span><span>{level.ppm} PPM</span></div>)}</div></div>
@@ -474,7 +565,7 @@ function ToolDrawer(props: PlanWorkspaceProps) {
   if (props.drawer === "camera") return <div className="space-y-3"><Label>Camera model</Label><div className="grid gap-2">{cameraCatalog.map((camera) => <button key={camera.id} type="button" onClick={() => props.onCameraSpecChange(camera.id)} className={`rounded-lg border p-3 text-right ${props.newCameraSpec === camera.id ? "border-primary bg-primary/5" : "border-border"}`}><p className="text-sm font-semibold">{camera.label}</p><p className="text-[11px] text-muted-foreground">{camera.model} · {camera.megapixel}MP · {camera.focal}mm</p></button>)}</div></div>;
   if (props.drawer === "device") return <div className="space-y-3">{(["switch", "nvr", "rack"] as const).map((kind) => <div key={kind}><p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{kind}</p>{hardwareCatalog.filter((item) => item.kind === kind).map((item) => <button key={item.id} type="button" onClick={() => { props.onHardwareSpecChange(item.id); props.onChooseTool(kind, "device"); }} className={`mb-1 w-full rounded-lg border p-2 text-right text-xs ${props.newHardwareSpec === item.id ? "border-primary bg-primary/5" : "border-border"}`}>{item.label}</button>)}</div>)}</div>;
   if (props.drawer === "cable") return <div className="space-y-4"><p className="text-xs text-muted-foreground">Orthogonal 90° routing. BOQ includes 15% slack.</p>{(["network", "fiber", "coaxial"] as const).map((category) => <div key={category}><p className="mb-2 text-xs font-bold">{category}</p><div className="grid grid-cols-2 gap-2">{cableTypes.filter((item) => item.category === category).map((item) => <button key={item.id} type="button" onClick={() => props.onCableTypeChange(item.id)} className={`rounded-lg border p-2 text-xs ${props.cableType === item.id ? "border-primary bg-primary/5 text-primary" : "border-border"}`}><span className="mx-auto mb-1 block h-0.5 w-10" style={{ backgroundColor: item.color }} />{item.label}</button>)}</div></div>)}</div>;
-  if (props.drawer === "wall") return <div className="space-y-4">{(["wall", "material"] as const).map((group) => <div key={group}><p className="mb-2 text-xs font-bold">{group === "wall" ? "Wall Thickness" : "Construction Materials"}</p><div className="space-y-1">{wallMaterials.filter((item) => item.group === group).map((item) => { const Icon = item.id.includes("glass") ? GlassWater : item.id === "fence" ? Fence : BrickWall; return <button key={item.id} type="button" onClick={() => props.onWallMaterialChange(item.id)} className={`flex w-full items-center justify-between rounded-lg border p-2 text-xs ${props.wallMaterial === item.id ? "border-primary bg-primary/5 text-primary" : "border-border"}`}><span className="flex items-center gap-2"><Icon className="h-4 w-4" />{item.label}</span><span className="text-muted-foreground">{item.attenuationRange ? `${item.attenuationRange[0]}–${item.attenuationRange[1]}dB` : `${item.attenuationDb}dB`}</span></button>; })}</div></div>)}<div className="flex items-center justify-between rounded-lg border border-border p-3 text-xs"><span>Curved wall</span><Switch checked={props.wallCurved} onCheckedChange={props.onWallCurvedChange} /></div></div>;
+  if (props.drawer === "wall") return <div className="space-y-4"><div><p className="mb-2 text-xs font-bold">سمك الحائط</p><div className="grid grid-cols-2 gap-2">{([10, 20] as const).map((thickness) => <button key={thickness} type="button" onClick={() => props.onWallThicknessChange(thickness)} className={`rounded-lg border p-3 text-sm font-semibold ${props.wallThicknessCm === thickness ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>{thickness} سم</button>)}</div><p className="mt-2 text-[11px] text-muted-foreground">الافتراضي 10 سم. غيّره إلى 20 سم فقط عند الحاجة.</p></div><div className="flex items-center justify-between rounded-lg border border-border p-3 text-xs"><span>Curved wall</span><Switch checked={props.wallCurved} onCheckedChange={props.onWallCurvedChange} /></div></div>;
   if (props.drawer === "annotation") return <div className="space-y-3"><p className="text-sm font-semibold">Room labels</p><p className="text-xs text-muted-foreground">Place labels on the plan, then edit text, font size and notes from the selection panel.</p><Button className="w-full" onClick={() => props.onChooseTool("label", "annotation")}><Tag className="h-4 w-4" />Add room label</Button></div>;
   return <div className="space-y-3"><div className="flex items-center justify-between rounded-lg border border-border p-3"><span className="text-xs">Coverage layer</span><Switch checked={props.plan.showCoverage} onCheckedChange={(value) => props.onUpdate((prev) => ({ ...prev, showCoverage: value }))} /></div><ProjectSummary plan={props.plan} /></div>;
 }
@@ -486,12 +577,12 @@ function DeviceProperties({ device, plan, onUpdate }: { device: PlacedDevice; pl
 }
 
 function WallProperties({ wall, plan, onUpdate }: { wall: WallSegment; plan: PlanData; onUpdate: (updater: (plan: PlanData) => PlanData) => void }) {
-  const material = wallMaterialById(wall.material);
   const lengthM = polylineLengthMeters(wall.points, plan.pxPerMeter);
   const patch = (next: Partial<WallSegment>) => onUpdate((prev) => ({ ...prev, walls: prev.walls.map((item) => item.id === wall.id ? { ...item, ...next } : item) }));
+  const thickness = wall.thicknessCm ?? 10;
   return <div className="space-y-4">
-    <div><Label>Wall material / thickness</Label><select value={wall.material} onChange={(event) => patch({ material: event.target.value })} className="mt-1 w-full rounded-md border border-border bg-background p-2 text-sm">{wallMaterials.map((item) => <option key={item.id} value={item.id}>{item.label} · {item.attenuationRange ? `${item.attenuationRange[0]}–${item.attenuationRange[1]}dB` : `${item.attenuationDb}dB`}</option>)}</select></div>
-    <div className="grid grid-cols-2 gap-2"><div className="rounded-lg border border-border p-3"><p className="text-[11px] text-muted-foreground">Measured length</p><p className="text-lg font-bold">{lengthM.toFixed(2)} m</p></div><div className="rounded-lg border border-border p-3"><p className="text-[11px] text-muted-foreground">Attenuation</p><p className="text-lg font-bold">{material.attenuationRange ? `${material.attenuationRange[0]}–${material.attenuationRange[1]}` : material.attenuationDb} dB</p></div></div>
+    <div><Label>سمك الحائط</Label><div className="mt-2 grid grid-cols-2 gap-2">{([10, 20] as const).map((value) => <button key={value} type="button" onClick={() => patch({ thicknessCm: value })} className={`rounded-lg border p-3 text-sm font-semibold ${thickness === value ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>{value} سم</button>)}</div></div>
+    <div className="rounded-lg border border-primary/40 bg-primary/5 p-3"><p className="text-[11px] text-muted-foreground">طول الحائط</p><p className="text-xl font-bold text-primary">{lengthM.toFixed(2)} m</p><p className="mt-1 text-[11px] text-muted-foreground">يظهر المقاس أيضاً مباشرة فوق الحائط عند تحديده.</p></div>
     <div><Label>Notes</Label><textarea value={wall.note ?? ""} onChange={(event) => patch({ note: event.target.value })} rows={4} className="mt-1 w-full resize-y rounded-md border border-border bg-background p-2 text-sm" placeholder="Execution notes, wall condition, routing restrictions…" /></div>
     <div className="flex items-center justify-between rounded-lg border border-border p-3 text-xs"><span>Curved wall</span><Switch checked={wall.curved} onCheckedChange={(value) => patch({ curved: value })} /></div>
     <Button variant="destructive" className="w-full" onClick={() => onUpdate((prev) => ({ ...prev, walls: prev.walls.filter((item) => item.id !== wall.id) }))}><Trash2 className="h-4 w-4" />Delete wall</Button>
@@ -504,7 +595,7 @@ function LabelProperties({ label, onUpdate }: { label: EditableRoomLabel; onUpda
 }
 
 function ProjectSummary({ plan }: { plan: PlanData }) {
-  return <div className="space-y-2 text-xs"><div className="rounded-lg border border-border p-3"><div className="flex justify-between"><span>Cameras</span><span>{plan.devices.filter((item) => item.kind === "camera").length}</span></div><div className="flex justify-between"><span>Network devices</span><span>{plan.devices.filter((item) => item.kind !== "camera").length}</span></div><div className="flex justify-between"><span>Cable routes</span><span>{plan.cables.length}</span></div><div className="flex justify-between"><span>Walls</span><span>{plan.walls.length}</span></div><div className="flex justify-between"><span>Annotations</span><span>{plan.roomLabels.length}</span></div></div><p className="text-muted-foreground">Select a device, wall or room label to edit its properties.</p></div>;
+  return <div className="space-y-2 text-xs"><div className="rounded-lg border border-border p-3"><div className="flex justify-between"><span>Layout</span><span className="max-w-36 truncate font-semibold">{plan.layoutName || "—"}</span></div><div className="flex justify-between"><span>Ceiling height</span><span>{plan.ceilingHeightM.toFixed(1)} m</span></div><div className="flex justify-between"><span>Cameras</span><span>{plan.devices.filter((item) => item.kind === "camera").length}</span></div><div className="flex justify-between"><span>Network devices</span><span>{plan.devices.filter((item) => item.kind !== "camera").length}</span></div><div className="flex justify-between"><span>Cable routes</span><span>{plan.cables.length}</span></div><div className="flex justify-between"><span>Walls</span><span>{plan.walls.length}</span></div><div className="flex justify-between"><span>Annotations</span><span>{plan.roomLabels.length}</span></div></div><p className="text-muted-foreground">Select a device, wall or room label to edit its properties.</p></div>;
 }
 
 type OfferLineView = { key: string; label: string; unit: string; qty: number; unitPrice: number; discountPercent: number; amount: number; isCable: boolean };
