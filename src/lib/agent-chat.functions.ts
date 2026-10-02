@@ -7,7 +7,7 @@ const AGENT_NAME = "az-agent-bim";
 const AGENT_VERSION = "8";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Json = Record<string, any>;
+type Json = any;
 
 function extractText(resp: Json): string {
   if (typeof resp.output_text === "string" && resp.output_text) return resp.output_text;
