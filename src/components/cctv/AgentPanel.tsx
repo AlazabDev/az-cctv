@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, RotateCcw, Send, Sparkles, User } from "lucide-react";
+import { Bot, Cctv, RotateCcw, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAgentChat } from "@/hooks/use-agent-chat";
@@ -40,7 +40,7 @@ export function AgentPanel({ projectId, projectName }: { projectId: string; proj
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5">
         <div className="flex items-center gap-2 text-sm font-bold text-foreground">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Sparkles className="h-3.5 w-3.5" />
+            <Cctv className="h-3.5 w-3.5" />
           </span>
           مساعد التصميم
         </div>

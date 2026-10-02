@@ -403,6 +403,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       ) : (
         <ModulePlaceholder module={activeModule} />
       )}
+      <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
+        <SheetContent side="left" className="no-print w-full p-0 sm:max-w-md">
+          <SheetTitle className="sr-only">مساعد التصميم</SheetTitle>
+          <AgentPanel projectId={projectId} projectName={name} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
