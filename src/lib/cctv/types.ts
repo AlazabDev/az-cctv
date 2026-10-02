@@ -52,14 +52,17 @@ export interface CableRun {
 }
 
 /**
- * Wall material IDs are catalog-driven. Keeping this as a string lets the
- * editor add new construction materials without a database schema migration.
+ * Wall material is retained for backward compatibility with existing saved
+ * projects and the design-agent occlusion model. New walls use one opaque wall
+ * material; the user-facing choice is wall thickness only.
  */
 export type WallMaterial = string;
+export type WallThicknessCm = 10 | 20;
 
 export interface WallSegment {
   id: string;
   material: WallMaterial;
+  thicknessCm?: WallThicknessCm;
   points: { x: number; y: number }[];
   curved: boolean;
   note?: string;
@@ -74,6 +77,8 @@ export interface RoomLabel {
 }
 
 export interface PlanData {
+  layoutName: string;
+  ceilingHeightM: number;
   pxPerMeter: number;
   devices: PlacedDevice[];
   cables: CableRun[];
@@ -85,6 +90,8 @@ export interface PlanData {
 }
 
 export const emptyPlan: PlanData = {
+  layoutName: "",
+  ceilingHeightM: 3,
   pxPerMeter: 40,
   devices: [],
   cables: [],
