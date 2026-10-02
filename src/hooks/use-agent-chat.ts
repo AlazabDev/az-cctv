@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { sendAgentMessage } from "@/lib/agent-chat.functions";
 
 export type AgentMessage = Tables<"agent_messages">;
 export type AgentThread = Tables<"agent_threads">;
@@ -116,38 +117,25 @@ export function useAgentChat(projectId: string | undefined) {
       setMessages((prev) => [...prev, optimisticUser, pendingAssistant]);
       setSending(true);
 
-      const { data, error } = await supabase.functions.invoke<{
-        thread_id: string;
-        reply: string;
-        error?: string;
-        detail?: string;
-      }>("az-agent", {
-        body: { message, thread_id: threadId ?? undefined, project_id: projectId },
-      });
+      let result: { threadId?: string | null; reply?: string; error?: string };
+      try {
+        result = await sendAgentMessage({
+          data: { message, projectId: projectId!, threadId: threadId ?? undefined },
+        });
+      } catch {
+        result = { error: "تعذّر الوصول للوكيل." };
+      }
 
       if (!mounted.current) return;
       setSending(false);
+      if (result.threadId) setThreadId(result.threadId);
 
-      if (error || !data || data.error) {
-        const detail =
-          (data as { detail?: string } | undefined)?.detail ??
-          error?.message ??
-          "تعذّر الوصول للوكيل.";
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === pendingAssistant.id
-              ? { ...m, pending: false, error: true, content: detail }
-              : m,
-          ),
-        );
-        return;
-      }
-
-      setThreadId(data.thread_id);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === pendingAssistant.id
-            ? { ...m, pending: false, content: data.reply || "لم يُرجع الوكيل رداً." }
+            ? result.error
+              ? { ...m, pending: false, error: true, content: result.error }
+              : { ...m, pending: false, content: result.reply || "لم يُرجع الوكيل رداً." }
             : m,
         ),
       );
