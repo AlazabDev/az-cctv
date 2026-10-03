@@ -87,6 +87,38 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+/** A Layout is one floor/area of the project with its own plan image, scale and elements. */
+type ProjectLayout = PlanData & { id: string; floorplanPath: string | null };
+
+function normalizeLayout(raw: Partial<ProjectLayout>): ProjectLayout {
+  return {
+    ...emptyPlan,
+    ...raw,
+    id: raw.id || uid(),
+    floorplanPath: raw.floorplanPath ?? null,
+    layoutName: raw.layoutName ?? "",
+    ceilingHeightM: raw.ceilingHeightM ?? 3,
+    pxPerMeter: raw.pxPerMeter || 40,
+    devices: raw.devices ?? [],
+    cables: raw.cables ?? [],
+    walls: (raw.walls ?? []).map((wall) => ({ ...wall, thicknessCm: wall.thicknessCm === 20 ? 20 : 10 })),
+    roomLabels: raw.roomLabels ?? [],
+    showCoverage: raw.showCoverage ?? true,
+  };
+}
+
+/** Combine every layout into one plan (at 1px = 1m) so BOQ/offer cover the whole project. */
+function mergeLayouts(layouts: ProjectLayout[]): PlanData {
+  return {
+    ...emptyPlan,
+    pxPerMeter: 1,
+    devices: layouts.flatMap((l) => l.devices),
+    cables: layouts.flatMap((l) => l.cables.map((c) => ({ ...c, points: c.points.map((p) => ({ x: p.x / (l.pxPerMeter || 1), y: p.y / (l.pxPerMeter || 1) })) }))),
+    walls: layouts.flatMap((l) => l.walls),
+    roomLabels: layouts.flatMap((l) => l.roomLabels),
+  };
+}
+
 function orthogonalAppend(points: { x: number; y: number }[], p: { x: number; y: number }) {
   const last = points.at(-1);
   if (!last) return [p];
@@ -96,7 +128,9 @@ function orthogonalAppend(points: { x: number; y: number }[], p: { x: number; y:
 
 export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const navigate = useNavigate();
-  const [plan, setPlan] = useState<PlanData>(emptyPlan);
+  const [layouts, setLayouts] = useState<ProjectLayout[]>([]);
+  const [activeLayoutId, setActiveLayoutId] = useState("");
+  const plan: PlanData = layouts.find((layout) => layout.id === activeLayoutId) ?? emptyPlan;
   const [name, setName] = useState("مشروع جديد");
   const [clientName, setClientName] = useState("");
   const [currency, setCurrency] = useState("EGP");
@@ -115,7 +149,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [cableDraft, setCableDraft] = useState<{ x: number; y: number }[]>([]);
   const [wallDraft, setWallDraft] = useState<{ x: number; y: number }[]>([]);
   const [scaleDraft, setScaleDraft] = useState<{ x: number; y: number }[]>([]);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const imageUrl = imageUrls[activeLayoutId] ?? null;
+  const [loaded, setLoaded] = useState(false);
+  const [dialogTargetId, setDialogTargetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [wallCurved, setWallCurved] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
@@ -136,17 +173,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     if (!project) return;
-    const stored = (project.data ?? {}) as Partial<PlanData> & { offer?: Partial<OfferSettings> };
-    setPlan({
-      ...emptyPlan,
-      ...stored,
-      layoutName: stored.layoutName ?? "",
-      ceilingHeightM: stored.ceilingHeightM ?? 3,
-      devices: stored.devices ?? [],
-      cables: stored.cables ?? [],
-      walls: (stored.walls ?? []).map((wall) => ({ ...wall, thicknessCm: wall.thicknessCm === 20 ? 20 : 10 })),
-      roomLabels: stored.roomLabels ?? [],
-    });
+    const stored = (project.data ?? {}) as Partial<PlanData> & { offer?: Partial<OfferSettings>; layouts?: Partial<ProjectLayout>[]; activeLayoutId?: string };
+    const list: ProjectLayout[] = stored.layouts?.length
+      ? stored.layouts.map((l) => normalizeLayout(l))
+      : [normalizeLayout({ ...stored, id: uid(), layoutName: stored.layoutName || "Layout 1", floorplanPath: project.floorplan_path ?? null })];
+    setLayouts(list);
+    setActiveLayoutId(list.some((l) => l.id === stored.activeLayoutId) ? stored.activeLayoutId! : list[0]!.id);
     setOffer({
       ...defaultOffer,
       ...(stored.offer ?? {}),
@@ -156,19 +188,24 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "EGP");
-    if (project.floorplan_path) {
-      supabase.storage.from("floorplans").createSignedUrl(project.floorplan_path, 60 * 60 * 8).then(({ data }) => setImageUrl(data?.signedUrl ?? null));
+    for (const layout of list) {
+      if (!layout.floorplanPath) continue;
+      supabase.storage.from("floorplans").createSignedUrl(layout.floorplanPath, 60 * 60 * 8).then(({ data }) => {
+        if (data?.signedUrl) setImageUrls((prev) => ({ ...prev, [layout.id]: data.signedUrl }));
+      });
     }
+    setLoaded(true);
   }, [project]);
 
   const selected = plan.devices.find((device) => device.id === selectedId) ?? null;
   const selectedWall = plan.walls.find((wall) => wall.id === selectedWallId) ?? null;
   const selectedLabel = (plan.roomLabels.find((label) => label.id === selectedLabelId) ?? null) as EditableRoomLabel | null;
-  const boq = useMemo(() => buildBoq(plan, retention), [plan, retention]);
+  const projectPlan = useMemo(() => mergeLayouts(layouts), [layouts]);
+  const boq = useMemo(() => buildBoq(projectPlan, retention), [projectPlan, retention]);
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
   function update(updater: (value: PlanData) => PlanData) {
-    setPlan((prev) => updater(prev));
+    setLayouts((prev) => prev.map((layout) => (layout.id === activeLayoutId ? { ...layout, ...updater(layout), id: layout.id, floorplanPath: layout.floorplanPath } : layout)));
   }
 
   function clearSelection() {
@@ -190,8 +227,19 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   function openLayoutDialog() {
-    setPendingLayoutName(plan.layoutName.trim() || name);
+    setDialogTargetId(null);
+    setPendingLayoutName(`Layout ${layouts.length + 1}`);
     setPendingCeilingHeight(String(plan.ceilingHeightM || 3));
+    setPendingLayoutFile(null);
+    setLayoutDialogOpen(true);
+  }
+
+  function openReplaceDialog(id: string) {
+    const target = layouts.find((l) => l.id === id);
+    if (!target) return;
+    setDialogTargetId(id);
+    setPendingLayoutName(target.layoutName || `Layout ${layouts.length}`);
+    setPendingCeilingHeight(String(target.ceilingHeightM || 3));
     setPendingLayoutFile(null);
     setLayoutDialogOpen(true);
   }
@@ -284,21 +332,28 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     }
     const { data: signed } = await supabase.storage.from("floorplans").createSignedUrl(path, 60 * 60 * 8);
     const url = signed?.signedUrl ?? null;
-    const nextPlan = { ...plan, layoutName, ceilingHeightM };
-    setPlan(nextPlan);
-    setImageUrl(url);
-    const { error: projectError } = await supabase
-      .from("cctv_projects")
-      .update({ floorplan_path: path, data: { ...nextPlan, offer } as never })
-      .eq("id", projectId);
-    if (projectError) {
+    let size: { imageWidth?: number; imageHeight?: number } = {};
+    if (url) {
+      size = await new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => resolve({ imageWidth: image.naturalWidth, imageHeight: image.naturalHeight });
+        image.onerror = () => resolve({});
+        image.src = url;
+      });
+    }
+    const targetId = dialogTargetId ?? uid();
+    const nextLayouts: ProjectLayout[] = dialogTargetId
+      ? layouts.map((l) => (l.id === targetId ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, ...size } : l))
+      : [...layouts, { ...emptyPlan, id: targetId, layoutName, ceilingHeightM, floorplanPath: path, ...size }];
+    setLayouts(nextLayouts);
+    setActiveLayoutId(targetId);
+    if (url) setImageUrls((prev) => ({ ...prev, [targetId]: url }));
+    clearSelection();
+    clearDrafts();
+    const ok = await persist(nextLayouts, targetId);
+    if (!ok) {
       toast.error("تم رفع الملف لكن تعذّر حفظ بيانات المخطط");
       return false;
-    }
-    if (url) {
-      const image = new Image();
-      image.onload = () => update((prev) => ({ ...prev, imageWidth: image.naturalWidth, imageHeight: image.naturalHeight }));
-      image.src = url;
     }
     toast.success(`تم رفع المخطط «${layoutName}»`);
     return true;
@@ -325,17 +380,70 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     if (ok) setLayoutDialogOpen(false);
   }
 
+  function selectLayout(id: string) {
+    if (id === activeLayoutId) return;
+    clearSelection();
+    clearDrafts();
+    setMode("select");
+    setActiveLayoutId(id);
+  }
+
+  function renameLayout(id: string) {
+    const current = layouts.find((l) => l.id === id);
+    if (!current) return;
+    const next = window.prompt("اسم المخطط", current.layoutName)?.trim();
+    if (!next) return;
+    setLayouts((prev) => prev.map((l) => (l.id === id ? { ...l, layoutName: next } : l)));
+  }
+
+  function deleteLayout(id: string) {
+    if (layouts.length <= 1) {
+      toast.error("يجب أن يحتوي المشروع على مخطط واحد على الأقل");
+      return;
+    }
+    const current = layouts.find((l) => l.id === id);
+    if (!window.confirm(`حذف المخطط «${current?.layoutName || ""}» وكل عناصره؟`)) return;
+    const rest = layouts.filter((l) => l.id !== id);
+    setLayouts(rest);
+    if (activeLayoutId === id) {
+      clearSelection();
+      setActiveLayoutId(rest[0]!.id);
+    }
+  }
+
+  function buildProjectData(nextLayouts: ProjectLayout[], nextActive: string) {
+    const active = nextLayouts.find((l) => l.id === nextActive) ?? nextLayouts[0];
+    // Top-level copy of the active layout keeps older readers (design agent) working.
+    return { ...(active ?? emptyPlan), layouts: nextLayouts, activeLayoutId: nextActive, offer };
+  }
+
+  async function persist(nextLayouts = layouts, nextActive = activeLayoutId) {
+    const active = nextLayouts.find((l) => l.id === nextActive);
+    const { error } = await supabase
+      .from("cctv_projects")
+      .update({ name, client_name: clientName, currency, floorplan_path: active?.floorplanPath ?? null, data: buildProjectData(nextLayouts, nextActive) as never })
+      .eq("id", projectId);
+    return !error;
+  }
+
   async function save() {
     setSaving(true);
-    const data = { ...plan, offer };
-    const { error } = await supabase.from("cctv_projects").update({ name, client_name: clientName, currency, data: data as never }).eq("id", projectId);
+    const ok = await persist();
     setSaving(false);
-    if (error) {
+    if (!ok) {
       toast.error("تعذّر الحفظ");
       return;
     }
     toast.success("تم حفظ المشروع");
   }
+
+  // Autosave so a reload restores every layout exactly.
+  useEffect(() => {
+    if (!loaded || layouts.length === 0) return;
+    const timer = window.setTimeout(() => { void persist(); }, 1200);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layouts, activeLayoutId, offer, name, clientName, currency, loaded]);
 
   function exportCsv() {
     const summary = calculateOffer(boq, offer);
@@ -433,6 +541,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
 
       {activeModule === "plan" ? (
         <PlanDesignWorkspace
+          layouts={layouts} activeLayoutId={activeLayoutId} imageUrls={imageUrls}
+          onSelectLayout={selectLayout} onRenameLayout={renameLayout} onDeleteLayout={deleteLayout} onReplaceLayout={openReplaceDialog}
           plan={plan} imageUrl={imageUrl} mode={mode} drawer={drawer}
           selectedId={selectedId} selectedWallId={selectedWallId} selectedLabelId={selectedLabelId}
           newCameraSpec={newCameraSpec} newHardwareSpec={newHardwareSpec} cableType={cableType}
@@ -465,7 +575,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
-                <h2 id="layout-upload-title" className="text-lg font-bold">إضافة مخطط</h2>
+                <h2 id="layout-upload-title" className="text-lg font-bold">{dialogTargetId ? "تحديث المخطط" : "إضافة مخطط جديد"}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">حدد اسم المخطط وارتفاع السقف ثم اختر الملف. لا يبدأ الرفع قبل اكتمال البيانات.</p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => !uploadingLayout && setLayoutDialogOpen(false)}><X className="h-4 w-4" /></Button>
@@ -502,6 +612,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
 }
 
 type PlanWorkspaceProps = {
+  layouts: ProjectLayout[]; activeLayoutId: string; imageUrls: Record<string, string>;
+  onSelectLayout: (id: string) => void; onRenameLayout: (id: string) => void; onDeleteLayout: (id: string) => void; onReplaceLayout: (id: string) => void;
   plan: PlanData; imageUrl: string | null; mode: CanvasMode; drawer: DrawerId;
   selectedId: string | null; selectedWallId: string | null; selectedLabelId: string | null;
   newCameraSpec: string; newHardwareSpec: string; cableType: string; wallThicknessCm: WallThicknessCm; wallCurved: boolean;
@@ -528,14 +640,31 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
     <div className="flex min-h-0 flex-1 overflow-hidden">
       <aside className="no-print w-64 shrink-0 border-r border-border bg-surface p-3">
         <div className="mb-3 flex items-center justify-between">
-          <div><p className="text-sm font-bold">Layouts</p><p className="text-[11px] text-muted-foreground">Project plans & scale</p></div>
+          <div><p className="text-sm font-bold">Layouts ({props.layouts.length})</p><p className="text-[11px] text-muted-foreground">Project plans & scale</p></div>
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={props.onOpenLayoutDialog} title="إضافة مخطط"><Plus className="h-4 w-4" /></Button>
         </div>
-        <button type="button" onClick={props.onOpenLayoutDialog} className="w-full rounded-lg border-2 border-primary bg-primary/5 p-2 text-right">
-          <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-muted">{props.imageUrl ? <img src={props.imageUrl} alt={props.plan.layoutName || "Current layout"} className="h-full w-full object-contain" /> : <ImageIcon className="h-8 w-8 text-muted-foreground" />}</div>
-          <p className="truncate text-xs font-semibold">{props.plan.layoutName || "إضافة مخطط"}</p>
-          <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span>H: {props.plan.ceilingHeightM.toFixed(1)}m</span><span>1m : {props.plan.pxPerMeter.toFixed(2)}px</span></div>
-        </button>
+        <div className="max-h-[42vh] space-y-2 overflow-y-auto">
+          {props.layouts.map((layout) => {
+            const active = layout.id === props.activeLayoutId;
+            const url = props.imageUrls[layout.id];
+            return (
+              <div key={layout.id} className={`rounded-lg border-2 p-2 ${active ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}>
+                <button type="button" onClick={() => props.onSelectLayout(layout.id)} className="w-full text-right">
+                  <div className="mb-2 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-muted">{url ? <img src={url} alt={layout.layoutName || "Layout"} className="h-full w-full object-contain" /> : <ImageIcon className="h-8 w-8 text-muted-foreground" />}</div>
+                  <p className="truncate text-xs font-semibold">{layout.layoutName || "بدون اسم"}</p>
+                  <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span>H: {layout.ceilingHeightM.toFixed(1)}m</span><span>{layout.devices.filter((d) => d.kind === "camera").length} cam</span><span>1m:{layout.pxPerMeter.toFixed(1)}px</span></div>
+                </button>
+                {active && (
+                  <div className="mt-2 flex gap-1">
+                    <Button variant="outline" size="sm" className="h-7 flex-1 px-1 text-[11px]" onClick={() => props.onReplaceLayout(layout.id)}>{url ? "تغيير المخطط" : "رفع مخطط"}</Button>
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px]" onClick={() => props.onRenameLayout(layout.id)}>تسمية</Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => props.onDeleteLayout(layout.id)} title="حذف المخطط"><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
         <div className="mt-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between text-xs"><span>Scale Calibration</span><Ruler className="h-4 w-4 text-muted-foreground" /></div><Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => props.onChooseTool("scale", null)}>Calibrate on plan</Button><Input type="number" value={Number(props.plan.pxPerMeter.toFixed(2))} onChange={(event) => props.onUpdate((prev) => ({ ...prev, pxPerMeter: Number(event.target.value) || 1 }))} className="mt-2 h-8" /></div>
         <div className="mt-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between text-xs"><span>DORI/PPM Coverage</span><Switch checked={props.plan.showCoverage} onCheckedChange={(value) => props.onUpdate((prev) => ({ ...prev, showCoverage: value }))} /></div><div className="mt-2 space-y-1 text-[10px] text-muted-foreground">{ppmLevels.map((level) => <div key={level.id} className="flex justify-between"><span>{level.label}</span><span>{level.ppm} PPM</span></div>)}</div></div>
       </aside>
