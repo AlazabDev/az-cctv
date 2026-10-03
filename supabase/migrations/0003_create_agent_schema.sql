@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.agent_design_proposals (
   project_id UUID NOT NULL REFERENCES public.cctv_projects(id) ON DELETE CASCADE,
   layout_id UUID REFERENCES public.cctv_layouts(id) ON DELETE CASCADE,
   thread_id UUID REFERENCES public.agent_threads(id) ON DELETE SET NULL,
-  status TEXT NOT NULL DEFAULT 'proposed' CHECK (status IN ('proposed','applied','rejected','superseded')),
+  status TEXT NOT NULL DEFAULT 'preview' CHECK (status IN ('preview','applied','rejected','superseded')),
   cameras JSONB NOT NULL DEFAULT '[]'::jsonb,
   summary TEXT,
   metrics JSONB NOT NULL DEFAULT '{}'::jsonb,
