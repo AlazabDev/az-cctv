@@ -38,6 +38,15 @@ CREATE TABLE IF NOT EXISTS public.agent_design_proposals (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- The live project already has these tables. Add the new layout-scoped fields
+-- before policies and indexes reference them, while keeping fresh installs valid.
+ALTER TABLE public.agent_threads
+  ADD COLUMN IF NOT EXISTS layout_id UUID REFERENCES public.cctv_layouts(id) ON DELETE CASCADE;
+ALTER TABLE public.agent_design_proposals
+  ADD COLUMN IF NOT EXISTS layout_id UUID REFERENCES public.cctv_layouts(id) ON DELETE CASCADE;
+ALTER TABLE public.agent_design_proposals
+  ADD COLUMN IF NOT EXISTS metrics JSONB NOT NULL DEFAULT '{}'::jsonb;
+
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.agent_threads TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.agent_messages TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.agent_design_proposals TO authenticated;
@@ -154,8 +163,3 @@ DROP TRIGGER IF EXISTS agent_design_proposals_lock_owner ON public.agent_design_
 CREATE TRIGGER agent_design_proposals_lock_owner
 BEFORE UPDATE ON public.agent_design_proposals
 FOR EACH ROW EXECUTE FUNCTION public.prevent_user_id_change();
-
--- Backfill missing columns if these tables already existed in the live project.
-ALTER TABLE public.agent_threads ADD COLUMN IF NOT EXISTS layout_id UUID REFERENCES public.cctv_layouts(id) ON DELETE CASCADE;
-ALTER TABLE public.agent_design_proposals ADD COLUMN IF NOT EXISTS layout_id UUID REFERENCES public.cctv_layouts(id) ON DELETE CASCADE;
-ALTER TABLE public.agent_design_proposals ADD COLUMN IF NOT EXISTS metrics JSONB NOT NULL DEFAULT '{}'::jsonb;
