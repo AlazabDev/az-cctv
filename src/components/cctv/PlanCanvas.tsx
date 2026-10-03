@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlanData, PlacedDevice } from "@/lib/cctv/types";
-import { cableTypes, cameraById, wallMaterialById } from "@/lib/cctv/catalog";
-import { distanceForPpm, ppmLevels, sectorPath, wallPath } from "@/lib/cctv/geometry";
+import { cableTypes, cameraById } from "@/lib/cctv/catalog";
+import { distanceForPpm, polylineLengthMeters, ppmLevels, sectorPath, wallPath } from "@/lib/cctv/geometry";
 import { Camera, HardDrive, Network, Server } from "lucide-react";
 
 export type CanvasMode = "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "label" | "scale";
@@ -37,6 +37,28 @@ function DeviceGlyph({ kind }: { kind: PlacedDevice["kind"] }) {
   if (kind === "nvr") return <Server className={cls} />;
   if (kind === "switch") return <Network className={cls} />;
   return <HardDrive className={cls} />;
+}
+
+function polylineMidpoint(points: { x: number; y: number }[]) {
+  if (points.length === 0) return { x: 0, y: 0 };
+  if (points.length === 1) return points[0]!;
+  const segments = points.slice(1).map((point, index) => {
+    const start = points[index]!;
+    return { start, end: point, length: Math.hypot(point.x - start.x, point.y - start.y) };
+  });
+  const total = segments.reduce((sum, segment) => sum + segment.length, 0);
+  let remaining = total / 2;
+  for (const segment of segments) {
+    if (remaining <= segment.length) {
+      const ratio = segment.length > 0 ? remaining / segment.length : 0;
+      return {
+        x: segment.start.x + (segment.end.x - segment.start.x) * ratio,
+        y: segment.start.y + (segment.end.y - segment.start.y) * ratio,
+      };
+    }
+    remaining -= segment.length;
+  }
+  return points.at(-1)!;
 }
 
 export function PlanCanvas({
@@ -165,6 +187,7 @@ export function PlanCanvas({
   }, [plan.imageWidth, plan.imageHeight, imageUrl]);
 
   const pxPerMeter = plan.pxPerMeter || 40;
+  const wallStrokePx = (thicknessCm?: number) => Math.max(1.5, ((thicknessCm ?? 10) / 100) * pxPerMeter);
 
   return (
     <div className="relative h-full w-full overflow-hidden grid-bg" ref={containerRef}>
@@ -224,22 +247,18 @@ export function PlanCanvas({
                 );
               })}
 
-          {plan.walls.map((w) => {
-            const spec = wallMaterialById(w.material);
-            return (
-              <path
-                key={`wall-bg-${w.id}`}
-                d={wallPath(w.points, w.curved)}
-                fill="none"
-                stroke={spec.color}
-                strokeOpacity={spec.opaque ? 1 : 0.75}
-                strokeWidth={spec.strokeWidth / zoom}
-                strokeDasharray={spec.dash ? spec.dash.map((n) => n / zoom).join(" ") : undefined}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            );
-          })}
+          {plan.walls.map((w) => (
+            <path
+              key={`wall-bg-${w.id}`}
+              d={wallPath(w.points, w.curved)}
+              fill="none"
+              stroke="var(--color-foreground)"
+              strokeOpacity={0.9}
+              strokeWidth={wallStrokePx(w.thicknessCm)}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
 
           {plan.cables.map((c) => {
             const cable = cableTypes.find((item) => item.id === c.type);
@@ -275,7 +294,7 @@ export function PlanCanvas({
               fill="none"
               stroke="var(--color-warning)"
               strokeDasharray={`${6 / zoom} ${4 / zoom}`}
-              strokeWidth={4 / zoom}
+              strokeWidth={wallStrokePx(10)}
               strokeLinecap="round"
             />
           )}
@@ -292,16 +311,18 @@ export function PlanCanvas({
 
         <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}>
           {plan.walls.map((w) => {
-            const spec = wallMaterialById(w.material);
             const selected = w.id === selectedWallId;
+            const strokeWidth = wallStrokePx(w.thicknessCm);
+            const midpoint = polylineMidpoint(w.points);
+            const lengthM = polylineLengthMeters(w.points, pxPerMeter);
+            const thicknessCm = w.thicknessCm ?? 10;
             return (
               <g key={`wall-${w.id}`}>
-                {/* شريط عريض شفاف لتسهيل النقر على الجدار عند التحديد */}
                 <path
                   d={wallPath(w.points, w.curved)}
                   fill="none"
                   stroke="transparent"
-                  strokeWidth={Math.max(spec.strokeWidth, 16) / zoom}
+                  strokeWidth={Math.max(strokeWidth, 16 / zoom)}
                   style={{ cursor: mode === "select" ? "pointer" : "default", pointerEvents: mode === "select" ? "stroke" : "none" }}
                   onPointerDown={(e) => {
                     if (mode !== "select") return;
@@ -311,15 +332,23 @@ export function PlanCanvas({
                   }}
                 />
                 {selected && (
-                  <path
-                    d={wallPath(w.points, w.curved)}
-                    fill="none"
-                    stroke="var(--color-foreground)"
-                    strokeWidth={(spec.strokeWidth + 5) / zoom}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ pointerEvents: "none" }}
-                  />
+                  <>
+                    <path
+                      d={wallPath(w.points, w.curved)}
+                      fill="none"
+                      stroke="var(--color-primary)"
+                      strokeWidth={strokeWidth + 4 / zoom}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ pointerEvents: "none" }}
+                    />
+                    <g transform={`translate(${midpoint.x} ${midpoint.y}) scale(${1 / zoom})`} style={{ pointerEvents: "none" }}>
+                      <rect x={-55} y={-34} width={110} height={24} rx={6} fill="var(--color-background)" stroke="var(--color-primary)" strokeWidth={1.5} />
+                      <text y={-18} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-foreground)">
+                        {lengthM.toFixed(2)} m · {thicknessCm} cm
+                      </text>
+                    </g>
+                  </>
                 )}
               </g>
             );
