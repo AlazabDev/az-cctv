@@ -36,6 +36,8 @@ import { PlanCanvas, type CanvasMode } from "@/components/cctv/PlanCanvas";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
+import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
+import { emptyTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import {
   cableTypes,
@@ -136,6 +138,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [currency, setCurrency] = useState("EGP");
   const [retention, setRetention] = useState(14);
   const [offer, setOffer] = useState<OfferSettings>(defaultOffer);
+  const [topology, setTopology] = useState<TopologyData>(emptyTopology);
   const [activeModule, setActiveModule] = useState<ModuleId>("plan");
   const [drawer, setDrawer] = useState<DrawerId>(null);
   const [mode, setMode] = useState<CanvasMode>("select");
@@ -173,7 +176,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     if (!project) return;
-    const stored = (project.data ?? {}) as Partial<PlanData> & { offer?: Partial<OfferSettings>; layouts?: Partial<ProjectLayout>[]; activeLayoutId?: string };
+    const stored = (project.data ?? {}) as Partial<PlanData> & { offer?: Partial<OfferSettings>; layouts?: Partial<ProjectLayout>[]; activeLayoutId?: string; topology?: Partial<TopologyData> };
     const list: ProjectLayout[] = stored.layouts?.length
       ? stored.layouts.map((l) => normalizeLayout(l))
       : [normalizeLayout({ ...stored, id: uid(), layoutName: stored.layoutName || "Layout 1", floorplanPath: project.floorplan_path ?? null })];
@@ -185,6 +188,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       fees: stored.offer?.fees ?? defaultOffer.fees,
       lineOverrides: stored.offer?.lineOverrides ?? {},
     });
+    setTopology({ parents: stored.topology?.parents ?? {}, media: stored.topology?.media ?? {} });
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "EGP");
@@ -414,7 +418,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   function buildProjectData(nextLayouts: ProjectLayout[], nextActive: string) {
     const active = nextLayouts.find((l) => l.id === nextActive) ?? nextLayouts[0];
     // Top-level copy of the active layout keeps older readers (design agent) working.
-    return { ...(active ?? emptyPlan), layouts: nextLayouts, activeLayoutId: nextActive, offer };
+    return { ...(active ?? emptyPlan), layouts: nextLayouts, activeLayoutId: nextActive, offer, topology };
   }
 
   async function persist(nextLayouts = layouts, nextActive = activeLayoutId) {
@@ -443,7 +447,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const timer = window.setTimeout(() => { void persist(); }, 1200);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layouts, activeLayoutId, offer, name, clientName, currency, loaded]);
+  }, [layouts, activeLayoutId, offer, topology, name, clientName, currency, loaded]);
 
   function exportCsv() {
     const summary = calculateOffer(boq, offer);
@@ -560,6 +564,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         />
       ) : activeModule === "offer" ? (
         <OfferList clientName={clientName} onClientNameChange={setClientName} currency={currency} retention={retention} onRetentionChange={setRetention} boq={boq} suggestion={suggestion} offer={offer} onOfferChange={setOffer} />
+      ) : activeModule === "topology" ? (
+        <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
       ) : (
         <ModulePlaceholder module={activeModule} />
       )}
@@ -769,7 +775,7 @@ function SummaryCard({ label, value, strong = false }: { label: string; value: s
   return <div className={`rounded-lg border p-4 ${strong ? "border-primary bg-primary/5" : "border-border"}`}><p className="text-xs text-muted-foreground">{label}</p><p className={`mt-2 text-xl font-bold ${strong ? "text-primary" : ""}`}>{value}</p></div>;
 }
 
-function ModulePlaceholder({ module }: { module: Exclude<ModuleId, "plan" | "offer"> }) {
+function ModulePlaceholder({ module }: { module: Exclude<ModuleId, "plan" | "offer" | "topology"> }) {
   const content = module === "map" ? { icon: Map, title: "Map Design", text: "Outdoor GIS, satellite map, GPS coordinates and wireless bridge line-of-sight are reserved for Phase 5." } : { icon: Network, title: "Topology", text: "Automatic network tree, PoE port budget and image export are reserved for Phase 4." };
   const Icon = content.icon;
   return <div className="flex flex-1 items-center justify-center bg-muted/20 p-8"><div className="max-w-xl rounded-2xl border border-border bg-surface p-10 text-center shadow-sm"><Icon className="mx-auto h-12 w-12 text-primary" /><h2 className="mt-4 text-2xl font-bold">{content.title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{content.text}</p></div></div>;
