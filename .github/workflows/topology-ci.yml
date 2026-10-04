@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-package-lock --no-audit --no-fund
 
+      - name: Format topology engineering files
+        run: npx prettier --write src/lib/cctv/topology.ts src/lib/cctv/types.ts src/lib/cctv/catalog.ts src/components/cctv/boq.ts src/components/cctv/TopologyWorkspace.tsx src/lib/topology-ai.functions.ts tests/topology.engineering.test.ts src/components/cctv/CctvProjectEditorV2.tsx
+
       - name: Build
         run: npm run build
 
@@ -48,7 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/components/cctv/CctvProjectEditorV2.tsx src/lib/cctv/topology.ts src/lib/topology-ai.functions.ts src/components/cctv/TopologyWorkspace.tsx src/components/cctv/boq.ts tests/topology.engineering.test.ts
+          git add src/components/cctv/CctvProjectEditorV2.tsx src/lib/cctv/topology.ts src/lib/cctv/types.ts src/lib/cctv/catalog.ts src/lib/topology-ai.functions.ts src/components/cctv/TopologyWorkspace.tsx src/components/cctv/boq.ts tests/topology.engineering.test.ts
           if ! git diff --cached --quiet; then
             git commit -m "Apply validated topology engineering integration"
             git push origin HEAD:feat/topology-engineering-ai
