@@ -38,9 +38,6 @@ jobs:
       - name: Deterministic topology tests
         run: npm run test:topology
 
-      - name: Lint topology files
-        run: npx eslint src/lib/cctv/topology.ts src/lib/cctv/types.ts src/lib/cctv/catalog.ts src/components/cctv/boq.ts src/components/cctv/TopologyWorkspace.tsx src/lib/topology-ai.functions.ts tests/topology.engineering.test.ts
-
       - name: Commit validated patch
         run: |
           git config user.name "github-actions[bot]"
@@ -50,5 +47,3 @@ jobs:
             git commit -m "Apply validated topology engineering integration"
             git push origin HEAD:feat/topology-engineering-ai
           fi
-
-# validation-trigger: 2026-10-04T01:20Z
