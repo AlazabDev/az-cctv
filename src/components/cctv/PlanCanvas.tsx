@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PlanData, PlacedDevice } from "@/lib/cctv/types";
+import type { PlanData, PlacedDevice, WallKind, WallSegment } from "@/lib/cctv/types";
 import { cableTypes, cameraById } from "@/lib/cctv/catalog";
 import { distanceForPpm, polylineLengthMeters, ppmLevels, sectorPath, wallPath } from "@/lib/cctv/geometry";
 import { Camera, HardDrive, Network, Server } from "lucide-react";
@@ -30,6 +30,15 @@ interface Props {
 
 const MIN_ZOOM = 0.15;
 const MAX_ZOOM = 6;
+const DEFAULT_WALL_COLOR = "#334155";
+const DEFAULT_FENCE_COLOR = "#15803d";
+const WALL_COMMIT_SENTINEL = "__wall_geometry_commit__";
+
+type Point = { x: number; y: number };
+type DragState =
+  | { id: string; kind: "device" | "label" }
+  | { id: string; kind: "wall"; start: Point; originalPoints: Point[] }
+  | { id: string; kind: "wall-vertex"; vertexIndex: number; originalPoints: Point[] };
 
 function DeviceGlyph({ kind }: { kind: PlacedDevice["kind"] }) {
   const cls = "h-3.5 w-3.5";
@@ -39,7 +48,7 @@ function DeviceGlyph({ kind }: { kind: PlacedDevice["kind"] }) {
   return <HardDrive className={cls} />;
 }
 
-function polylineMidpoint(points: { x: number; y: number }[]) {
+function polylineMidpoint(points: Point[]) {
   if (points.length === 0) return { x: 0, y: 0 };
   if (points.length === 1) return points[0]!;
   const segments = points.slice(1).map((point, index) => {
@@ -59,6 +68,14 @@ function polylineMidpoint(points: { x: number; y: number }[]) {
     remaining -= segment.length;
   }
   return points.at(-1)!;
+}
+
+function wallKind(wall: WallSegment): WallKind {
+  return wall.kind === "fence" || wall.material === "fence" ? "fence" : "wall";
+}
+
+function wallColor(wall: WallSegment) {
+  return wall.color || (wallKind(wall) === "fence" ? DEFAULT_FENCE_COLOR : DEFAULT_WALL_COLOR);
 }
 
 export function PlanCanvas({
@@ -85,11 +102,17 @@ export function PlanCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [hoverPoint, setHoverPoint] = useState<{ x: number; y: number } | null>(null);
+  const [hoverPoint, setHoverPoint] = useState<Point | null>(null);
+  const [hoveredWallId, setHoveredWallId] = useState<string | null>(null);
+  const [draftWallKind, setDraftWallKind] = useState<WallKind>("wall");
+  const [draftWallColor, setDraftWallColor] = useState(DEFAULT_WALL_COLOR);
   const panRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
-  const dragRef = useRef<{ id: string; kind: "device" | "label" } | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const pendingNewWallStyleRef = useRef<{ kind: WallKind; color: string } | null>(null);
   const stateRef = useRef({ zoom, offset });
   stateRef.current = { zoom, offset };
+
+  const selectedWall = plan.walls.find((wall) => wall.id === selectedWallId) ?? null;
 
   const toPlan = useCallback((clientX: number, clientY: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
@@ -97,6 +120,41 @@ export function PlanCanvas({
     const { zoom: z, offset: o } = stateRef.current;
     return { x: (clientX - rect.left - o.x) / z, y: (clientY - rect.top - o.y) / z };
   }, []);
+
+  const forcePlanCommit = useCallback(() => {
+    // Existing editor callback intentionally creates a fresh PlanData snapshot,
+    // which persists wall mutations through the normal autosave path.
+    onMoveLabel(WALL_COMMIT_SENTINEL, { x: 0, y: 0 });
+  }, [onMoveLabel]);
+
+  const patchWall = useCallback(
+    (id: string, patch: Partial<WallSegment>) => {
+      const wall = plan.walls.find((item) => item.id === id);
+      if (!wall) return;
+      Object.assign(wall, patch);
+      forcePlanCommit();
+    },
+    [forcePlanCommit, plan.walls],
+  );
+
+  const finishWallWithStyle = useCallback(() => {
+    if (wallDraft.length >= 2) {
+      pendingNewWallStyleRef.current = { kind: draftWallKind, color: draftWallColor };
+    }
+    onFinishWall();
+  }, [draftWallColor, draftWallKind, onFinishWall, wallDraft.length]);
+
+  useEffect(() => {
+    const pending = pendingNewWallStyleRef.current;
+    if (!pending || !selectedWallId) return;
+    const wall = plan.walls.find((item) => item.id === selectedWallId);
+    if (!wall) return;
+    wall.kind = pending.kind;
+    wall.material = pending.kind === "fence" ? "fence" : "medium-wall";
+    wall.color = pending.color;
+    pendingNewWallStyleRef.current = null;
+    forcePlanCommit();
+  }, [forcePlanCommit, plan.walls, selectedWallId]);
 
   const wheelHandler = useRef<(e: WheelEvent) => void>(() => {});
   wheelHandler.current = (e: WheelEvent) => {
@@ -126,12 +184,12 @@ export function PlanCanvas({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (mode === "wall") onFinishWall();
+      if (mode === "wall") finishWallWithStyle();
       else onFinishCable();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mode, onFinishCable, onFinishWall]);
+  }, [finishWallWithStyle, mode, onFinishCable]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.button === 1 || (mode === "select" && e.target === e.currentTarget) || e.shiftKey) {
@@ -150,8 +208,29 @@ export function PlanCanvas({
       });
       return;
     }
-    if (dragRef.current?.kind === "device") onMoveDevice(dragRef.current.id, p);
-    if (dragRef.current?.kind === "label") onMoveLabel(dragRef.current.id, p);
+    const drag = dragRef.current;
+    if (!drag) return;
+    if (drag.kind === "device") {
+      onMoveDevice(drag.id, p);
+      return;
+    }
+    if (drag.kind === "label") {
+      onMoveLabel(drag.id, p);
+      return;
+    }
+    const wall = plan.walls.find((item) => item.id === drag.id);
+    if (!wall) return;
+    if (drag.kind === "wall") {
+      const dx = p.x - drag.start.x;
+      const dy = p.y - drag.start.y;
+      wall.points = drag.originalPoints.map((point) => ({ x: point.x + dx, y: point.y + dy }));
+      forcePlanCommit();
+      return;
+    }
+    wall.points = drag.originalPoints.map((point, index) =>
+      index === drag.vertexIndex ? { x: p.x, y: p.y } : { ...point },
+    );
+    forcePlanCommit();
   };
 
   const endPointer = () => {
@@ -188,6 +267,30 @@ export function PlanCanvas({
 
   const pxPerMeter = plan.pxPerMeter || 40;
   const wallStrokePx = (thicknessCm?: number) => Math.max(1.5, ((thicknessCm ?? 10) / 100) * pxPerMeter);
+  const visualStrokeWidth = (wall: WallSegment) =>
+    wallKind(wall) === "fence" ? 3 / zoom : wallStrokePx(wall.thicknessCm);
+
+  const setCurrentWallKind = (kind: WallKind) => {
+    if (selectedWall) {
+      patchWall(selectedWall.id, {
+        kind,
+        material: kind === "fence" ? "fence" : "medium-wall",
+        color: selectedWall.color || (kind === "fence" ? DEFAULT_FENCE_COLOR : DEFAULT_WALL_COLOR),
+      });
+      return;
+    }
+    setDraftWallKind(kind);
+    if (kind === "fence" && draftWallColor === DEFAULT_WALL_COLOR) setDraftWallColor(DEFAULT_FENCE_COLOR);
+    if (kind === "wall" && draftWallColor === DEFAULT_FENCE_COLOR) setDraftWallColor(DEFAULT_WALL_COLOR);
+  };
+
+  const setCurrentWallColor = (color: string) => {
+    if (selectedWall) patchWall(selectedWall.id, { color });
+    else setDraftWallColor(color);
+  };
+
+  const currentKind = selectedWall ? wallKind(selectedWall) : draftWallKind;
+  const currentColor = selectedWall ? wallColor(selectedWall) : draftWallColor;
 
   return (
     <div className="relative h-full w-full overflow-hidden grid-bg" ref={containerRef}>
@@ -201,11 +304,11 @@ export function PlanCanvas({
         onClick={handleClick}
         onDoubleClick={() => {
           if (mode === "cable") onFinishCable();
-          if (mode === "wall") onFinishWall();
+          if (mode === "wall") finishWallWithStyle();
         }}
         onContextMenu={(e) => {
           e.preventDefault();
-          if (mode === "wall") onFinishWall();
+          if (mode === "wall") finishWallWithStyle();
           else onFinishCable();
         }}
       >
@@ -247,18 +350,22 @@ export function PlanCanvas({
                 );
               })}
 
-          {plan.walls.map((w) => (
-            <path
-              key={`wall-bg-${w.id}`}
-              d={wallPath(w.points, w.curved)}
-              fill="none"
-              stroke="var(--color-foreground)"
-              strokeOpacity={0.9}
-              strokeWidth={wallStrokePx(w.thicknessCm)}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          ))}
+          {plan.walls.map((w) => {
+            const fence = wallKind(w) === "fence";
+            return (
+              <path
+                key={`wall-bg-${w.id}`}
+                d={wallPath(w.points, w.curved)}
+                fill="none"
+                stroke={wallColor(w)}
+                strokeOpacity={0.95}
+                strokeWidth={visualStrokeWidth(w)}
+                strokeDasharray={fence ? `${8 / zoom} ${5 / zoom}` : undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            );
+          })}
 
           {plan.cables.map((c) => {
             const cable = cableTypes.find((item) => item.id === c.type);
@@ -292,9 +399,11 @@ export function PlanCanvas({
             <path
               d={wallPath([...wallDraft, hoverPoint ?? wallDraft[wallDraft.length - 1]!], wallCurved)}
               fill="none"
-              stroke="var(--color-warning)"
-              strokeDasharray={`${6 / zoom} ${4 / zoom}`}
-              strokeWidth={wallStrokePx(10)}
+              stroke={draftWallColor}
+              strokeDasharray={
+                draftWallKind === "fence" ? `${8 / zoom} ${5 / zoom}` : `${6 / zoom} ${4 / zoom}`
+              }
+              strokeWidth={draftWallKind === "fence" ? 3 / zoom : wallStrokePx(10)}
               strokeLinecap="round"
             />
           )}
@@ -312,44 +421,112 @@ export function PlanCanvas({
         <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}>
           {plan.walls.map((w) => {
             const selected = w.id === selectedWallId;
-            const strokeWidth = wallStrokePx(w.thicknessCm);
+            const hovered = w.id === hoveredWallId;
+            const fence = wallKind(w) === "fence";
+            const strokeWidth = visualStrokeWidth(w);
             const midpoint = polylineMidpoint(w.points);
             const lengthM = polylineLengthMeters(w.points, pxPerMeter);
             const thicknessCm = w.thicknessCm ?? 10;
+            const label = fence
+              ? `سياج · ${lengthM.toFixed(2)} m`
+              : `${lengthM.toFixed(2)} m · ${thicknessCm} cm`;
             return (
               <g key={`wall-${w.id}`}>
                 <path
                   d={wallPath(w.points, w.curved)}
                   fill="none"
                   stroke="transparent"
-                  strokeWidth={Math.max(strokeWidth, 16 / zoom)}
-                  style={{ cursor: mode === "select" ? "pointer" : "default", pointerEvents: mode === "select" ? "stroke" : "none" }}
+                  strokeWidth={Math.max(strokeWidth, 18 / zoom)}
+                  style={{
+                    cursor: mode === "select" ? "move" : "default",
+                    pointerEvents: mode === "select" ? "stroke" : "none",
+                  }}
+                  onPointerEnter={() => setHoveredWallId(w.id)}
+                  onPointerLeave={() => setHoveredWallId((current) => (current === w.id ? null : current))}
                   onPointerDown={(e) => {
                     if (mode !== "select") return;
                     e.stopPropagation();
+                    const start = toPlan(e.clientX, e.clientY);
                     onSelectWall(w.id);
                     onSelect(null);
+                    onSelectLabel(null);
+                    dragRef.current = {
+                      id: w.id,
+                      kind: "wall",
+                      start,
+                      originalPoints: w.points.map((point) => ({ ...point })),
+                    };
+                    (e.target as Element).setPointerCapture?.(e.pointerId);
                   }}
+                  onClick={(e) => e.stopPropagation()}
                 />
+
                 {selected && (
-                  <>
-                    <path
-                      d={wallPath(w.points, w.curved)}
-                      fill="none"
-                      stroke="var(--color-primary)"
-                      strokeWidth={strokeWidth + 4 / zoom}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ pointerEvents: "none" }}
-                    />
-                    <g transform={`translate(${midpoint.x} ${midpoint.y}) scale(${1 / zoom})`} style={{ pointerEvents: "none" }}>
-                      <rect x={-55} y={-34} width={110} height={24} rx={6} fill="var(--color-background)" stroke="var(--color-primary)" strokeWidth={1.5} />
-                      <text y={-18} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--color-foreground)">
-                        {lengthM.toFixed(2)} m · {thicknessCm} cm
-                      </text>
-                    </g>
-                  </>
+                  <path
+                    d={wallPath(w.points, w.curved)}
+                    fill="none"
+                    stroke="var(--color-primary)"
+                    strokeOpacity={0.35}
+                    strokeWidth={strokeWidth + 6 / zoom}
+                    strokeDasharray={fence ? `${8 / zoom} ${5 / zoom}` : undefined}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ pointerEvents: "none" }}
+                  />
                 )}
+
+                {(selected || hovered) && (
+                  <g
+                    transform={`translate(${midpoint.x} ${midpoint.y}) scale(${1 / zoom})`}
+                    style={{ pointerEvents: "none" }}
+                  >
+                    <rect
+                      x={-70}
+                      y={-36}
+                      width={140}
+                      height={26}
+                      rx={6}
+                      fill="var(--color-background)"
+                      stroke={wallColor(w)}
+                      strokeWidth={1.5}
+                    />
+                    <text
+                      y={-19}
+                      textAnchor="middle"
+                      fontSize={12}
+                      fontWeight={700}
+                      fill="var(--color-foreground)"
+                    >
+                      {label}
+                    </text>
+                  </g>
+                )}
+
+                {selected &&
+                  w.points.map((point, index) => (
+                    <circle
+                      key={`${w.id}-vertex-${index}`}
+                      cx={point.x}
+                      cy={point.y}
+                      r={6 / zoom}
+                      fill="var(--color-background)"
+                      stroke={wallColor(w)}
+                      strokeWidth={2 / zoom}
+                      style={{ cursor: "grab", pointerEvents: "all" }}
+                      onPointerDown={(e) => {
+                        if (mode !== "select") return;
+                        e.stopPropagation();
+                        dragRef.current = {
+                          id: w.id,
+                          kind: "wall-vertex",
+                          vertexIndex: index,
+                          originalPoints: w.points.map((p) => ({ ...p })),
+                        };
+                        (e.target as Element).setPointerCapture?.(e.pointerId);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ))}
               </g>
             );
           })}
@@ -454,6 +631,42 @@ export function PlanCanvas({
           })}
         </g>
       </svg>
+
+      {(mode === "wall" || selectedWall) && (
+        <div className="no-print absolute left-3 top-3 z-30 flex items-center gap-2 rounded-xl border border-border bg-surface/95 p-2 shadow-xl backdrop-blur">
+          <div className="flex overflow-hidden rounded-lg border border-border">
+            <button
+              type="button"
+              onClick={() => setCurrentWallKind("wall")}
+              className={`px-3 py-1.5 text-xs font-semibold ${currentKind === "wall" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+            >
+              حائط
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentWallKind("fence")}
+              className={`border-l border-border px-3 py-1.5 text-xs font-semibold ${currentKind === "fence" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+            >
+              سياج
+            </button>
+          </div>
+          <label className="flex items-center gap-2 rounded-lg border border-border px-2 py-1 text-xs">
+            اللون
+            <input
+              type="color"
+              value={currentColor.startsWith("#") ? currentColor : DEFAULT_WALL_COLOR}
+              onChange={(event) => setCurrentWallColor(event.target.value)}
+              className="h-7 w-8 cursor-pointer border-0 bg-transparent p-0"
+              aria-label="لون الحائط أو السياج"
+            />
+          </label>
+          {selectedWall && (
+            <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
+              اسحب الخط للنقل · اسحب النقاط لتعديل الشكل
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="no-print pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 rounded-md bg-surface/90 px-3 py-1.5 text-xs text-muted-foreground">
         <span>التكبير {(zoom * 100).toFixed(0)}%</span>
