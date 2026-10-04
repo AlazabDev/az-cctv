@@ -17,6 +17,6 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
       - run: npm run build
       - run: npx eslint src/components/cctv/PlanCanvas.tsx src/lib/cctv/types.ts
