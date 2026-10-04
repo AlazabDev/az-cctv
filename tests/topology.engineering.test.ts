@@ -87,6 +87,21 @@ describe("topology engineering", () => {
     expect(validateTopology(t, collectNodes(layouts), layouts).some((i) => i.level === "error" && i.text.includes("Ethernet"))).toBe(true);
   });
 
+  it("does not count built-in NVR PoE camera ports as the NVR LAN Ethernet interface", () => {
+    const c1 = device("c1", "camera", "bullet-2mp-28", 0);
+    const c2 = device("c2", "camera", "bullet-2mp-28", 10);
+    const nvr = device("nvr", "nvr", "nvr-8", 20);
+    const layouts = [layout("L1", [c1, c2, nvr])];
+    const t = topology({
+      parents: { c1: "nvr", c2: "nvr", nvr: "__router" },
+      media: { c1: "utp", c2: "utp", nvr: "utp" },
+      recorders: { c1: "nvr", c2: "nvr" },
+    });
+    const issues = validateTopology(t, collectNodes(layouts), layouts);
+    expect(issues.some((i) => i.deviceId === "nvr" && i.level === "error" && i.text.includes("Ethernet"))).toBe(false);
+    expect(issues.some((i) => i.deviceId === "nvr" && i.level === "error" && i.text.includes("PoE"))).toBe(false);
+  });
+
   it("keeps NVR recording channels separate from physical PoE ports", () => {
     const cam = device("cam", "camera", "bullet-2mp-28", 0);
     const nvr = device("nvr", "nvr", "nvr-32", 10);

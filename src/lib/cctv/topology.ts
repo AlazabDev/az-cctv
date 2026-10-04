@@ -367,7 +367,9 @@ export function autoTopology(layouts: TopoLayout[], current: TopologyData = empt
     const candidates = [...switches, ...nvrs]
       .filter((p) => {
         const cap = effectiveCapabilities(p.device, base);
-        return cap.poePorts > (usedPoe.get(p.device.id) ?? 0) && cap.ethernetPorts > (usedEthernet.get(p.device.id) ?? 0);
+        const poeAvailable = cap.poePorts > (usedPoe.get(p.device.id) ?? 0);
+        const ethernetAvailable = p.device.kind === "nvr" || cap.ethernetPorts > (usedEthernet.get(p.device.id) ?? 0);
+        return poeAvailable && ethernetAvailable;
       })
       .sort((a, b) => {
         const da = dist(cam, a), db = dist(cam, b);
@@ -380,7 +382,9 @@ export function autoTopology(layouts: TopoLayout[], current: TopologyData = empt
     media[cam.device.id] = "utp";
     routeBindings[cam.device.id] = { mode: "estimated", cableTypeId: "cat6-stp" };
     usedPoe.set(p.device.id, (usedPoe.get(p.device.id) ?? 0) + 1);
-    usedEthernet.set(p.device.id, (usedEthernet.get(p.device.id) ?? 0) + 1);
+    if (p.device.kind === "switch") {
+      usedEthernet.set(p.device.id, (usedEthernet.get(p.device.id) ?? 0) + 1);
+    }
   }
 
   for (const sw of switches) {
@@ -485,6 +489,14 @@ export function validateTopology(topologyInput: TopologyData, nodes: Map<string,
 
     const route = resolveLinkRoute(d.id, topology, nodes, layouts);
     const medium = topology.media[d.id] ?? "utp";
+    const selectedCable = route.cableTypeId ? cableTypes.find((c) => c.id === route.cableTypeId) : undefined;
+    const expectedCategory = medium === "fiber" ? "fiber" : "network";
+    if (selectedCable && selectedCable.category !== expectedCategory) {
+      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: نوع الكابل ${selectedCable.label} لا يطابق وسيط الرابط ${medium === "fiber" ? "Fiber" : "UTP/STP"}` });
+    }
+    if (medium === "fiber" && route.source === "estimated" && !selectedCable) {
+      issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: نوع/عدد قلوب الفايبر غير محدد؛ لن يُفترض نوع تلقائياً في BOQ` });
+    }
     if (topology.routeBindings[d.id]?.mode === "cable" && route.source !== "measured") {
       issues.push({ level: "error", deviceId: d.id, text: `${d.name}: مسار الكابل المقاس غير صالح (${route.reason ?? "غير معروف"})` });
     }
@@ -516,8 +528,11 @@ export function validateTopology(topologyInput: TopologyData, nodes: Map<string,
     const cap = effectiveCapabilities(d, topology);
     const kids = childrenOf(topology, d.id, nodes);
     const cameras = kids.filter((k) => k.device.kind === "camera");
-    const hasCopperUplink = d.kind === "switch" && !!topology.parents[d.id] && (topology.media[d.id] ?? "utp") === "utp";
-    const usedEthernet = kids.length + (hasCopperUplink ? 1 : 0);
+    const hasCopperUplink = !!topology.parents[d.id] && (topology.media[d.id] ?? "utp") === "utp";
+    const networkChildren = kids.filter((k) => k.device.kind !== "camera").length;
+    const usedEthernet = d.kind === "nvr"
+      ? networkChildren + (hasCopperUplink ? 1 : 0)
+      : kids.length + (hasCopperUplink ? 1 : 0);
 
     if (usedEthernet > cap.ethernetPorts) {
       issues.push({ level: "error", deviceId: d.id, text: `${d.name}: ${usedEthernet} منافذ Ethernet مستخدمة من أصل ${cap.ethernetPorts}` });
@@ -640,11 +655,31 @@ export function buildNetworkReviewContext(topology: TopologyData, layouts: TopoL
     recorderId: n.device.kind === "camera" ? topology.recorders[n.device.id] ?? null : undefined,
   }));
 
+  const cableTotals = new Map<string, { cableTypeId: string; medium: LinkMedia; totalLengthM: number; measuredLinks: number; estimatedLinks: number }>();
+  for (const edge of edges) {
+    if (!(edge.lengthM && edge.lengthM > 0) || !edge.cableTypeId) continue;
+    const current = cableTotals.get(edge.cableTypeId) ?? {
+      cableTypeId: edge.cableTypeId,
+      medium: edge.medium,
+      totalLengthM: 0,
+      measuredLinks: 0,
+      estimatedLinks: 0,
+    };
+    current.totalLengthM += edge.lengthM;
+    if (edge.lengthSource === "measured") current.measuredLinks += 1;
+    if (edge.lengthSource === "estimated") current.estimatedLinks += 1;
+    cableTotals.set(edge.cableTypeId, current);
+  }
+
   return {
     gateway: { name: topology.gateway.name ?? "Router / Core", ...gatewayCapabilities(topology) },
     devices,
     edges,
     stats: topologyStats(topology, nodes, layouts),
+    networkBoqSummary: {
+      cableTotals: [...cableTotals.values()].map((x) => ({ ...x, totalLengthM: Math.round(x.totalLengthM * 10) / 10 })),
+      mediaConverters: totalMediaConverters(topology, nodes),
+    },
     issues: issues.map((i) => ({ severity: i.level, deviceId: i.deviceId ?? null, text: i.text })),
   };
 }
@@ -662,5 +697,6 @@ export function hardwareSpecCapabilities(spec?: HardwareSpec) {
 
 export function cableTypeForRoute(route: ResolvedLinkRoute, medium: LinkMedia) {
   if (route.cableTypeId) return cableTypes.find((c) => c.id === route.cableTypeId);
-  return cableTypes.find((c) => (medium === "fiber" ? c.category === "fiber" : c.category === "network"));
+  if (medium === "fiber") return undefined;
+  return cableTypes.find((c) => c.id === "cat6-stp") ?? cableTypes.find((c) => c.category === "network");
 }

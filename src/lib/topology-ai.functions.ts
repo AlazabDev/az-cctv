@@ -3,9 +3,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const ENDPOINT = "https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway";
-const AGENT_NAME = process.env["AZURE_NETWORK_AGENT_NAME"] || process.env["AZURE_AGENT_NAME"] || "az-agent-bim";
-const AGENT_VERSION = process.env["AZURE_NETWORK_AGENT_VERSION"] || process.env["AZURE_AGENT_VERSION"] || "8";
-
 const recommendationSchema = z.object({
   severity: z.enum(["critical", "warning", "improvement", "info"]),
   title: z.string().min(1).max(160),
@@ -25,6 +22,10 @@ const reviewInputSchema = z.object({
     devices: z.array(z.record(z.unknown())).max(500),
     edges: z.array(z.record(z.unknown())).max(1000),
     stats: z.record(z.unknown()),
+    networkBoqSummary: z.object({
+      cableTotals: z.array(z.record(z.unknown())).max(100),
+      mediaConverters: z.number().nonnegative(),
+    }),
     issues: z.array(z.record(z.unknown())).max(1000),
   }),
 });
@@ -63,6 +64,8 @@ export const reviewNetworkTopology = createServerFn({ method: "POST" })
   .inputValidator((value) => reviewInputSchema.parse(value))
   .handler(async ({ data }) => {
     const apiKey = process.env["AZURE_API_KEY"];
+    const agentName = process.env["AZURE_NETWORK_AGENT_NAME"] || process.env["AZURE_AGENT_NAME"] || "az-agent-bim";
+    const agentVersion = process.env["AZURE_NETWORK_AGENT_VERSION"] || process.env["AZURE_AGENT_VERSION"] || "8";
     if (!apiKey) return { error: "خدمة AI Network Review غير مهيأة على الخادم." } as const;
 
     const systemInstruction = [
@@ -82,7 +85,7 @@ export const reviewNetworkTopology = createServerFn({ method: "POST" })
         headers: { "Content-Type": "application/json", "api-key": apiKey },
         body: JSON.stringify({
           input,
-          agent: { name: AGENT_NAME, version: AGENT_VERSION, type: "agent_reference" },
+          agent: { name: agentName, version: agentVersion, type: "agent_reference" },
         }),
         signal: AbortSignal.timeout(110_000),
       });

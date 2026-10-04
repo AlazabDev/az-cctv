@@ -37,7 +37,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
-import { emptyTopology, type TopologyData } from "@/lib/cctv/topology";
+import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import {
   cableTypes,
@@ -188,7 +188,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       fees: stored.offer?.fees ?? defaultOffer.fees,
       lineOverrides: stored.offer?.lineOverrides ?? {},
     });
-    setTopology({ parents: stored.topology?.parents ?? {}, media: stored.topology?.media ?? {} });
+    setTopology(normalizeTopology(stored.topology));
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "EGP");
@@ -205,7 +205,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const selectedWall = plan.walls.find((wall) => wall.id === selectedWallId) ?? null;
   const selectedLabel = (plan.roomLabels.find((label) => label.id === selectedLabelId) ?? null) as EditableRoomLabel | null;
   const projectPlan = useMemo(() => mergeLayouts(layouts), [layouts]);
-  const boq = useMemo(() => buildBoq(projectPlan, retention), [projectPlan, retention]);
+  const boq = useMemo(() => buildBoq(projectPlan, retention, { layouts, topology }), [projectPlan, retention, layouts, topology]);
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
   function update(updater: (value: PlanData) => PlanData) {
