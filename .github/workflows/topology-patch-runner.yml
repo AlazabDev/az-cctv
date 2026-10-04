@@ -4,7 +4,7 @@ on:
     branches:
       - feat/topology-engineering-ai
     paths:
-      - scripts/apply-topology-engineering-patch.mjs
+      - scripts/apply-topology-engineering-patch.py
       - .github/workflows/topology-patch-runner.yml
 permissions:
   contents: write
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/apply-topology-engineering-patch.mjs
+      - run: python3 scripts/apply-topology-engineering-patch.py
       - run: npm install --no-package-lock --no-audit --no-fund
       - run: npm run build
       - run: npm run test:topology
