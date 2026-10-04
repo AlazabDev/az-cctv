@@ -1,0 +1,22 @@
+name: Wall Editor Validation
+on:
+  push:
+    branches:
+      - fix/wall-editor-interactions
+  pull_request:
+    paths:
+      - src/components/cctv/PlanCanvas.tsx
+      - src/lib/cctv/types.ts
+      - .github/workflows/wall-editor-validation.yml
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx eslint src/components/cctv/PlanCanvas.tsx src/lib/cctv/types.ts
