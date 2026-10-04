@@ -9,6 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test": "npx --yes vitest@3.2.4 run",
+    "test:topology": "npx --yes vitest@3.2.4 run tests/topology.engineering.test.ts",
     "format": "prettier --write ."
   },
   "overrides": {

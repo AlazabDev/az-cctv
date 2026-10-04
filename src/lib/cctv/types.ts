@@ -22,9 +22,20 @@ export interface HardwareSpec {
   kind: Exclude<DeviceKind, "camera">;
   label: string;
   price: number;
+  /** Recording capacity only. Never treat channels as physical Ethernet/PoE ports. */
   channels?: number;
+  /** Legacy physical port count kept for backward compatibility. */
   ports?: number;
+  /** Total copper Ethernet interfaces available on the device. */
+  ethernetPorts?: number;
+  /** Copper interfaces capable of supplying PoE to endpoint devices. */
+  poePorts?: number;
+  /** SFP/SFP+ cages that can terminate fiber directly without media converters. */
+  sfpPorts?: number;
+  /** Total PoE power budget in watts. */
   poeBudget?: number;
+  /** Nominal uplink capacity in Mbps when known. */
+  uplinkMbps?: number;
 }
 
 export interface PlacedDevice {

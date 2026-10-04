@@ -1,0 +1,242 @@
+name: Topology engineering validation
+on:
+  push:
+    branches: [feat/topology-engineering-ai]
+    paths:
+      - .github/workflows/topology-validation.yml
+permissions:
+  contents: write
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/topology-engineering-ai
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply engineering correctness patches
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # 1) Editor wiring: normalize legacy topology and feed central BOQ from layouts + topology.
+          p = Path('src/components/cctv/CctvProjectEditorV2.tsx')
+          s = p.read_text()
+          pairs = [
+            ('import { emptyTopology, type TopologyData } from "@/lib/cctv/topology";', 'import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";'),
+            ('setTopology({ parents: stored.topology?.parents ?? {}, media: stored.topology?.media ?? {} });', 'setTopology(normalizeTopology(stored.topology));'),
+            ('const boq = useMemo(() => buildBoq(projectPlan, retention), [projectPlan, retention]);', 'const boq = useMemo(() => buildBoq(projectPlan, retention, { layouts, topology }), [projectPlan, retention, layouts, topology]);'),
+          ]
+          for old, new in pairs:
+            if old in s:
+              s = s.replace(old, new, 1)
+            elif new not in s:
+              raise SystemExit(f'Expected editor fragment not found: {old}')
+          p.write_text(s)
+
+          # 2) NVR PoE ports are dedicated camera ports, not the NVR LAN uplink interface.
+          p = Path('src/lib/cctv/topology.ts')
+          s = p.read_text()
+          old = '''    const candidates = [...switches, ...nvrs]
+      .filter((p) => {
+        const cap = effectiveCapabilities(p.device, base);
+        return cap.poePorts > (usedPoe.get(p.device.id) ?? 0) && cap.ethernetPorts > (usedEthernet.get(p.device.id) ?? 0);
+      })'''
+          new = '''    const candidates = [...switches, ...nvrs]
+      .filter((p) => {
+        const cap = effectiveCapabilities(p.device, base);
+        const poeAvailable = cap.poePorts > (usedPoe.get(p.device.id) ?? 0);
+        const ethernetAvailable = p.device.kind === "nvr" || cap.ethernetPorts > (usedEthernet.get(p.device.id) ?? 0);
+        return poeAvailable && ethernetAvailable;
+      })'''
+          if old not in s:
+            raise SystemExit('NVR camera candidate block not found')
+          s = s.replace(old, new, 1)
+
+          old = '''    usedPoe.set(p.device.id, (usedPoe.get(p.device.id) ?? 0) + 1);
+    usedEthernet.set(p.device.id, (usedEthernet.get(p.device.id) ?? 0) + 1);'''
+          new = '''    usedPoe.set(p.device.id, (usedPoe.get(p.device.id) ?? 0) + 1);
+    if (p.device.kind === "switch") {
+      usedEthernet.set(p.device.id, (usedEthernet.get(p.device.id) ?? 0) + 1);
+    }'''
+          if old not in s:
+            raise SystemExit('NVR camera port accounting block not found')
+          s = s.replace(old, new, 1)
+
+          old = '''    const hasCopperUplink = d.kind === "switch" && !!topology.parents[d.id] && (topology.media[d.id] ?? "utp") === "utp";
+    const usedEthernet = kids.length + (hasCopperUplink ? 1 : 0);
+
+    if (usedEthernet > cap.ethernetPorts) {
+      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: ${usedEthernet} منافذ Ethernet مستخدمة من أصل ${cap.ethernetPorts}` });
+    }'''
+          new = '''    const hasCopperUplink = !!topology.parents[d.id] && (topology.media[d.id] ?? "utp") === "utp";
+    const networkChildren = kids.filter((k) => k.device.kind !== "camera").length;
+    const usedEthernet = d.kind === "nvr"
+      ? networkChildren + (hasCopperUplink ? 1 : 0)
+      : kids.length + (hasCopperUplink ? 1 : 0);
+
+    if (usedEthernet > cap.ethernetPorts) {
+      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: ${usedEthernet} منافذ Ethernet مستخدمة من أصل ${cap.ethernetPorts}` });
+    }'''
+          if old not in s:
+            raise SystemExit('Ethernet validation block not found')
+          s = s.replace(old, new, 1)
+
+          # No invented fiber core/type: estimated fiber must explicitly specify a fiber cable type.
+          old = '''export function cableTypeForRoute(route: ResolvedLinkRoute, medium: LinkMedia) {
+  if (route.cableTypeId) return cableTypes.find((c) => c.id === route.cableTypeId);
+  return cableTypes.find((c) => (medium === "fiber" ? c.category === "fiber" : c.category === "network"));
+}'''
+          new = '''export function cableTypeForRoute(route: ResolvedLinkRoute, medium: LinkMedia) {
+  if (route.cableTypeId) return cableTypes.find((c) => c.id === route.cableTypeId);
+  if (medium === "fiber") return undefined;
+  return cableTypes.find((c) => c.id === "cat6-stp") ?? cableTypes.find((c) => c.category === "network");
+}'''
+          if old not in s:
+            raise SystemExit('cableTypeForRoute block not found')
+          s = s.replace(old, new, 1)
+
+          # Validate selected cable category against topology medium and flag unspecified estimated fiber.
+          needle = '''    const route = resolveLinkRoute(d.id, topology, nodes, layouts);
+    const medium = topology.media[d.id] ?? "utp";'''
+          replacement = '''    const route = resolveLinkRoute(d.id, topology, nodes, layouts);
+    const medium = topology.media[d.id] ?? "utp";
+    const selectedCable = route.cableTypeId ? cableTypes.find((c) => c.id === route.cableTypeId) : undefined;
+    const expectedCategory = medium === "fiber" ? "fiber" : "network";
+    if (selectedCable && selectedCable.category !== expectedCategory) {
+      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: نوع الكابل ${selectedCable.label} لا يطابق وسيط الرابط ${medium === "fiber" ? "Fiber" : "UTP/STP"}` });
+    }
+    if (medium === "fiber" && route.source === "estimated" && !selectedCable) {
+      issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: نوع/عدد قلوب الفايبر غير محدد؛ لن يُفترض نوع تلقائياً في BOQ` });
+    }'''
+          if needle not in s:
+            raise SystemExit('route validation insertion point not found')
+          s = s.replace(needle, replacement, 1)
+
+          # Structured network BOQ summary for AI context, without prices or secrets.
+          old = '''  return {
+    gateway: { name: topology.gateway.name ?? "Router / Core", ...gatewayCapabilities(topology) },
+    devices,
+    edges,
+    stats: topologyStats(topology, nodes, layouts),
+    issues: issues.map((i) => ({ severity: i.level, deviceId: i.deviceId ?? null, text: i.text })),
+  };'''
+          new = '''  const cableTotals = new Map<string, { cableTypeId: string; medium: LinkMedia; totalLengthM: number; measuredLinks: number; estimatedLinks: number }>();
+  for (const edge of edges) {
+    if (!(edge.lengthM && edge.lengthM > 0) || !edge.cableTypeId) continue;
+    const current = cableTotals.get(edge.cableTypeId) ?? {
+      cableTypeId: edge.cableTypeId,
+      medium: edge.medium,
+      totalLengthM: 0,
+      measuredLinks: 0,
+      estimatedLinks: 0,
+    };
+    current.totalLengthM += edge.lengthM;
+    if (edge.lengthSource === "measured") current.measuredLinks += 1;
+    if (edge.lengthSource === "estimated") current.estimatedLinks += 1;
+    cableTotals.set(edge.cableTypeId, current);
+  }
+
+  return {
+    gateway: { name: topology.gateway.name ?? "Router / Core", ...gatewayCapabilities(topology) },
+    devices,
+    edges,
+    stats: topologyStats(topology, nodes, layouts),
+    networkBoqSummary: {
+      cableTotals: [...cableTotals.values()].map((x) => ({ ...x, totalLengthM: Math.round(x.totalLengthM * 10) / 10 })),
+      mediaConverters: totalMediaConverters(topology, nodes),
+    },
+    issues: issues.map((i) => ({ severity: i.level, deviceId: i.deviceId ?? null, text: i.text })),
+  };'''
+          if old not in s:
+            raise SystemExit('AI context return block not found')
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # 3) AI input schema explicitly includes network BOQ summary; env is resolved at request time server-side.
+          p = Path('src/lib/topology-ai.functions.ts')
+          s = p.read_text()
+          s = s.replace('const AGENT_NAME = process.env["AZURE_NETWORK_AGENT_NAME"] || process.env["AZURE_AGENT_NAME"] || "az-agent-bim";\nconst AGENT_VERSION = process.env["AZURE_NETWORK_AGENT_VERSION"] || process.env["AZURE_AGENT_VERSION"] || "8";\n\n', '')
+          old = '''    stats: z.record(z.unknown()),
+    issues: z.array(z.record(z.unknown())).max(1000),'''
+          new = '''    stats: z.record(z.unknown()),
+    networkBoqSummary: z.object({
+      cableTotals: z.array(z.record(z.unknown())).max(100),
+      mediaConverters: z.number().nonnegative(),
+    }),
+    issues: z.array(z.record(z.unknown())).max(1000),'''
+          if old not in s:
+            raise SystemExit('AI schema block not found')
+          s = s.replace(old, new, 1)
+          old = '''    const apiKey = process.env["AZURE_API_KEY"];
+    if (!apiKey) return { error: "خدمة AI Network Review غير مهيأة على الخادم." } as const;'''
+          new = '''    const apiKey = process.env["AZURE_API_KEY"];
+    const agentName = process.env["AZURE_NETWORK_AGENT_NAME"] || process.env["AZURE_AGENT_NAME"] || "az-agent-bim";
+    const agentVersion = process.env["AZURE_NETWORK_AGENT_VERSION"] || process.env["AZURE_AGENT_VERSION"] || "8";
+    if (!apiKey) return { error: "خدمة AI Network Review غير مهيأة على الخادم." } as const;'''
+          if old not in s:
+            raise SystemExit('AI env block not found')
+          s = s.replace(old, new, 1)
+          s = s.replace('agent: { name: AGENT_NAME, version: AGENT_VERSION, type: "agent_reference" },', 'agent: { name: agentName, version: agentVersion, type: "agent_reference" },')
+          p.write_text(s)
+
+          # 4) Add regression test proving built-in NVR PoE ports do not consume its LAN interface.
+          p = Path('tests/topology.engineering.test.ts')
+          s = p.read_text()
+          marker = '''  it("keeps NVR recording channels separate from physical PoE ports", () => {'''
+          test = '''  it("does not count built-in NVR PoE camera ports as the NVR LAN Ethernet interface", () => {
+    const c1 = device("c1", "camera", "bullet-2mp-28", 0);
+    const c2 = device("c2", "camera", "bullet-2mp-28", 10);
+    const nvr = device("nvr", "nvr", "nvr-8", 20);
+    const layouts = [layout("L1", [c1, c2, nvr])];
+    const t = topology({
+      parents: { c1: "nvr", c2: "nvr", nvr: "__router" },
+      media: { c1: "utp", c2: "utp", nvr: "utp" },
+      recorders: { c1: "nvr", c2: "nvr" },
+    });
+    const issues = validateTopology(t, collectNodes(layouts), layouts);
+    expect(issues.some((i) => i.deviceId === "nvr" && i.level === "error" && i.text.includes("Ethernet"))).toBe(false);
+    expect(issues.some((i) => i.deviceId === "nvr" && i.level === "error" && i.text.includes("PoE"))).toBe(false);
+  });
+
+'''
+          if test not in s:
+            if marker not in s:
+              raise SystemExit('NVR regression test insertion point not found')
+            s = s.replace(marker, test + marker, 1)
+          p.write_text(s)
+          PY
+
+      - name: Install
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: Deterministic topology tests
+        run: npm run test:topology
+      - name: Lint changed topology files
+        run: |
+          npx eslint \
+            src/lib/cctv/topology.ts \
+            src/lib/cctv/types.ts \
+            src/lib/cctv/catalog.ts \
+            src/components/cctv/boq.ts \
+            src/components/cctv/TopologyWorkspace.tsx \
+            src/lib/topology-ai.functions.ts \
+            tests/topology.engineering.test.ts \
+            src/components/cctv/CctvProjectEditorV2.tsx
+      - name: Commit validated integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            src/components/cctv/CctvProjectEditorV2.tsx \
+            src/lib/cctv/topology.ts \
+            src/lib/topology-ai.functions.ts \
+            tests/topology.engineering.test.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "Harden topology engineering model and AI review context"
+            git push origin HEAD:feat/topology-engineering-ai
+          fi
