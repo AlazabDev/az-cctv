@@ -131,14 +131,27 @@ export const cameraCatalog: CameraSpec[] = [
   },
 ];
 
+/** Physical topology capabilities. Recording channels are not physical PoE ports. */
 export const hardwareCatalog: HardwareSpec[] = [
-  { id: "nvr-8", kind: "nvr", label: "مسجل شبكي NVR 8 قنوات PoE", price: 1100, channels: 8 },
-  { id: "nvr-16", kind: "nvr", label: "مسجل شبكي NVR 16 قناة PoE", price: 1850, channels: 16 },
-  { id: "nvr-32", kind: "nvr", label: "مسجل شبكي NVR 32 قناة", price: 3100, channels: 32 },
-  { id: "sw-8", kind: "switch", label: "سويتش PoE 8 منافذ", price: 430, ports: 8, poeBudget: 120 },
-  { id: "sw-16", kind: "switch", label: "سويتش PoE 16 منفذ", price: 890, ports: 16, poeBudget: 225 },
-  { id: "sw-24", kind: "switch", label: "سويتش PoE 24 منفذ", price: 1500, ports: 24, poeBudget: 370 },
+  { id: "nvr-8", kind: "nvr", label: "مسجل شبكي NVR 8 قنوات PoE", price: 1100, channels: 8, ports: 8, ethernetPorts: 1, poePorts: 8, sfpPorts: 0, uplinkMbps: 1000 },
+  { id: "nvr-16", kind: "nvr", label: "مسجل شبكي NVR 16 قناة PoE", price: 1850, channels: 16, ports: 16, ethernetPorts: 1, poePorts: 16, sfpPorts: 0, uplinkMbps: 1000 },
+  { id: "nvr-32", kind: "nvr", label: "مسجل شبكي NVR 32 قناة", price: 3100, channels: 32, ports: 1, ethernetPorts: 1, poePorts: 0, sfpPorts: 0, uplinkMbps: 1000 },
+  { id: "sw-8", kind: "switch", label: "سويتش PoE 8 منافذ", price: 430, ports: 8, ethernetPorts: 8, poePorts: 8, sfpPorts: 0, poeBudget: 120, uplinkMbps: 1000 },
+  { id: "sw-16", kind: "switch", label: "سويتش PoE 16 منفذ", price: 890, ports: 16, ethernetPorts: 16, poePorts: 16, sfpPorts: 0, poeBudget: 225, uplinkMbps: 1000 },
+  { id: "sw-24", kind: "switch", label: "سويتش PoE 24 منفذ", price: 1500, ports: 24, ethernetPorts: 24, poePorts: 24, sfpPorts: 0, poeBudget: 370, uplinkMbps: 1000 },
   { id: "rack-6u", kind: "rack", label: "كابينة 6U مع منظم كهرباء", price: 650 },
+];
+
+export interface NetworkAccessorySpec {
+  id: string;
+  label: string;
+  unit: string;
+  price: number;
+}
+
+/** Quantity is engineering-derived; the Offer module keeps price editable. */
+export const networkAccessories: NetworkAccessorySpec[] = [
+  { id: "media-converter-gigabit", label: "محول ميديا Gigabit Ethernet ↔ Fiber", unit: "قطعة", price: 0 },
 ];
 
 export type CableCategory = "network" | "fiber" | "coaxial";
