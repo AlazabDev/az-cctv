@@ -64,7 +64,10 @@ export function normalizeTopology(raw?: Partial<TopologyData> | null): TopologyD
   };
 }
 
-export interface TopoLayout extends Pick<PlanData, "devices" | "cables" | "pxPerMeter" | "layoutName"> {
+export interface TopoLayout extends Pick<
+  PlanData,
+  "devices" | "cables" | "pxPerMeter" | "layoutName"
+> {
   id: string;
 }
 
@@ -124,7 +127,10 @@ function finiteNonNegative(value: number | undefined, fallback: number) {
   return Number.isFinite(value) && (value ?? 0) >= 0 ? Number(value) : fallback;
 }
 
-export function effectiveCapabilities(d: PlacedDevice, topology: TopologyData): EffectiveCapabilities {
+export function effectiveCapabilities(
+  d: PlacedDevice,
+  topology: TopologyData,
+): EffectiveCapabilities {
   const spec = hardwareById(d.specId);
   const override = topology.deviceOverrides[d.id] ?? {};
 
@@ -138,8 +144,14 @@ export function effectiveCapabilities(d: PlacedDevice, topology: TopologyData): 
   }
 
   const legacyPorts = spec?.ports ?? 0;
-  const ethernetPorts = finiteNonNegative(override.ethernetPorts, spec?.ethernetPorts ?? legacyPorts);
-  const poePorts = finiteNonNegative(override.poePorts, spec?.poePorts ?? (d.kind === "switch" ? legacyPorts : 0));
+  const ethernetPorts = finiteNonNegative(
+    override.ethernetPorts,
+    spec?.ethernetPorts ?? legacyPorts,
+  );
+  const poePorts = finiteNonNegative(
+    override.poePorts,
+    spec?.poePorts ?? (d.kind === "switch" ? legacyPorts : 0),
+  );
   const sfpPorts = finiteNonNegative(override.sfpPorts, spec?.sfpPorts ?? 0);
 
   return {
@@ -191,7 +203,11 @@ export function canTerminateFiber(device: PlacedDevice | null, topology: Topolog
 }
 
 /** Valid parent kinds for a physical Ethernet tree. NVR is an endpoint unless it has dedicated PoE camera ports. */
-export function canParent(child: PlacedDevice, parent: PlacedDevice | null, topology: TopologyData = emptyTopology) {
+export function canParent(
+  child: PlacedDevice,
+  parent: PlacedDevice | null,
+  topology: TopologyData = emptyTopology,
+) {
   if (!parent) return child.kind === "nvr" || child.kind === "switch";
   if (child.id === parent.id) return false;
   if (child.kind === "camera") {
@@ -252,8 +268,12 @@ export function cableEndpointsMatch(
 
   if (child.layoutId === parent.layoutId) {
     if (cableLayoutId !== child.layoutId) return false;
-    const a = endpointDistanceM(first, child) <= toleranceM && endpointDistanceM(last, parent) <= toleranceM;
-    const b = endpointDistanceM(last, child) <= toleranceM && endpointDistanceM(first, parent) <= toleranceM;
+    const a =
+      endpointDistanceM(first, child) <= toleranceM &&
+      endpointDistanceM(last, parent) <= toleranceM;
+    const b =
+      endpointDistanceM(last, child) <= toleranceM &&
+      endpointDistanceM(first, parent) <= toleranceM;
     return a || b;
   }
 
@@ -263,7 +283,9 @@ export function cableEndpointsMatch(
     return Math.min(endpointDistanceM(first, child), endpointDistanceM(last, child)) <= toleranceM;
   }
   if (cableLayoutId === parent.layoutId) {
-    return Math.min(endpointDistanceM(first, parent), endpointDistanceM(last, parent)) <= toleranceM;
+    return (
+      Math.min(endpointDistanceM(first, parent), endpointDistanceM(last, parent)) <= toleranceM
+    );
   }
   return false;
 }
@@ -285,16 +307,27 @@ export function resolveLinkRoute(
   if (!child) return { lengthM: null, source: "missing", reason: "child device not found" };
   const parentId = topology.parents[childId];
   if (!parentId) return { lengthM: null, source: "missing", reason: "link has no parent" };
-  const parent = parentId === ROUTER_ID ? null : nodes.get(parentId) ?? null;
+  const parent = parentId === ROUTER_ID ? null : (nodes.get(parentId) ?? null);
   const binding = topology.routeBindings[childId] ?? { mode: "estimated" as const };
 
   if (binding.mode === "cable") {
     if (!binding.cableRunId) {
-      return { lengthM: null, source: "missing", cableTypeId: binding.cableTypeId, reason: "measured mode has no cable route" };
+      return {
+        lengthM: null,
+        source: "missing",
+        cableTypeId: binding.cableTypeId,
+        reason: "measured mode has no cable route",
+      };
     }
     const found = findCable(layouts, binding.cableRunId);
     if (!found) {
-      return { lengthM: null, source: "missing", cableRunId: binding.cableRunId, cableTypeId: binding.cableTypeId, reason: "bound cable route not found" };
+      return {
+        lengthM: null,
+        source: "missing",
+        cableRunId: binding.cableRunId,
+        cableTypeId: binding.cableTypeId,
+        reason: "bound cable route not found",
+      };
     }
     const endpointValid = cableEndpointsMatch(found.cable, found.layout.id, child, parent);
     if (!endpointValid) {
@@ -341,7 +374,10 @@ export function resolveLinkRoute(
 }
 
 /** Auto-build a physical tree and a separate camera->NVR recording map. */
-export function autoTopology(layouts: TopoLayout[], current: TopologyData = emptyTopology): TopologyData {
+export function autoTopology(
+  layouts: TopoLayout[],
+  current: TopologyData = emptyTopology,
+): TopologyData {
   const base = normalizeTopology(current);
   const nodes = collectNodes(layouts);
   const all = [...nodes.values()];
@@ -368,11 +404,13 @@ export function autoTopology(layouts: TopoLayout[], current: TopologyData = empt
       .filter((p) => {
         const cap = effectiveCapabilities(p.device, base);
         const poeAvailable = cap.poePorts > (usedPoe.get(p.device.id) ?? 0);
-        const ethernetAvailable = p.device.kind === "nvr" || cap.ethernetPorts > (usedEthernet.get(p.device.id) ?? 0);
+        const ethernetAvailable =
+          p.device.kind === "nvr" || cap.ethernetPorts > (usedEthernet.get(p.device.id) ?? 0);
         return poeAvailable && ethernetAvailable;
       })
       .sort((a, b) => {
-        const da = dist(cam, a), db = dist(cam, b);
+        const da = dist(cam, a),
+          db = dist(cam, b);
         if (da !== db) return da - db;
         return (a.device.kind === "switch" ? 0 : 1) - (b.device.kind === "switch" ? 0 : 1);
       });
@@ -395,7 +433,12 @@ export function autoTopology(layouts: TopoLayout[], current: TopologyData = empt
 
   for (const nvr of nvrs) {
     const localSwitch = switches
-      .filter((s) => s.layoutId === nvr.layoutId && effectiveCapabilities(s.device, base).ethernetPorts > (usedEthernet.get(s.device.id) ?? 0))
+      .filter(
+        (s) =>
+          s.layoutId === nvr.layoutId &&
+          effectiveCapabilities(s.device, base).ethernetPorts >
+            (usedEthernet.get(s.device.id) ?? 0),
+      )
       .sort((a, b) => dist(nvr, a) - dist(nvr, b))[0];
     if (localSwitch) {
       parents[nvr.device.id] = localSwitch.device.id;
@@ -417,7 +460,9 @@ export function autoTopology(layouts: TopoLayout[], current: TopologyData = empt
       recorderUse.set(directParent.device.id, (recorderUse.get(directParent.device.id) ?? 0) + 1);
       continue;
     }
-    const recorder = nvrs.find((n) => (recorderUse.get(n.device.id) ?? 0) < recorderChannelsOf(n.device, base));
+    const recorder = nvrs.find(
+      (n) => (recorderUse.get(n.device.id) ?? 0) < recorderChannelsOf(n.device, base),
+    );
     if (recorder) {
       recorders[cam.device.id] = recorder.device.id;
       recorderUse.set(recorder.device.id, (recorderUse.get(recorder.device.id) ?? 0) + 1);
@@ -437,17 +482,31 @@ export function childrenOf(topology: TopologyData, parentId: string, nodes: Map<
   return [...nodes.values()].filter((n) => topology.parents[n.device.id] === parentId);
 }
 
-export function camerasForRecorder(topology: TopologyData, recorderId: string, nodes: Map<string, TopoNode>) {
-  return [...nodes.values()].filter((n) => n.device.kind === "camera" && topology.recorders[n.device.id] === recorderId);
+export function camerasForRecorder(
+  topology: TopologyData,
+  recorderId: string,
+  nodes: Map<string, TopoNode>,
+) {
+  return [...nodes.values()].filter(
+    (n) => n.device.kind === "camera" && topology.recorders[n.device.id] === recorderId,
+  );
 }
 
-function parentHasFiberPort(parentId: string, nodes: Map<string, TopoNode>, topology: TopologyData) {
+function parentHasFiberPort(
+  parentId: string,
+  nodes: Map<string, TopoNode>,
+  topology: TopologyData,
+) {
   if (parentId === ROUTER_ID) return gatewayCapabilities(topology).sfpPorts > 0;
   const parent = nodes.get(parentId);
   return parent ? effectiveCapabilities(parent.device, topology).sfpPorts > 0 : false;
 }
 
-export function mediaConvertersForLink(childId: string, topology: TopologyData, nodes: Map<string, TopoNode>) {
+export function mediaConvertersForLink(
+  childId: string,
+  topology: TopologyData,
+  nodes: Map<string, TopoNode>,
+) {
   if ((topology.media[childId] ?? "utp") !== "fiber") return 0;
   const child = nodes.get(childId);
   const parentId = topology.parents[childId];
@@ -464,7 +523,11 @@ export function totalMediaConverters(topology: TopologyData, nodes: Map<string, 
   return total;
 }
 
-export function validateTopology(topologyInput: TopologyData, nodes: Map<string, TopoNode>, layouts: TopoLayout[] = []) {
+export function validateTopology(
+  topologyInput: TopologyData,
+  nodes: Map<string, TopoNode>,
+  layouts: TopoLayout[] = [],
+) {
   const topology = normalizeTopology(topologyInput);
   const issues: TopoIssue[] = [];
 
@@ -473,48 +536,92 @@ export function validateTopology(topologyInput: TopologyData, nodes: Map<string,
     if (d.kind === "rack") continue;
     const pid = topology.parents[d.id];
     if (!pid || (pid !== ROUTER_ID && !nodes.has(pid))) {
-      if (d.kind === "camera") issues.push({ level: "error", deviceId: d.id, text: `${d.name}: غير متصلة بأي نقطة شبكة صالحة` });
-      else issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: لا يوجد uplink محدد` });
+      if (d.kind === "camera")
+        issues.push({
+          level: "error",
+          deviceId: d.id,
+          text: `${d.name}: غير متصلة بأي نقطة شبكة صالحة`,
+        });
+      else
+        issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: لا يوجد uplink محدد` });
       continue;
     }
 
     if (pid !== ROUTER_ID) {
       const parent = nodes.get(pid)!;
       if (!canParent(d, parent.device, topology)) {
-        issues.push({ level: "error", deviceId: d.id, text: `${d.name}: نوع أو مواصفات ${parent.device.name} لا تسمح بهذا التوصيل` });
+        issues.push({
+          level: "error",
+          deviceId: d.id,
+          text: `${d.name}: نوع أو مواصفات ${parent.device.name} لا تسمح بهذا التوصيل`,
+        });
       }
     } else if (d.kind === "camera") {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: لا يمكن توصيل كاميرا مباشرة بالراوتر في نموذج PoE الحالي` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: لا يمكن توصيل كاميرا مباشرة بالراوتر في نموذج PoE الحالي`,
+      });
     }
 
     const route = resolveLinkRoute(d.id, topology, nodes, layouts);
     const medium = topology.media[d.id] ?? "utp";
-    const selectedCable = route.cableTypeId ? cableTypes.find((c) => c.id === route.cableTypeId) : undefined;
+    const selectedCable = route.cableTypeId
+      ? cableTypes.find((c) => c.id === route.cableTypeId)
+      : undefined;
     const expectedCategory = medium === "fiber" ? "fiber" : "network";
     if (selectedCable && selectedCable.category !== expectedCategory) {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: نوع الكابل ${selectedCable.label} لا يطابق وسيط الرابط ${medium === "fiber" ? "Fiber" : "UTP/STP"}` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: نوع الكابل ${selectedCable.label} لا يطابق وسيط الرابط ${medium === "fiber" ? "Fiber" : "UTP/STP"}`,
+      });
     }
     if (medium === "fiber" && route.source === "estimated" && !selectedCable) {
-      issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: نوع/عدد قلوب الفايبر غير محدد؛ لن يُفترض نوع تلقائياً في BOQ` });
+      issues.push({
+        level: "warning",
+        deviceId: d.id,
+        text: `${d.name}: نوع/عدد قلوب الفايبر غير محدد؛ لن يُفترض نوع تلقائياً في BOQ`,
+      });
     }
     if (topology.routeBindings[d.id]?.mode === "cable" && route.source !== "measured") {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: مسار الكابل المقاس غير صالح (${route.reason ?? "غير معروف"})` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: مسار الكابل المقاس غير صالح (${route.reason ?? "غير معروف"})`,
+      });
     }
     if (medium === "utp" && route.lengthM !== null && route.lengthM > MAX_UTP_M) {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: طول UTP ${route.lengthM.toFixed(1)}م يتجاوز حد التصميم 90م` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: طول UTP ${route.lengthM.toFixed(1)}م يتجاوز حد التصميم 90م`,
+      });
     }
     if (medium === "utp" && route.source === "missing" && pid !== ROUTER_ID) {
-      issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: لا يوجد طول قابل للتحقق للرابط النحاسي` });
+      issues.push({
+        level: "warning",
+        deviceId: d.id,
+        text: `${d.name}: لا يوجد طول قابل للتحقق للرابط النحاسي`,
+      });
     }
     if (medium === "fiber" && d.kind === "camera") {
-      issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: ربط فايبر مباشر للكاميرا يحتاج إنهاء Fiber/Media Converter وطاقة محلية` });
+      issues.push({
+        level: "warning",
+        deviceId: d.id,
+        text: `${d.name}: ربط فايبر مباشر للكاميرا يحتاج إنهاء Fiber/Media Converter وطاقة محلية`,
+      });
     }
 
     const seen = new Set<string>([d.id]);
     let cur = pid;
     while (cur && cur !== ROUTER_ID) {
       if (seen.has(cur)) {
-        issues.push({ level: "error", deviceId: d.id, text: `${d.name}: حلقة توصيل (Loop) في الشبكة` });
+        issues.push({
+          level: "error",
+          deviceId: d.id,
+          text: `${d.name}: حلقة توصيل (Loop) في الشبكة`,
+        });
         break;
       }
       seen.add(cur);
@@ -530,29 +637,50 @@ export function validateTopology(topologyInput: TopologyData, nodes: Map<string,
     const cameras = kids.filter((k) => k.device.kind === "camera");
     const hasCopperUplink = !!topology.parents[d.id] && (topology.media[d.id] ?? "utp") === "utp";
     const networkChildren = kids.filter((k) => k.device.kind !== "camera").length;
-    const usedEthernet = d.kind === "nvr"
-      ? networkChildren + (hasCopperUplink ? 1 : 0)
-      : kids.length + (hasCopperUplink ? 1 : 0);
+    const usedEthernet =
+      d.kind === "nvr"
+        ? networkChildren + (hasCopperUplink ? 1 : 0)
+        : kids.length + (hasCopperUplink ? 1 : 0);
 
     if (usedEthernet > cap.ethernetPorts) {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: ${usedEthernet} منافذ Ethernet مستخدمة من أصل ${cap.ethernetPorts}` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: ${usedEthernet} منافذ Ethernet مستخدمة من أصل ${cap.ethernetPorts}`,
+      });
     }
     if (cameras.length > cap.poePorts) {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: ${cameras.length} كاميرا PoE مباشرة تتجاوز ${cap.poePorts} منفذ PoE` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: ${cameras.length} كاميرا PoE مباشرة تتجاوز ${cap.poePorts} منفذ PoE`,
+      });
     }
 
     const load = cameras.reduce((s, c) => s + poeWatt(c.device), 0);
     if (cap.poeBudget !== undefined && load > cap.poeBudget) {
-      issues.push({ level: "error", deviceId: d.id, text: `${d.name}: حمل PoE ${load}W يتجاوز الميزانية ${cap.poeBudget}W` });
+      issues.push({
+        level: "error",
+        deviceId: d.id,
+        text: `${d.name}: حمل PoE ${load}W يتجاوز الميزانية ${cap.poeBudget}W`,
+      });
     } else if (cap.poeBudget !== undefined && load > cap.poeBudget * 0.8) {
-      issues.push({ level: "warning", deviceId: d.id, text: `${d.name}: حمل PoE ${load}W أعلى من 80% من الميزانية ${cap.poeBudget}W` });
+      issues.push({
+        level: "warning",
+        deviceId: d.id,
+        text: `${d.name}: حمل PoE ${load}W أعلى من 80% من الميزانية ${cap.poeBudget}W`,
+      });
     }
 
     if (d.kind === "nvr") {
       const assigned = camerasForRecorder(topology, d.id, nodes).length;
       const channels = cap.channels ?? 0;
       if (assigned > channels) {
-        issues.push({ level: "error", deviceId: d.id, text: `${d.name}: ${assigned} كاميرا مسجلة تتجاوز سعة ${channels} قناة` });
+        issues.push({
+          level: "error",
+          deviceId: d.id,
+          text: `${d.name}: ${assigned} كاميرا مسجلة تتجاوز سعة ${channels} قناة`,
+        });
       }
     }
   }
@@ -561,11 +689,19 @@ export function validateTopology(topologyInput: TopologyData, nodes: Map<string,
     if (n.device.kind !== "camera") continue;
     const recorderId = topology.recorders[n.device.id];
     if (!recorderId) {
-      issues.push({ level: "warning", deviceId: n.device.id, text: `${n.device.name}: لم يتم تعيين NVR للتسجيل` });
+      issues.push({
+        level: "warning",
+        deviceId: n.device.id,
+        text: `${n.device.name}: لم يتم تعيين NVR للتسجيل`,
+      });
       continue;
     }
     if (nodes.get(recorderId)?.device.kind !== "nvr") {
-      issues.push({ level: "error", deviceId: n.device.id, text: `${n.device.name}: تعيين NVR غير صالح` });
+      issues.push({
+        level: "error",
+        deviceId: n.device.id,
+        text: `${n.device.name}: تعيين NVR غير صالح`,
+      });
     }
   }
 
@@ -573,15 +709,26 @@ export function validateTopology(topologyInput: TopologyData, nodes: Map<string,
 }
 
 /** Legacy helper kept for UI compatibility. In the new model recorder assignment is separate. */
-export function countCamerasBelow(topology: TopologyData, id: string, nodes: Map<string, TopoNode>, depth = 0): number {
+export function countCamerasBelow(
+  topology: TopologyData,
+  id: string,
+  nodes: Map<string, TopoNode>,
+  depth = 0,
+): number {
   if (depth > 20) return 0;
   return childrenOf(topology, id, nodes).reduce(
-    (s, k) => s + (k.device.kind === "camera" ? 1 : countCamerasBelow(topology, k.device.id, nodes, depth + 1)),
+    (s, k) =>
+      s +
+      (k.device.kind === "camera" ? 1 : countCamerasBelow(topology, k.device.id, nodes, depth + 1)),
     0,
   );
 }
 
-export function topologyStats(topology: TopologyData, nodes: Map<string, TopoNode>, layouts: TopoLayout[] = []) {
+export function topologyStats(
+  topology: TopologyData,
+  nodes: Map<string, TopoNode>,
+  layouts: TopoLayout[] = [],
+) {
   let utpM = 0;
   let fiberM = 0;
   let fiberLinks = 0;
@@ -629,7 +776,7 @@ export function buildNetworkReviewContext(topology: TopologyData, layouts: TopoL
     .filter((n) => !!topology.parents[n.device.id])
     .map((n) => {
       const parentId = topology.parents[n.device.id]!;
-      const parent = parentId === ROUTER_ID ? null : nodes.get(parentId) ?? null;
+      const parent = parentId === ROUTER_ID ? null : (nodes.get(parentId) ?? null);
       const route = resolveLinkRoute(n.device.id, topology, nodes, layouts);
       return {
         childId: n.device.id,
@@ -651,11 +798,23 @@ export function buildNetworkReviewContext(topology: TopologyData, layouts: TopoL
     kind: n.device.kind,
     layout: n.layoutName,
     specId: n.device.specId,
-    capabilities: n.device.kind === "camera" ? { poeWatt: poeWatt(n.device) } : effectiveCapabilities(n.device, topology),
-    recorderId: n.device.kind === "camera" ? topology.recorders[n.device.id] ?? null : undefined,
+    capabilities:
+      n.device.kind === "camera"
+        ? { poeWatt: poeWatt(n.device) }
+        : effectiveCapabilities(n.device, topology),
+    recorderId: n.device.kind === "camera" ? (topology.recorders[n.device.id] ?? null) : undefined,
   }));
 
-  const cableTotals = new Map<string, { cableTypeId: string; medium: LinkMedia; totalLengthM: number; measuredLinks: number; estimatedLinks: number }>();
+  const cableTotals = new Map<
+    string,
+    {
+      cableTypeId: string;
+      medium: LinkMedia;
+      totalLengthM: number;
+      measuredLinks: number;
+      estimatedLinks: number;
+    }
+  >();
   for (const edge of edges) {
     if (!(edge.lengthM && edge.lengthM > 0) || !edge.cableTypeId) continue;
     const current = cableTotals.get(edge.cableTypeId) ?? {
@@ -677,7 +836,10 @@ export function buildNetworkReviewContext(topology: TopologyData, layouts: TopoL
     edges,
     stats: topologyStats(topology, nodes, layouts),
     networkBoqSummary: {
-      cableTotals: [...cableTotals.values()].map((x) => ({ ...x, totalLengthM: Math.round(x.totalLengthM * 10) / 10 })),
+      cableTotals: [...cableTotals.values()].map((x) => ({
+        ...x,
+        totalLengthM: Math.round(x.totalLengthM * 10) / 10,
+      })),
       mediaConverters: totalMediaConverters(topology, nodes),
     },
     issues: issues.map((i) => ({ severity: i.level, deviceId: i.deviceId ?? null, text: i.text })),
@@ -698,5 +860,7 @@ export function hardwareSpecCapabilities(spec?: HardwareSpec) {
 export function cableTypeForRoute(route: ResolvedLinkRoute, medium: LinkMedia) {
   if (route.cableTypeId) return cableTypes.find((c) => c.id === route.cableTypeId);
   if (medium === "fiber") return undefined;
-  return cableTypes.find((c) => c.id === "cat6-stp") ?? cableTypes.find((c) => c.category === "network");
+  return (
+    cableTypes.find((c) => c.id === "cat6-stp") ?? cableTypes.find((c) => c.category === "network")
+  );
 }

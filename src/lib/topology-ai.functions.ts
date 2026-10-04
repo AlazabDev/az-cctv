@@ -64,8 +64,10 @@ export const reviewNetworkTopology = createServerFn({ method: "POST" })
   .inputValidator((value) => reviewInputSchema.parse(value))
   .handler(async ({ data }) => {
     const apiKey = process.env["AZURE_API_KEY"];
-    const agentName = process.env["AZURE_NETWORK_AGENT_NAME"] || process.env["AZURE_AGENT_NAME"] || "az-agent-bim";
-    const agentVersion = process.env["AZURE_NETWORK_AGENT_VERSION"] || process.env["AZURE_AGENT_VERSION"] || "8";
+    const agentName =
+      process.env["AZURE_NETWORK_AGENT_NAME"] || process.env["AZURE_AGENT_NAME"] || "az-agent-bim";
+    const agentVersion =
+      process.env["AZURE_NETWORK_AGENT_VERSION"] || process.env["AZURE_AGENT_VERSION"] || "8";
     if (!apiKey) return { error: "خدمة AI Network Review غير مهيأة على الخادم." } as const;
 
     const systemInstruction = [
@@ -108,7 +110,9 @@ export const reviewNetworkTopology = createServerFn({ method: "POST" })
       const result = responseSchema.safeParse(json);
       if (!result.success) {
         console.error("network review schema mismatch", result.error.flatten());
-        return { error: "مراجعة AI لم تطابق مخطط البيانات المتوقع؛ لم يتم تغيير أي بيانات." } as const;
+        return {
+          error: "مراجعة AI لم تطابق مخطط البيانات المتوقع؛ لم يتم تغيير أي بيانات.",
+        } as const;
       }
       return { review: result.data } as const;
     } catch (error) {
