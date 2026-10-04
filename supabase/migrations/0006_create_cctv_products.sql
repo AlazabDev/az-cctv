@@ -30,8 +30,7 @@ alter table public.products
   add column if not exists updated_at timestamptz not null default now();
 
 create unique index if not exists products_source_unique_idx
-  on public.products (source_sheet, source_row)
-  where source_sheet is not null and source_row is not null;
+  on public.products (source_sheet, source_row);
 
 create index if not exists products_category_idx on public.products (category);
 create index if not exists products_subcategory_idx on public.products (subcategory);
