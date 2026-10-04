@@ -33,11 +33,14 @@ jobs:
             s = s.replace(old, new, 1)
           p.write_text(s)
           PY
-      - name: Install and validate
-        run: |
-          npm ci
-          npm run build
-          npm run lint
+      - name: Install dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: Topology engineering tests
+        run: npx --yes vitest@3.2.4 run tests/topology.engineering.test.ts
+      - name: Lint
+        run: npm run lint
       - name: Commit editor wiring
         run: |
           git config user.name "github-actions[bot]"
