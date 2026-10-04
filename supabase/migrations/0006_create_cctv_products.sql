@@ -1,66 +1,60 @@
--- Product catalog for CCTV design application
--- Canonical import target for curated CCTV cameras, recorders, switches and UPS products.
+-- Canonical product master for CCTV design application.
+-- One and only one commercial product table: public.products.
+-- Design-time/experimental elements are stored separately and may optionally reference products.
 
-create table if not exists public.cctv_products (
-  id uuid primary key default gen_random_uuid(),
-  category text not null,
-  subcategory text,
-  brand text not null,
-  model text not null,
-  product_name text not null,
-  description text,
-  technology text,
-  form_factor text,
-  power_type text,
-  current_price numeric(14,2),
-  old_price numeric(14,2),
-  discount_percent numeric(6,2),
-  image_name text,
-  image_url text,
-  source_sheet text,
-  source_row integer,
-  is_active boolean not null default true,
-  metadata jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint cctv_products_current_price_nonnegative check (current_price is null or current_price >= 0),
-  constraint cctv_products_old_price_nonnegative check (old_price is null or old_price >= 0),
-  constraint cctv_products_discount_range check (
-    discount_percent is null or (discount_percent >= 0 and discount_percent <= 100)
-  ),
-  constraint cctv_products_source_unique unique (source_sheet, source_row)
+create table if not exists public.products (
+  id uuid primary key default gen_random_uuid()
 );
 
-create index if not exists cctv_products_category_idx
-  on public.cctv_products (category);
+alter table public.products
+  add column if not exists category text,
+  add column if not exists subcategory text,
+  add column if not exists brand text,
+  add column if not exists model text,
+  add column if not exists product_name text,
+  add column if not exists description text,
+  add column if not exists technology text,
+  add column if not exists form_factor text,
+  add column if not exists power_type text,
+  add column if not exists current_price numeric(14,2),
+  add column if not exists old_price numeric(14,2),
+  add column if not exists discount_percent numeric(6,2),
+  add column if not exists image_name text,
+  add column if not exists image_url text,
+  add column if not exists source_sheet text,
+  add column if not exists source_row integer,
+  add column if not exists specifications jsonb not null default '{}'::jsonb,
+  add column if not exists metadata jsonb not null default '{}'::jsonb,
+  add column if not exists is_active boolean not null default true,
+  add column if not exists created_at timestamptz not null default now(),
+  add column if not exists updated_at timestamptz not null default now();
 
-create index if not exists cctv_products_subcategory_idx
-  on public.cctv_products (subcategory);
+create unique index if not exists products_source_unique_idx
+  on public.products (source_sheet, source_row)
+  where source_sheet is not null and source_row is not null;
 
-create index if not exists cctv_products_brand_idx
-  on public.cctv_products (brand);
-
-create index if not exists cctv_products_model_idx
-  on public.cctv_products (model);
-
-create index if not exists cctv_products_active_category_idx
-  on public.cctv_products (category, subcategory)
+create index if not exists products_category_idx on public.products (category);
+create index if not exists products_subcategory_idx on public.products (subcategory);
+create index if not exists products_brand_idx on public.products (brand);
+create index if not exists products_model_idx on public.products (model);
+create index if not exists products_active_category_idx
+  on public.products (category, subcategory)
   where is_active;
 
-alter table public.cctv_products enable row level security;
+alter table public.products enable row level security;
 
-revoke all on table public.cctv_products from anon;
-grant select on table public.cctv_products to authenticated;
-grant all on table public.cctv_products to service_role;
+revoke all on table public.products from anon;
+grant select on table public.products to authenticated;
+grant all on table public.products to service_role;
 
-drop policy if exists "authenticated can read cctv products" on public.cctv_products;
-create policy "authenticated can read cctv products"
-on public.cctv_products
+drop policy if exists "authenticated can read products" on public.products;
+create policy "authenticated can read products"
+on public.products
 for select
 to authenticated
 using (is_active = true);
 
-create or replace function public.touch_cctv_products_updated_at()
+create or replace function public.touch_products_updated_at()
 returns trigger
 language plpgsql
 security invoker
@@ -72,8 +66,8 @@ begin
 end;
 $$;
 
-drop trigger if exists cctv_products_touch on public.cctv_products;
-create trigger cctv_products_touch
-before update on public.cctv_products
+drop trigger if exists products_touch on public.products;
+create trigger products_touch
+before update on public.products
 for each row
-execute function public.touch_cctv_products_updated_at();
+execute function public.touch_products_updated_at();
