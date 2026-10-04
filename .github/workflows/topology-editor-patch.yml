@@ -1,0 +1,48 @@
+name: Apply topology editor integration
+on:
+  push:
+    branches: [feat/topology-engineering-ai]
+    paths:
+      - .github/workflows/topology-editor-patch.yml
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/topology-engineering-ai
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Patch editor integration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('src/components/cctv/CctvProjectEditorV2.tsx')
+          s = p.read_text()
+          replacements = [
+            ('import { emptyTopology, type TopologyData } from "@/lib/cctv/topology";', 'import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";'),
+            ('setTopology({ parents: stored.topology?.parents ?? {}, media: stored.topology?.media ?? {} });', 'setTopology(normalizeTopology(stored.topology));'),
+            ('const boq = useMemo(() => buildBoq(projectPlan, retention), [projectPlan, retention]);', 'const boq = useMemo(() => buildBoq(projectPlan, retention, { layouts, topology }), [projectPlan, retention, layouts, topology]);'),
+          ]
+          for old, new in replacements:
+            if old not in s:
+              raise SystemExit(f'Expected editor fragment not found: {old}')
+            s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+      - name: Install and validate
+        run: |
+          npm ci
+          npm run build
+          npm run lint
+      - name: Commit editor wiring
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/cctv/CctvProjectEditorV2.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m "Wire topology engineering context into project BOQ"
+          git push origin HEAD:feat/topology-engineering-ai
