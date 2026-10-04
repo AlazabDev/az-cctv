@@ -64,15 +64,19 @@ export interface CableRun {
 
 /**
  * Wall material is retained for backward compatibility with existing saved
- * projects and the design-agent occlusion model. New walls use one opaque wall
- * material; the user-facing choice is wall thickness only.
+ * projects and the design-agent occlusion model.
  */
 export type WallMaterial = string;
 export type WallThicknessCm = 10 | 20;
+export type WallKind = "wall" | "fence";
 
 export interface WallSegment {
   id: string;
   material: WallMaterial;
+  /** Visual/engineering classification used by the plan editor. */
+  kind?: WallKind;
+  /** User-selected drawing color. Stored with the layout. */
+  color?: string;
   thicknessCm?: WallThicknessCm;
   points: { x: number; y: number }[];
   curved: boolean;
