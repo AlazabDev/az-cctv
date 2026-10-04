@@ -1,0 +1,1 @@
+Wall/fence interaction is implemented in PlanCanvas without changing product catalog semantics. Geometry remains stored in layout wall segments. Fence is a wall-segment geometry with `kind: "fence"` and a dashed visual style; wall/fence length uses the same calibrated geometry engine.
