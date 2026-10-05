@@ -12,21 +12,34 @@ alter table public.products
   add column if not exists metadata jsonb not null default '{}'::jsonb;
 
 -- Preserve useful data from legacy child product tables before removing them.
+-- Correlated scalar subqueries are used deliberately here so this migration also
+-- works against databases where those legacy tables exist only remotely.
 do $$
 begin
   if to_regclass('public.product_images') is not null then
     execute $sql$
       update public.products p
       set
-        image_name = coalesce(p.image_name, i.file_name),
-        image_url = coalesce(p.image_url, i.public_url)
-      from lateral (
-        select pi.file_name, pi.public_url
-        from public.product_images pi
-        where pi.product_id = p.id
-        order by pi.is_primary desc, pi.sort_order asc, pi.created_at asc
-        limit 1
-      ) i
+        image_name = coalesce(
+          p.image_name,
+          (
+            select pi.file_name
+            from public.product_images pi
+            where pi.product_id = p.id
+            order by pi.is_primary desc, pi.sort_order asc, pi.created_at asc
+            limit 1
+          )
+        ),
+        image_url = coalesce(
+          p.image_url,
+          (
+            select pi.public_url
+            from public.product_images pi
+            where pi.product_id = p.id
+            order by pi.is_primary desc, pi.sort_order asc, pi.created_at asc
+            limit 1
+          )
+        )
       where p.image_name is null or p.image_url is null
     $sql$;
   end if;
@@ -35,17 +48,47 @@ begin
     execute $sql$
       update public.products p
       set
-        current_price = coalesce(p.current_price, x.price),
-        old_price = coalesce(p.old_price, x.old_price),
-        currency = coalesce(nullif(p.currency, ''), x.currency),
-        source_url = coalesce(p.source_url, x.source_url)
-      from lateral (
-        select pp.price, pp.old_price, pp.currency, pp.source_url
-        from public.product_prices pp
-        where pp.product_id = p.id
-        order by pp.checked_at desc, pp.created_at desc
-        limit 1
-      ) x
+        current_price = coalesce(
+          p.current_price,
+          (
+            select pp.price
+            from public.product_prices pp
+            where pp.product_id = p.id
+            order by pp.checked_at desc, pp.created_at desc
+            limit 1
+          )
+        ),
+        old_price = coalesce(
+          p.old_price,
+          (
+            select pp.old_price
+            from public.product_prices pp
+            where pp.product_id = p.id
+            order by pp.checked_at desc, pp.created_at desc
+            limit 1
+          )
+        ),
+        currency = coalesce(
+          nullif(p.currency, ''),
+          (
+            select pp.currency
+            from public.product_prices pp
+            where pp.product_id = p.id
+            order by pp.checked_at desc, pp.created_at desc
+            limit 1
+          ),
+          'EGP'
+        ),
+        source_url = coalesce(
+          p.source_url,
+          (
+            select pp.source_url
+            from public.product_prices pp
+            where pp.product_id = p.id
+            order by pp.checked_at desc, pp.created_at desc
+            limit 1
+          )
+        )
       where p.current_price is null
          or p.old_price is null
          or p.source_url is null
@@ -57,11 +100,12 @@ $$;
 drop table if exists public.product_images cascade;
 drop table if exists public.product_prices cascade;
 
--- Import identity is provenance, not brand/model.
+-- Import identity is provenance, not brand/model. PostgreSQL UNIQUE permits
+-- multiple NULL values, so a normal unique index works with ON CONFLICT and
+-- still allows manually-created rows that have no source provenance yet.
 drop index if exists public.products_source_unique_idx;
 create unique index products_source_unique_idx
-  on public.products (source_sheet, source_row)
-  where source_sheet is not null and source_row is not null;
+  on public.products (source_sheet, source_row);
 
 create index if not exists products_active_type_idx
   on public.products (category, subcategory, brand)
