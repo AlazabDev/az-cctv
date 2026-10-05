@@ -427,17 +427,17 @@ export function TopologyWorkspace({
               <NumberField
                 label="Ethernet"
                 value={topology.gateway.ethernetPorts}
-                onChange={(v) => patch({ gateway: { ...topology.gateway, ethernetPorts: v } })}
+                onChange={(v) => patch({ gateway: withOpt(topology.gateway, "ethernetPorts", v) })}
               />
               <NumberField
                 label="SFP"
                 value={topology.gateway.sfpPorts}
-                onChange={(v) => patch({ gateway: { ...topology.gateway, sfpPorts: v } })}
+                onChange={(v) => patch({ gateway: withOpt(topology.gateway, "sfpPorts", v) })}
               />
               <NumberField
                 label="Uplink Mbps"
                 value={topology.gateway.uplinkMbps}
-                onChange={(v) => patch({ gateway: { ...topology.gateway, uplinkMbps: v } })}
+                onChange={(v) => patch({ gateway: withOpt(topology.gateway, "uplinkMbps", v) })}
               />
             </div>
           </div>
@@ -462,34 +462,34 @@ export function TopologyWorkspace({
                     label="Ethernet"
                     value={selectedSpec.ethernetPorts}
                     onChange={(v) =>
-                      updateOverride(selectedSpecNode.device.id, { ethernetPorts: v })
+                      updateOverride(selectedSpecNode.device.id, { ethernetPorts: v } as never)
                     }
                   />
                   <NumberField
                     label="PoE ports"
                     value={selectedSpec.poePorts}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { poePorts: v })}
+                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { poePorts: v } as never)}
                   />
                   <NumberField
                     label="SFP"
                     value={selectedSpec.sfpPorts}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { sfpPorts: v })}
+                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { sfpPorts: v } as never)}
                   />
                   <NumberField
                     label="PoE W"
                     value={selectedSpec.poeBudget}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { poeBudget: v })}
+                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { poeBudget: v } as never)}
                   />
                   <NumberField
                     label="Uplink Mbps"
                     value={selectedSpec.uplinkMbps}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { uplinkMbps: v })}
+                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { uplinkMbps: v } as never)}
                   />
                   {selectedSpecNode.device.kind === "nvr" && (
                     <NumberField
                       label="Channels"
                       value={selectedSpec.channels}
-                      onChange={(v) => updateOverride(selectedSpecNode.device.id, { channels: v })}
+                      onChange={(v) => updateOverride(selectedSpecNode.device.id, { channels: v } as never)}
                     />
                   )}
                 </div>
@@ -554,7 +554,7 @@ function NumberField({
   onChange,
 }: {
   label: string;
-  value?: number;
+  value?: number | undefined;
   onChange: (value: number | undefined) => void;
 }) {
   return (
@@ -580,4 +580,11 @@ function Stat({ label, value }: { label: string; value: string | number }) {
       <p className="text-muted-foreground">{label}</p>
     </div>
   );
+}
+
+function withOpt<T extends object, K extends keyof T>(obj: T, key: K, value: T[K] | undefined): T {
+  const next = { ...obj };
+  if (value === undefined) delete next[key];
+  else next[key] = value;
+  return next;
 }
