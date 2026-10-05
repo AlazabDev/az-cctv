@@ -346,6 +346,193 @@ export type Database = {
         }
         Relationships: []
       }
+      product_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          file_name: string
+          id: string
+          is_primary: boolean
+          product_id: string
+          public_url: string | null
+          sort_order: number
+          storage_bucket: string | null
+          storage_path: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          is_primary?: boolean
+          product_id: string
+          public_url?: string | null
+          sort_order?: number
+          storage_bucket?: string | null
+          storage_path?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          is_primary?: boolean
+          product_id?: string
+          public_url?: string | null
+          sort_order?: number
+          storage_bucket?: string | null
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_prices: {
+        Row: {
+          checked_at: string
+          created_at: string
+          currency: string
+          id: string
+          old_price: number | null
+          price: number
+          product_id: string
+          source_url: string | null
+          stock_status: string | null
+          supplier: string
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          old_price?: number | null
+          price: number
+          product_id: string
+          source_url?: string | null
+          stock_status?: string | null
+          supplier: string
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          old_price?: number | null
+          price?: number
+          product_id?: string
+          source_url?: string | null
+          stock_status?: string | null
+          supplier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          brand: string | null
+          category: string | null
+          category_id: string | null
+          created_at: string
+          currency: string
+          current_price: number | null
+          description: string | null
+          discount_percent: number | null
+          form_factor: string | null
+          id: string
+          image_name: string | null
+          image_url: string | null
+          is_active: boolean
+          model: string
+          name_ar: string | null
+          name_en: string | null
+          old_price: number | null
+          power_type: string | null
+          product_name: string | null
+          product_type: string | null
+          sku: string | null
+          source: string | null
+          source_row: number | null
+          source_url: string | null
+          specifications: Json
+          subcategory: string | null
+          technology: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          current_price?: number | null
+          description?: string | null
+          discount_percent?: number | null
+          form_factor?: string | null
+          id?: string
+          image_name?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          model: string
+          name_ar?: string | null
+          name_en?: string | null
+          old_price?: number | null
+          power_type?: string | null
+          product_name?: string | null
+          product_type?: string | null
+          sku?: string | null
+          source?: string | null
+          source_row?: number | null
+          source_url?: string | null
+          specifications?: Json
+          subcategory?: string | null
+          technology?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          current_price?: number | null
+          description?: string | null
+          discount_percent?: number | null
+          form_factor?: string | null
+          id?: string
+          image_name?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          model?: string
+          name_ar?: string | null
+          name_en?: string | null
+          old_price?: number | null
+          power_type?: string | null
+          product_name?: string | null
+          product_type?: string | null
+          sku?: string | null
+          source?: string | null
+          source_row?: number | null
+          source_url?: string | null
+          specifications?: Json
+          subcategory?: string | null
+          technology?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
