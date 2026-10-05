@@ -468,28 +468,38 @@ export function TopologyWorkspace({
                   <NumberField
                     label="PoE ports"
                     value={selectedSpec.poePorts}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { poePorts: v } as never)}
+                    onChange={(v) =>
+                      updateOverride(selectedSpecNode.device.id, { poePorts: v } as never)
+                    }
                   />
                   <NumberField
                     label="SFP"
                     value={selectedSpec.sfpPorts}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { sfpPorts: v } as never)}
+                    onChange={(v) =>
+                      updateOverride(selectedSpecNode.device.id, { sfpPorts: v } as never)
+                    }
                   />
                   <NumberField
                     label="PoE W"
                     value={selectedSpec.poeBudget}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { poeBudget: v } as never)}
+                    onChange={(v) =>
+                      updateOverride(selectedSpecNode.device.id, { poeBudget: v } as never)
+                    }
                   />
                   <NumberField
                     label="Uplink Mbps"
                     value={selectedSpec.uplinkMbps}
-                    onChange={(v) => updateOverride(selectedSpecNode.device.id, { uplinkMbps: v } as never)}
+                    onChange={(v) =>
+                      updateOverride(selectedSpecNode.device.id, { uplinkMbps: v } as never)
+                    }
                   />
                   {selectedSpecNode.device.kind === "nvr" && (
                     <NumberField
                       label="Channels"
                       value={selectedSpec.channels}
-                      onChange={(v) => updateOverride(selectedSpecNode.device.id, { channels: v } as never)}
+                      onChange={(v) =>
+                        updateOverride(selectedSpecNode.device.id, { channels: v } as never)
+                      }
                     />
                   )}
                 </div>
