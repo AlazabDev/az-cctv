@@ -88,10 +88,10 @@ export interface EffectiveCapabilities {
   ethernetPorts: number;
   poePorts: number;
   sfpPorts: number;
-  poeBudget?: number;
-  uplinkMbps?: number;
-  channels?: number;
-  notes?: string;
+  poeBudget?: number | undefined;
+  uplinkMbps?: number | undefined;
+  channels?: number | undefined;
+  notes?: string | undefined;
 }
 
 export interface ResolvedLinkRoute {
