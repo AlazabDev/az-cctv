@@ -1,0 +1,46 @@
+name: Phase 1 Finalize Temp
+on:
+  push:
+    branches:
+      - fix/wall-editor-interactions
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/wall-editor-interactions
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Fix Shift orthogonal interaction
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/components/cctv/PlanCanvas.tsx')
+          s = p.read_text()
+          old = 'if (e.button === 1 || (mode === "select" && e.target === e.currentTarget) || e.shiftKey) {'
+          new = 'if (e.button === 1 || (mode === "select" && e.target === e.currentTarget)) {'
+          if old in s:
+              s = s.replace(old, new, 1)
+              p.write_text(s)
+          PY
+      - run: npm install --no-audit --no-fund
+      - run: npx prettier --write src/components/cctv/PlanCanvas.tsx
+      - run: npx --yes vitest@3.2.4 run tests/wall-editor.engineering.test.ts
+      - run: npm run build
+      - run: npx eslint src/components/cctv/PlanCanvas.tsx src/lib/cctv/types.ts src/lib/cctv/wall-editor.ts tests/wall-editor.engineering.test.ts
+      - name: Commit final interaction fix if needed
+        run: |
+          if git diff --quiet; then
+            echo "No final changes required"
+            exit 0
+          fi
+          git config user.name "Alazab CI"
+          git config user.email "ci@alazab.com"
+          git add src/components/cctv/PlanCanvas.tsx
+          git commit -m "fix(plan): reserve Shift for orthogonal wall constraint"
+          git push origin HEAD:fix/wall-editor-interactions
