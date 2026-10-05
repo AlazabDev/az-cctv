@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/SiteHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { cableTypes, storageOptions } from "@/lib/cctv/catalog";
+import { cableTypes } from "@/lib/cctv/catalog";
 import { buildProductCatalog } from "@/lib/cctv/product-catalog";
 import { distanceForPpm, formatMoney } from "@/lib/cctv/geometry";
 
@@ -40,6 +40,11 @@ const tabs = [
   { id: "cameras", label: "الكاميرات" },
   { id: "hardware", label: "المسجلات والسويتشات" },
   { id: "other", label: "مواد التصميم" },
+] as const;
+
+const storageOptions = [
+  { id: "hdd-4", label: "هارد ديسك 4TB (مراقبة)", price: 620, tb: 4 },
+  { id: "hdd-8", label: "هارد ديسك 8TB (مراقبة)", price: 1150, tb: 8 },
 ] as const;
 
 function CatalogPage() {
