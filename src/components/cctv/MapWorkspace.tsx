@@ -52,7 +52,7 @@ export function MapWorkspace({
         [start.lat, start.lng],
         stateRef.current.center ? stateRef.current.zoom : 12,
       );
-      const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      const googleKey = import.meta.env["VITE_GOOGLE_MAPS_API_KEY"];
 
       if (googleKey) {
         // طبقة Google Maps Hybrid (قمر صناعي + أسماء وتفاصيل الشوارع)
@@ -67,11 +67,11 @@ export function MapWorkspace({
         // بديل تلقائي (Esri) في حال عدم وجود المفتاح
         L.tileLayer(
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
+          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" }
         ).addTo(map);
         L.tileLayer(
           "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
+          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" }
         ).addTo(map);
       }
 
