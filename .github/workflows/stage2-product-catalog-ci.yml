@@ -1,0 +1,37 @@
+name: Stage 2 Product Catalog CI
+
+"on":
+  push:
+    branches:
+      - feat/stage2-product-catalog-close
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint Stage 2 integration
+        run: npx eslint src/components/cctv/ProductCatalogGate.tsx src/routes/catalog.tsx src/routes/_authenticated/editor.\$id.tsx src/lib/cctv/catalog.ts src/lib/cctv/product-catalog.ts
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
