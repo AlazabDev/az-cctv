@@ -42,8 +42,7 @@ export function rowToProjectLayout(row: LayoutRow): ProjectLayout {
     devices: array<PlanData["devices"][number]>(design.devices),
     cables: array<PlanData["cables"][number]>(design.cables),
     roomLabels: array<PlanData["roomLabels"][number]>(design.roomLabels),
-    showCoverage:
-      typeof design.showCoverage === "boolean" ? design.showCoverage : true,
+    showCoverage: typeof design.showCoverage === "boolean" ? design.showCoverage : true,
   };
 }
 
@@ -122,10 +121,7 @@ function legacyLayouts(project: ProjectRow) {
   };
 }
 
-async function replaceSingleBackfillWithLegacyMulti(
-  project: ProjectRow,
-  existing: LayoutRow[],
-) {
+async function replaceSingleBackfillWithLegacyMulti(project: ProjectRow, existing: LayoutRow[]) {
   const legacy = legacyLayouts(project);
   if (legacy.layouts.length <= existing.length) return existing;
 
@@ -141,7 +137,9 @@ async function replaceSingleBackfillWithLegacyMulti(
     projectLayoutToPayload(project.id, layout, index, activeId),
   );
 
-  const { error } = await supabase.from("cctv_layouts").upsert(payload as never, { onConflict: "id" });
+  const { error } = await supabase
+    .from("cctv_layouts")
+    .upsert(payload as never, { onConflict: "id" });
   if (error) throw error;
 
   const { data, error: reloadError } = await supabase
@@ -183,7 +181,9 @@ export async function saveNormalizedProjectLayouts(
   const payload = layouts.map((layout, index) =>
     projectLayoutToPayload(projectId, layout, index, activeLayoutId),
   );
-  const { error } = await supabase.from("cctv_layouts").upsert(payload as never, { onConflict: "id" });
+  const { error } = await supabase
+    .from("cctv_layouts")
+    .upsert(payload as never, { onConflict: "id" });
   if (error) return false;
 
   const { error: activateError } = await supabase.rpc("activate_cctv_layout", {

@@ -7,7 +7,8 @@ export const Route = createFileRoute("/_authenticated/editor/$id")({
       { title: "CCTV Project Designer — كاميرا بلان" },
       {
         name: "description",
-        content: "محرر متكامل لتصميم أنظمة كاميرات المراقبة والكابلات والجدران والتغطية وعروض الأسعار التجارية.",
+        content:
+          "محرر متكامل لتصميم أنظمة كاميرات المراقبة والكابلات والجدران والتغطية وعروض الأسعار التجارية.",
       },
     ],
   }),

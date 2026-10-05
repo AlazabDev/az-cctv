@@ -1,10 +1,16 @@
 name: Stage 2 Product Catalog CI
 
-"on":
+on:
   push:
     branches:
-      - feat/stage2-product-catalog-close
       - main
+    paths:
+      - "src/components/cctv/ProductCatalogGate.tsx"
+      - "src/routes/catalog.tsx"
+      - "src/routes/_authenticated/editor.$id.tsx"
+      - "src/lib/cctv/catalog.ts"
+      - "src/lib/cctv/product-catalog.ts"
+      - ".github/workflows/stage2-product-catalog-ci.yml"
   pull_request:
     branches:
       - main
@@ -28,8 +34,23 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Check formatting
+        run: |
+          npx prettier --check \
+            src/components/cctv/ProductCatalogGate.tsx \
+            src/routes/catalog.tsx \
+            'src/routes/_authenticated/editor.$id.tsx' \
+            src/lib/cctv/catalog.ts \
+            src/lib/cctv/product-catalog.ts
+
       - name: Lint Stage 2 integration
-        run: npx eslint src/components/cctv/ProductCatalogGate.tsx src/routes/catalog.tsx src/routes/_authenticated/editor.\$id.tsx src/lib/cctv/catalog.ts src/lib/cctv/product-catalog.ts
+        run: |
+          npx eslint \
+            src/components/cctv/ProductCatalogGate.tsx \
+            src/routes/catalog.tsx \
+            'src/routes/_authenticated/editor.$id.tsx' \
+            src/lib/cctv/catalog.ts \
+            src/lib/cctv/product-catalog.ts
 
       - name: Test
         run: npm test

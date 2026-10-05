@@ -44,7 +44,9 @@ export function MapWorkspace({
   useEffect(() => {
     let cancelled = false;
     void import("leaflet").then((mod) => {
-      const L = (mod as unknown as { default?: typeof Leaflet }).default ?? (mod as unknown as typeof Leaflet);
+      const L =
+        (mod as unknown as { default?: typeof Leaflet }).default ??
+        (mod as unknown as typeof Leaflet);
       if (cancelled || !containerRef.current || mapRef.current) return;
       LRef.current = L;
       const start = stateRef.current.center ?? { lat: 30.0444, lng: 31.2357 };
@@ -56,22 +58,19 @@ export function MapWorkspace({
 
       if (googleKey) {
         // طبقة Google Maps Hybrid (قمر صناعي + أسماء وتفاصيل الشوارع)
-        L.tileLayer(
-          `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${googleKey}`,
-          {
-            maxZoom: 21,
-            attribution: "Map data © Google",
-          }
-        ).addTo(map);
+        L.tileLayer(`https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${googleKey}`, {
+          maxZoom: 21,
+          attribution: "Map data © Google",
+        }).addTo(map);
       } else {
         // بديل تلقائي (Esri) في حال عدم وجود المفتاح
         L.tileLayer(
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" }
+          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
         ).addTo(map);
         L.tileLayer(
           "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" }
+          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
         ).addTo(map);
       }
 
@@ -145,7 +144,9 @@ export function MapWorkspace({
         iconSize: [22, 22],
         iconAnchor: [11, 11],
       });
-      const m = L.marker([cam.lat, cam.lng], { icon, draggable: true, title: cam.name }).addTo(layer);
+      const m = L.marker([cam.lat, cam.lng], { icon, draggable: true, title: cam.name }).addTo(
+        layer,
+      );
       m.on("click", () => setSelectedId(cam.id));
       m.on("dragend", () => {
         const p = m.getLatLng();
@@ -193,7 +194,12 @@ export function MapWorkspace({
   function applyCoords() {
     const lat = Number(latInput);
     const lng = Number(lngInput);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      Math.abs(lat) > 90 ||
+      Math.abs(lng) > 180
+    ) {
       toast.error("إحداثيات غير صحيحة");
       return;
     }
@@ -208,7 +214,10 @@ export function MapWorkspace({
   }
 
   function updateCam(id: string, patch: Partial<MapCamera>) {
-    onChange({ ...siteMap, cameras: siteMap.cameras.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
+    onChange({
+      ...siteMap,
+      cameras: siteMap.cameras.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    });
   }
   function removeCam(id: string) {
     onChange({ ...siteMap, cameras: siteMap.cameras.filter((c) => c.id !== id) });
@@ -249,7 +258,11 @@ export function MapWorkspace({
               </option>
             ))}
           </select>
-          <Button size="sm" variant={placing ? "default" : "outline"} onClick={() => setPlacing((v) => !v)}>
+          <Button
+            size="sm"
+            variant={placing ? "default" : "outline"}
+            onClick={() => setPlacing((v) => !v)}
+          >
             <Camera className="h-4 w-4" />
             {placing ? "انقر على الخريطة لوضع كاميرا" : "إضافة كاميرا"}
           </Button>
@@ -263,8 +276,20 @@ export function MapWorkspace({
         </h3>
         {siteMap.address && <p className="mb-2 text-xs text-muted-foreground">{siteMap.address}</p>}
         <div className="grid grid-cols-2 gap-2">
-          <Input value={latInput} onChange={(e) => setLatInput(e.target.value)} placeholder="Lat" className="h-8" dir="ltr" />
-          <Input value={lngInput} onChange={(e) => setLngInput(e.target.value)} placeholder="Lng" className="h-8" dir="ltr" />
+          <Input
+            value={latInput}
+            onChange={(e) => setLatInput(e.target.value)}
+            placeholder="Lat"
+            className="h-8"
+            dir="ltr"
+          />
+          <Input
+            value={lngInput}
+            onChange={(e) => setLngInput(e.target.value)}
+            placeholder="Lng"
+            className="h-8"
+            dir="ltr"
+          />
         </div>
         <Button size="sm" variant="secondary" className="mt-2 w-full" onClick={applyCoords}>
           <Crosshair className="h-4 w-4" /> تثبيت الإحداثيات
@@ -283,7 +308,11 @@ export function MapWorkspace({
 
         {selected && selSpec && (
           <div className="mt-4 space-y-2 rounded-lg border border-primary/40 p-3">
-            <Input value={selected.name} onChange={(e) => updateCam(selected.id, { name: e.target.value })} className="h-8" />
+            <Input
+              value={selected.name}
+              onChange={(e) => updateCam(selected.id, { name: e.target.value })}
+              className="h-8"
+            />
             <select
               value={selected.specId}
               onChange={(e) => updateCam(selected.id, { specId: e.target.value })}
@@ -321,7 +350,10 @@ export function MapWorkspace({
               {ppmLevels.map((l, i) => (
                 <div key={l.id} className="flex items-center justify-between">
                   <span className="flex items-center gap-1">
-                    <span className="inline-block h-2 w-2 rounded-full" style={{ background: LEVEL_COLORS[i] }} />
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: LEVEL_COLORS[i] }}
+                    />
                     {l.label} ({l.ppm} PPM)
                   </span>
                   <span>{distanceForPpm(selSpec, l.ppm).toFixed(1)} م</span>
@@ -331,7 +363,12 @@ export function MapWorkspace({
             <p className="text-xs text-muted-foreground" dir="ltr">
               {selected.lat.toFixed(6)}, {selected.lng.toFixed(6)}
             </p>
-            <Button size="sm" variant="destructive" className="w-full" onClick={() => removeCam(selected.id)}>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="w-full"
+              onClick={() => removeCam(selected.id)}
+            >
               <Trash2 className="h-4 w-4" /> حذف الكاميرا
             </Button>
           </div>
@@ -354,7 +391,9 @@ export function MapWorkspace({
             </li>
           ))}
           {siteMap.cameras.length === 0 && (
-            <li className="text-xs text-muted-foreground">حدد الموقع ثم اضغط "إضافة كاميرا" وانقر على الخريطة.</li>
+            <li className="text-xs text-muted-foreground">
+              حدد الموقع ثم اضغط "إضافة كاميرا" وانقر على الخريطة.
+            </li>
           )}
         </ul>
         <p className="mt-4 text-xs text-muted-foreground">

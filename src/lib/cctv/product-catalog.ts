@@ -59,11 +59,9 @@ export function productToCameraSpec(product: ProductRow): CameraSpec | null {
   const hfov = positiveNumber(specs.hfov_deg) ?? positiveNumber(specs.hfov) ?? 0;
   const irRange = positiveNumber(specs.ir_range_m) ?? positiveNumber(specs.irRange) ?? 0;
   const poeWatt = positiveNumber(specs.poe_watt) ?? positiveNumber(specs.poeWatt) ?? 0;
-  const bitrateMbps =
-    positiveNumber(specs.bitrate_mbps) ?? positiveNumber(specs.bitrateMbps) ?? 0;
+  const bitrateMbps = positiveNumber(specs.bitrate_mbps) ?? positiveNumber(specs.bitrateMbps) ?? 0;
 
-  const engineeringReady =
-    hres > 0 && vres > 0 && focal > 0 && hfov > 0 && megapixel > 0;
+  const engineeringReady = hres > 0 && vres > 0 && focal > 0 && hfov > 0 && megapixel > 0;
 
   return {
     id: product.id,
@@ -125,8 +123,7 @@ export function productToHardwareSpec(product: ProductRow): HardwareSpec | null 
     const describedPorts = firstNumber(description, /(\d+)\s*Port\b/i);
     const ethernetPorts = finiteNumber(specs.ethernet_ports) ?? describedPorts ?? 0;
     const poePorts =
-      finiteNumber(specs.poe_ports) ??
-      (/\bPoE\b/i.test(description) ? describedPorts ?? 0 : 0);
+      finiteNumber(specs.poe_ports) ?? (/\bPoE\b/i.test(description) ? (describedPorts ?? 0) : 0);
 
     return {
       id: product.id,

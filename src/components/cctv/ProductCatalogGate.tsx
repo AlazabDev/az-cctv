@@ -1,11 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CctvProjectEditorV2 } from "@/components/cctv/CctvProjectEditorV2";
-import {
-  cameraCatalog,
-  hardwareCatalog,
-  hydrateProductCatalog,
-} from "@/lib/cctv/catalog";
+import { cameraCatalog, hardwareCatalog, hydrateProductCatalog } from "@/lib/cctv/catalog";
 
 export function ProductCatalogGate({ projectId }: { projectId: string }) {
   const { data, error, isLoading } = useQuery({
@@ -51,7 +47,8 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
       <div className="p-10">
         <h1 className="mb-2 text-lg font-bold">كتالوج المنتجات غير مكتمل</h1>
         <p className="text-sm text-muted-foreground">
-          يلزم وجود كاميرا نشطة واحدة على الأقل ومنتج NVR أو Network Switch واحد على الأقل قبل فتح المحرر.
+          يلزم وجود كاميرا نشطة واحدة على الأقل ومنتج NVR أو Network Switch واحد على الأقل قبل فتح
+          المحرر.
         </p>
         <p className="mt-3 text-xs text-muted-foreground">
           Cameras: {cameraCatalog.length} · Hardware: {hardwareCatalog.length}
