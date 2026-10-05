@@ -52,14 +52,29 @@ export function MapWorkspace({
         [start.lat, start.lng],
         stateRef.current.center ? stateRef.current.zoom : 12,
       );
-      L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
-      ).addTo(map);
-      L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 21, maxNativeZoom: 19 },
-      ).addTo(map);
+      const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
+      if (googleKey) {
+        // طبقة Google Maps Hybrid (قمر صناعي + أسماء وتفاصيل الشوارع)
+        L.tileLayer(
+          `https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${googleKey}`,
+          {
+            maxZoom: 21,
+            attribution: "Map data © Google",
+          }
+        ).addTo(map);
+      } else {
+        // بديل تلقائي (Esri) في حال عدم وجود المفتاح
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
+        ).addTo(map);
+        L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+          { maxZoom: 21, maxNativeZoom: 19 },
+        ).addTo(map);
+      };
+
       L.control.scale({ metric: true, imperial: false }).addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
       map.on("click", (e: Leaflet.LeafletMouseEvent) => {
