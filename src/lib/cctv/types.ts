@@ -2,10 +2,12 @@ export type DeviceKind = "camera" | "nvr" | "switch" | "rack";
 
 export interface CameraSpec {
   id: string;
+  /** Canonical commercial product row when this spec came from public.products. */
+  productId?: string;
   brand: string;
   model: string;
   label: string;
-  type: "bullet" | "dome" | "turret" | "ptz" | "fisheye";
+  type: "bullet" | "dome" | "turret" | "ptz" | "fisheye" | "other";
   megapixel: number;
   hres: number;
   vres: number;
@@ -13,15 +15,26 @@ export interface CameraSpec {
   hfov: number;
   irRange: number;
   price: number;
+  currency?: string;
   poeWatt: number;
   bitrateMbps: number;
+  imageUrl?: string;
+  /** True only when deterministic geometry inputs are complete enough for DORI/PPM. */
+  engineeringReady?: boolean;
 }
 
 export interface HardwareSpec {
   id: string;
+  /** Canonical commercial product row when this spec came from public.products. */
+  productId?: string;
   kind: Exclude<DeviceKind, "camera">;
+  brand?: string;
+  model?: string;
   label: string;
   price: number;
+  currency?: string;
+  imageUrl?: string;
+  engineeringReady?: boolean;
   /** Recording capacity only. Never treat channels as physical Ethernet/PoE ports. */
   channels?: number;
   /** Legacy physical port count kept for backward compatibility. */
@@ -41,7 +54,10 @@ export interface HardwareSpec {
 export interface PlacedDevice {
   id: string;
   kind: DeviceKind;
+  /** Engineering/catalog adapter id. New catalog-backed devices use the product UUID. */
   specId: string;
+  /** Canonical commercial product identity. Experimental/design-only items may omit it. */
+  productId?: string;
   name: string;
   x: number;
   y: number;
