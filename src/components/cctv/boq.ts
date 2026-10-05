@@ -164,12 +164,8 @@ export function suggestHardware(cameraCount: number) {
     .sort((a, b) => (a.channels ?? 0) - (b.channels ?? 0));
   const switches = hardwareCatalog
     .filter((item) => item.kind === "switch")
-    .sort(
-      (a, b) => (a.ethernetPorts ?? a.ports ?? 0) - (b.ethernetPorts ?? b.ports ?? 0),
-    );
+    .sort((a, b) => (a.ethernetPorts ?? a.ports ?? 0) - (b.ethernetPorts ?? b.ports ?? 0));
   const nvr = nvrs.find((item) => (item.channels ?? 0) >= cameraCount) ?? nvrs.at(-1);
-  const sw = switches.find(
-    (item) => (item.ethernetPorts ?? item.ports ?? 0) >= cameraCount + 1,
-  );
+  const sw = switches.find((item) => (item.ethernetPorts ?? item.ports ?? 0) >= cameraCount + 1);
   return { nvr, sw };
 }
