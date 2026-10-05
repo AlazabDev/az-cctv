@@ -99,12 +99,11 @@ export function TopologyWorkspace({
         ? undefined
         : (cableTypes.find((c) => c.id === "cat6-stp")?.id ??
           cableTypes.find((c) => c.category === "network")?.id);
-    const routeBindings = {
+    const nextType = currentType?.category === wantedCategory ? current.cableTypeId : fallback;
+    const { cableTypeId: _omitType, ...restBinding } = current;
+    const routeBindings: typeof topology.routeBindings = {
       ...topology.routeBindings,
-      [id]: {
-        ...current,
-        cableTypeId: currentType?.category === wantedCategory ? current.cableTypeId : fallback,
-      },
+      [id]: nextType ? { ...restBinding, cableTypeId: nextType } : restBinding,
     };
     patch({ media, routeBindings });
   };
@@ -114,7 +113,10 @@ export function TopologyWorkspace({
     patch({
       routeBindings: {
         ...topology.routeBindings,
-        [id]: { ...current, mode, cableRunId: mode === "cable" ? cableRunId : undefined },
+        [id]: (() => {
+          const { cableRunId: _omitRun, ...rest } = current;
+          return mode === "cable" && cableRunId ? { ...rest, mode, cableRunId } : { ...rest, mode };
+        })(),
       },
     });
   };
