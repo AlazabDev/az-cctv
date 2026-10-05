@@ -4,6 +4,7 @@ name: Stage 2 Product Catalog CI
   push:
     branches:
       - feat/stage2-product-catalog-close
+      - main
   pull_request:
     branches:
       - main
