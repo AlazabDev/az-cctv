@@ -259,7 +259,7 @@ export function PlanCanvas({
   ]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button === 1 || (mode === "select" && e.target === e.currentTarget) || e.shiftKey) {
+    if (e.button === 1 || (mode === "select" && e.target === e.currentTarget)) {
       panRef.current = {
         startX: e.clientX,
         startY: e.clientY,
