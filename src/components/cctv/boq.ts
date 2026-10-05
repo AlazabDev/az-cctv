@@ -4,7 +4,6 @@ import {
   hardwareById,
   hardwareCatalog,
   networkAccessories,
-  storageOptions,
 } from "@/lib/cctv/catalog";
 import { cableLengthMeters, storageTb } from "@/lib/cctv/geometry";
 import {
@@ -23,6 +22,9 @@ export interface BoqLine {
   unit: string;
   unitPrice: number;
   total: number;
+  /** Canonical commercial source. Missing only for engineering/design-only requirements. */
+  productId?: string;
+  imageUrl?: string;
   source?: "plan" | "topology-measured" | "topology-estimated" | "topology-accessory";
 }
 
@@ -40,41 +42,49 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
   const lines: BoqLine[] = [];
   const cameras = plan.devices.filter((d) => d.kind === "camera");
 
-  const byModel = new Map<string, number>();
-  cameras.forEach((c) => byModel.set(c.specId, (byModel.get(c.specId) ?? 0) + 1));
-  byModel.forEach((qty, specId) => {
-    const spec = cameraById(specId);
-    if (!spec) return;
+  const cameraGroups = new Map<string, typeof cameras>();
+  for (const camera of cameras) {
+    const key = camera.productId ?? camera.specId;
+    cameraGroups.set(key, [...(cameraGroups.get(key) ?? []), camera]);
+  }
+
+  for (const grouped of cameraGroups.values()) {
+    const sample = grouped[0]!;
+    const spec = cameraById(sample.specId);
+    if (!spec) continue;
     lines.push({
       label: `${spec.label} — ${spec.model}`,
-      qty,
+      qty: grouped.length,
       unit: "قطعة",
       unitPrice: spec.price,
-      total: qty * spec.price,
+      total: grouped.length * spec.price,
+      productId: sample.productId ?? spec.productId,
+      imageUrl: spec.imageUrl,
       source: "plan",
     });
-  });
+  }
 
-  plan.devices
-    .filter((d) => d.kind !== "camera")
-    .forEach((d) => {
-      const spec = hardwareById(d.specId);
-      if (!spec) return;
-      const existing = lines.find((l) => l.label === spec.label);
-      if (existing) {
-        existing.qty += 1;
-        existing.total = existing.qty * existing.unitPrice;
-      } else {
-        lines.push({
-          label: spec.label,
-          qty: 1,
-          unit: "قطعة",
-          unitPrice: spec.price,
-          total: spec.price,
-          source: "plan",
-        });
-      }
+  const hardwareGroups = new Map<string, typeof plan.devices>();
+  for (const device of plan.devices.filter((d) => d.kind !== "camera")) {
+    const key = device.productId ?? device.specId;
+    hardwareGroups.set(key, [...(hardwareGroups.get(key) ?? []), device]);
+  }
+
+  for (const grouped of hardwareGroups.values()) {
+    const sample = grouped[0]!;
+    const spec = hardwareById(sample.specId);
+    if (!spec) continue;
+    lines.push({
+      label: spec.label,
+      qty: grouped.length,
+      unit: "قطعة",
+      unitPrice: spec.price,
+      total: grouped.length * spec.price,
+      productId: sample.productId ?? spec.productId,
+      imageUrl: spec.imageUrl,
+      source: "plan",
     });
+  }
 
   const cableByType = new Map<string, number>();
   const topology = options.topology;
@@ -118,45 +128,48 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
   });
 
   cableByType.forEach((meters, typeId) => {
-    const t = cableTypes.find((x) => x.id === typeId);
-    if (!t) return;
+    const type = cableTypes.find((item) => item.id === typeId);
+    if (!type) return;
     const qty = Math.ceil(meters);
     lines.push({
-      label: `كابل ${t.label}`,
+      label: `كابل ${type.label}`,
       qty,
       unit: "متر",
-      unitPrice: t.pricePerMeter,
-      total: qty * t.pricePerMeter,
+      unitPrice: type.pricePerMeter,
+      total: qty * type.pricePerMeter,
       source: topology ? "topology-measured" : "plan",
     });
   });
 
-  const totalBitrate = cameras.reduce((s, c) => s + (cameraById(c.specId)?.bitrateMbps ?? 0), 0);
+  const totalBitrate = cameras.reduce(
+    (sum, camera) => sum + (cameraById(camera.specId)?.bitrateMbps ?? 0),
+    0,
+  );
   const neededTb = storageTb(totalBitrate, retentionDays);
-  const disk = (neededTb > 4 ? storageOptions[1] : storageOptions[0])!;
-  const diskQty = Math.max(cameras.length ? 1 : 0, Math.ceil(neededTb / disk.tb) || 0);
-  if (diskQty > 0) {
-    lines.push({
-      label: disk.label,
-      qty: diskQty,
-      unit: "قطعة",
-      unitPrice: disk.price,
-      total: diskQty * disk.price,
-      source: "plan",
-    });
-  }
 
-  const grand = lines.reduce((s, l) => s + l.total, 0);
-  const poeLoad = cameras.reduce((s, c) => s + (cameraById(c.specId)?.poeWatt ?? 0), 0);
+  // Storage remains an engineering requirement until an HDD product exists in public.products.
+  // Do not invent a commercial product/price outside the canonical product master.
+
+  const grand = lines.reduce((sum, line) => sum + line.total, 0);
+  const poeLoad = cameras.reduce(
+    (sum, camera) => sum + (cameraById(camera.specId)?.poeWatt ?? 0),
+    0,
+  );
   return { lines, grand, cameras: cameras.length, totalBitrate, neededTb, poeLoad };
 }
 
 export function suggestHardware(cameraCount: number) {
-  const nvr =
-    hardwareCatalog.find((h) => h.kind === "nvr" && (h.channels ?? 0) >= cameraCount) ??
-    hardwareCatalog[2]!;
-  const sw = hardwareCatalog.find(
-    (h) => h.kind === "switch" && (h.ethernetPorts ?? h.ports ?? 0) >= cameraCount + 1,
+  const nvrs = hardwareCatalog
+    .filter((item) => item.kind === "nvr")
+    .sort((a, b) => (a.channels ?? 0) - (b.channels ?? 0));
+  const switches = hardwareCatalog
+    .filter((item) => item.kind === "switch")
+    .sort(
+      (a, b) => (a.ethernetPorts ?? a.ports ?? 0) - (b.ethernetPorts ?? b.ports ?? 0),
+    );
+  const nvr = nvrs.find((item) => (item.channels ?? 0) >= cameraCount) ?? nvrs.at(-1);
+  const sw = switches.find(
+    (item) => (item.ethernetPorts ?? item.ports ?? 0) >= cameraCount + 1,
   );
   return { nvr, sw };
 }
