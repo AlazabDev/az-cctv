@@ -4,6 +4,7 @@ export type PlanPoint = { x: number; y: number };
 
 const EPSILON = 0.001;
 
+// Pure geometry helpers below are intentionally deterministic and unit-tested.
 export function distance(a: PlanPoint, b: PlanPoint) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
