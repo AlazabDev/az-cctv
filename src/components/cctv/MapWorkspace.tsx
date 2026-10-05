@@ -73,7 +73,7 @@ export function MapWorkspace({
           "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
           { maxZoom: 21, maxNativeZoom: 19, attribution: "Tiles © Esri" },
         ).addTo(map);
-      };
+      }
 
       L.control.scale({ metric: true, imperial: false }).addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
