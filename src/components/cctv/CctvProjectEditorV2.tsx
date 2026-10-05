@@ -38,7 +38,12 @@ import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
-import { emptySiteMap, mapCamerasAsDevices, normalizeSiteMap, type SiteMapData } from "@/lib/cctv/site-map";
+import {
+  emptySiteMap,
+  mapCamerasAsDevices,
+  normalizeSiteMap,
+  type SiteMapData,
+} from "@/lib/cctv/site-map";
 import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import { cableTypes, cameraById, cameraCatalog, hardwareCatalog } from "@/lib/cctv/catalog";

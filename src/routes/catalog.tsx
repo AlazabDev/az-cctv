@@ -163,11 +163,7 @@ function CatalogPage() {
                 rows={catalog.hardware.map((item) => [
                   item.label,
                   item.model ?? "—",
-                  item.channels
-                    ? `${item.channels} قناة`
-                    : item.ports
-                      ? `${item.ports} منفذ`
-                      : "—",
+                  item.channels ? `${item.channels} قناة` : item.ports ? `${item.ports} منفذ` : "—",
                   item.poeBudget ? `${item.poeBudget} W` : "—",
                   formatMoney(item.price, item.currency || "EGP"),
                 ])}
