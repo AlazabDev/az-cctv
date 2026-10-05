@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CctvProjectEditorV2 } from "@/components/cctv/CctvProjectEditorV2";
+import { ProductCatalogGate } from "@/components/cctv/ProductCatalogGate";
 
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   head: () => ({
@@ -16,5 +16,5 @@ export const Route = createFileRoute("/_authenticated/editor/$id")({
 
 function EditorRoutePage() {
   const { id } = Route.useParams();
-  return <CctvProjectEditorV2 projectId={id} />;
+  return <ProductCatalogGate projectId={id} />;
 }
