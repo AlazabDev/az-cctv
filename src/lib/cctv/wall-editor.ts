@@ -1,3 +1,5 @@
+import type { WallSegment } from "@/lib/cctv/types";
+
 export type PlanPoint = { x: number; y: number };
 
 const EPSILON = 0.001;
@@ -16,6 +18,12 @@ export function dedupeConsecutivePoints(points: PlanPoint[], tolerance = EPSILON
     if (!last || !samePoint(last, point, tolerance)) result.push({ ...point });
     return result;
   }, []);
+}
+
+export function sanitizeWallPoints(points: PlanPoint[], tolerance = EPSILON) {
+  return dedupeConsecutivePoints(points, tolerance).filter(
+    (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
+  );
 }
 
 export function constrainOrthogonal(anchor: PlanPoint, point: PlanPoint) {
@@ -57,7 +65,9 @@ export function snapWallPoint(options: {
 }
 
 export function insertVertex(points: PlanPoint[], segmentIndex: number, point: PlanPoint) {
-  if (segmentIndex < 0 || segmentIndex >= points.length - 1) return points.map((p) => ({ ...p }));
+  if (segmentIndex < 0 || segmentIndex >= points.length - 1) {
+    return points.map((p) => ({ ...p }));
+  }
   return [
     ...points.slice(0, segmentIndex + 1).map((p) => ({ ...p })),
     { ...point },
@@ -66,8 +76,9 @@ export function insertVertex(points: PlanPoint[], segmentIndex: number, point: P
 }
 
 export function deleteVertex(points: PlanPoint[], vertexIndex: number) {
-  if (points.length <= 2 || vertexIndex < 0 || vertexIndex >= points.length)
+  if (points.length <= 2 || vertexIndex < 0 || vertexIndex >= points.length) {
     return points.map((p) => ({ ...p }));
+  }
   return points.filter((_, index) => index !== vertexIndex).map((p) => ({ ...p }));
 }
 
@@ -75,7 +86,9 @@ export function closestPointOnSegment(point: PlanPoint, start: PlanPoint, end: P
   const dx = end.x - start.x;
   const dy = end.y - start.y;
   const lengthSquared = dx * dx + dy * dy;
-  if (lengthSquared <= EPSILON) return { point: { ...start }, t: 0, distance: distance(point, start) };
+  if (lengthSquared <= EPSILON) {
+    return { point: { ...start }, t: 0, distance: distance(point, start) };
+  }
   const rawT = ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared;
   const t = Math.max(0, Math.min(1, rawT));
   const projected = { x: start.x + dx * t, y: start.y + dy * t };
@@ -91,4 +104,17 @@ export function nearestSegment(points: PlanPoint[], point: PlanPoint) {
     }
   }
   return best;
+}
+
+export function normalizeWallSegment(wall: WallSegment): WallSegment {
+  const points = sanitizeWallPoints(wall.points);
+  return {
+    ...wall,
+    kind: wall.kind === "fence" || wall.material === "fence" ? "fence" : "wall",
+    color: wall.color || (wall.kind === "fence" || wall.material === "fence" ? "#15803d" : "#334155"),
+    thicknessCm: wall.thicknessCm === 20 ? 20 : 10,
+    points,
+    curved: Boolean(wall.curved),
+    note: wall.note ?? "",
+  };
 }
