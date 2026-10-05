@@ -19,15 +19,7 @@ import {
 import { Camera, HardDrive, Network, Server, Trash2 } from "lucide-react";
 
 export type CanvasMode =
-  | "select"
-  | "camera"
-  | "nvr"
-  | "switch"
-  | "rack"
-  | "cable"
-  | "wall"
-  | "label"
-  | "scale";
+  "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "label" | "scale";
 
 interface Props {
   plan: PlanData;
@@ -99,8 +91,7 @@ function wallKind(wall: WallSegment): WallKind {
 }
 
 function wallColor(wall: WallSegment) {
-  return wall.color ||
-    (wallKind(wall) === "fence" ? DEFAULT_FENCE_COLOR : DEFAULT_WALL_COLOR);
+  return wall.color || (wallKind(wall) === "fence" ? DEFAULT_FENCE_COLOR : DEFAULT_WALL_COLOR);
 }
 
 function isTypingTarget(target: EventTarget | null) {
@@ -279,18 +270,11 @@ export function PlanCanvas({
     }
   };
 
-  const snapVertex = (
-    raw: Point,
-    wall: WallSegment,
-    vertexIndex: number,
-    orthogonal: boolean,
-  ) => {
+  const snapVertex = (raw: Point, wall: WallSegment, vertexIndex: number, orthogonal: boolean) => {
     const candidates = plan.walls.flatMap((candidateWall) =>
       candidateWall.points
         .map((point, index) => ({ point, index }))
-        .filter(
-          ({ index }) => candidateWall.id !== wall.id || index !== vertexIndex,
-        )
+        .filter(({ index }) => candidateWall.id !== wall.id || index !== vertexIndex)
         .map(({ point }) => point),
     );
     const anchor = wall.points[vertexIndex - 1] ?? wall.points[vertexIndex + 1];
@@ -367,14 +351,7 @@ export function PlanCanvas({
       thresholdPlanUnits: snapThreshold,
       orthogonal: orthogonalPreview,
     });
-  }, [
-    allWallPoints,
-    hoverPoint,
-    mode,
-    orthogonalPreview,
-    snapThreshold,
-    wallDraft,
-  ]);
+  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, snapThreshold, wallDraft]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (mode === "select") {
@@ -431,9 +408,7 @@ export function PlanCanvas({
       patchWall(selectedWall.id, {
         kind,
         material: kind === "fence" ? "fence" : "medium-wall",
-        color:
-          selectedWall.color ||
-          (kind === "fence" ? DEFAULT_FENCE_COLOR : DEFAULT_WALL_COLOR),
+        color: selectedWall.color || (kind === "fence" ? DEFAULT_FENCE_COLOR : DEFAULT_WALL_COLOR),
       });
       return;
     }
@@ -494,14 +469,7 @@ export function PlanCanvas({
               height={plan.imageHeight ?? undefined}
             />
           ) : (
-            <rect
-              x={0}
-              y={0}
-              width={1200}
-              height={800}
-              fill="oklch(0.25 0.02 258)"
-              rx={8}
-            />
+            <rect x={0} y={0} width={1200} height={800} fill="oklch(0.25 0.02 258)" rx={8} />
           )}
 
           {plan.showCoverage &&
@@ -569,8 +537,7 @@ export function PlanCanvas({
                 .join(" ")}
               fill="none"
               stroke={
-                cableTypes.find((item) => item.id === cableDraftType)?.color ??
-                "var(--color-cable)"
+                cableTypes.find((item) => item.id === cableDraftType)?.color ?? "var(--color-cable)"
               }
               strokeDasharray={`${6 / zoom} ${4 / zoom}`}
               strokeWidth={2 / zoom}
@@ -587,9 +554,7 @@ export function PlanCanvas({
                 fill="none"
                 stroke={draftWallColor}
                 strokeDasharray={
-                  draftWallKind === "fence"
-                    ? `${8 / zoom} ${5 / zoom}`
-                    : `${6 / zoom} ${4 / zoom}`
+                  draftWallKind === "fence" ? `${8 / zoom} ${5 / zoom}` : `${6 / zoom} ${4 / zoom}`
                 }
                 strokeWidth={draftWallKind === "fence" ? 3 / zoom : wallStrokePx(10)}
                 strokeLinecap="round"
@@ -874,9 +839,7 @@ export function PlanCanvas({
               type="button"
               onClick={() => setCurrentWallKind("wall")}
               className={`px-3 py-1.5 text-xs font-semibold ${
-                currentKind === "wall"
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                currentKind === "wall" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
               }`}
             >
               حائط
@@ -885,9 +848,7 @@ export function PlanCanvas({
               type="button"
               onClick={() => setCurrentWallKind("fence")}
               className={`border-l border-border px-3 py-1.5 text-xs font-semibold ${
-                currentKind === "fence"
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                currentKind === "fence" ? "bg-primary text-primary-foreground" : "hover:bg-muted"
               }`}
             >
               سياج

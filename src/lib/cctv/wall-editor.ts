@@ -111,7 +111,8 @@ export function normalizeWallSegment(wall: WallSegment): WallSegment {
   return {
     ...wall,
     kind: wall.kind === "fence" || wall.material === "fence" ? "fence" : "wall",
-    color: wall.color || (wall.kind === "fence" || wall.material === "fence" ? "#15803d" : "#334155"),
+    color:
+      wall.color || (wall.kind === "fence" || wall.material === "fence" ? "#15803d" : "#334155"),
     thicknessCm: wall.thicknessCm === 20 ? 20 : 10,
     points,
     curved: Boolean(wall.curved),
