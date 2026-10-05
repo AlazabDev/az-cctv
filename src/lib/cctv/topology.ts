@@ -10,23 +10,23 @@ export type LinkLengthMode = "estimated" | "cable";
 
 export interface RouteBinding {
   mode: LinkLengthMode;
-  cableRunId?: string;
+  cableRunId?: string | undefined;
   /** Used for estimated links and as an explicit override when needed. */
-  cableTypeId?: string;
+  cableTypeId?: string | undefined;
 }
 
 export interface EngineeringCapabilityOverride {
-  ethernetPorts?: number;
-  poePorts?: number;
-  sfpPorts?: number;
-  poeBudget?: number;
-  uplinkMbps?: number;
-  channels?: number;
-  notes?: string;
+  ethernetPorts?: number | undefined;
+  poePorts?: number | undefined;
+  sfpPorts?: number | undefined;
+  poeBudget?: number | undefined;
+  uplinkMbps?: number | undefined;
+  channels?: number | undefined;
+  notes?: string | undefined;
 }
 
 export interface GatewayEngineeringSpec extends EngineeringCapabilityOverride {
-  name?: string;
+  name?: string | undefined;
 }
 
 export interface TopologyData {
@@ -80,7 +80,7 @@ export interface TopoNode {
 
 export interface TopoIssue {
   level: "error" | "warning";
-  deviceId?: string;
+  deviceId?: string | undefined;
   text: string;
 }
 
@@ -88,19 +88,19 @@ export interface EffectiveCapabilities {
   ethernetPorts: number;
   poePorts: number;
   sfpPorts: number;
-  poeBudget?: number;
-  uplinkMbps?: number;
-  channels?: number;
-  notes?: string;
+  poeBudget?: number | undefined;
+  uplinkMbps?: number | undefined;
+  channels?: number | undefined;
+  notes?: string | undefined;
 }
 
 export interface ResolvedLinkRoute {
   lengthM: number | null;
   source: "measured" | "estimated" | "missing";
-  cableRunId?: string;
-  cableTypeId?: string;
-  endpointValid?: boolean;
-  reason?: string;
+  cableRunId?: string | undefined;
+  cableTypeId?: string | undefined;
+  endpointValid?: boolean | undefined;
+  reason?: string | undefined;
 }
 
 export function collectNodes(layouts: TopoLayout[]) {

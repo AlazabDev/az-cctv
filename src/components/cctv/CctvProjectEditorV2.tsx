@@ -37,6 +37,8 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
+import { MapWorkspace } from "@/components/cctv/MapWorkspace";
+import { emptySiteMap, mapCamerasAsDevices, normalizeSiteMap, type SiteMapData } from "@/lib/cctv/site-map";
 import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import { cableTypes, cameraById, cameraCatalog, hardwareCatalog } from "@/lib/cctv/catalog";
@@ -145,6 +147,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [retention, setRetention] = useState(14);
   const [offer, setOffer] = useState<OfferSettings>(defaultOffer);
   const [topology, setTopology] = useState<TopologyData>(emptyTopology);
+  const [siteMap, setSiteMap] = useState<SiteMapData>(emptySiteMap);
   const [activeModule, setActiveModule] = useState<ModuleId>("plan");
   const [drawer, setDrawer] = useState<DrawerId>(null);
   const [mode, setMode] = useState<CanvasMode>("select");
@@ -193,6 +196,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       layouts?: Partial<ProjectLayout>[];
       activeLayoutId?: string;
       topology?: Partial<TopologyData>;
+      siteMap?: Partial<SiteMapData>;
     };
     const list: ProjectLayout[] = stored.layouts?.length
       ? stored.layouts.map((l) => normalizeLayout(l))
@@ -215,6 +219,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       lineOverrides: stored.offer?.lineOverrides ?? {},
     });
     setTopology(normalizeTopology(stored.topology));
+    setSiteMap(normalizeSiteMap(stored.siteMap));
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "EGP");
@@ -234,7 +239,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const selectedWall = plan.walls.find((wall) => wall.id === selectedWallId) ?? null;
   const selectedLabel = (plan.roomLabels.find((label) => label.id === selectedLabelId) ??
     null) as EditableRoomLabel | null;
-  const projectPlan = useMemo(() => mergeLayouts(layouts), [layouts]);
+  const projectPlan = useMemo(() => {
+    const merged = mergeLayouts(layouts);
+    return { ...merged, devices: [...merged.devices, ...mapCamerasAsDevices(siteMap)] };
+  }, [layouts, siteMap]);
   const boq = useMemo(
     () => buildBoq(projectPlan, retention, { layouts, topology }),
     [projectPlan, retention, layouts, topology],
@@ -502,6 +510,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       activeLayoutId: nextActive,
       offer,
       topology,
+      siteMap,
     };
   }
 
@@ -539,7 +548,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     }, 1200);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layouts, activeLayoutId, offer, topology, name, clientName, currency, loaded]);
+  }, [layouts, activeLayoutId, offer, topology, siteMap, name, clientName, currency, loaded]);
 
   function exportCsv() {
     const summary = calculateOffer(boq, offer);
@@ -814,7 +823,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       ) : activeModule === "topology" ? (
         <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
       ) : (
-        <ModulePlaceholder module={activeModule} />
+        <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
       )}
       <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
         <SheetContent side="left" className="no-print w-full p-0 sm:max-w-md">
@@ -1926,35 +1935,6 @@ function SummaryCard({
     >
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className={`mt-2 text-xl font-bold ${strong ? "text-primary" : ""}`}>{value}</p>
-    </div>
-  );
-}
-
-function ModulePlaceholder({
-  module,
-}: {
-  module: Exclude<ModuleId, "plan" | "offer" | "topology">;
-}) {
-  const content =
-    module === "map"
-      ? {
-          icon: Map,
-          title: "Map Design",
-          text: "Outdoor GIS, satellite map, GPS coordinates and wireless bridge line-of-sight are reserved for Phase 5.",
-        }
-      : {
-          icon: Network,
-          title: "Topology",
-          text: "Automatic network tree, PoE port budget and image export are reserved for Phase 4.",
-        };
-  const Icon = content.icon;
-  return (
-    <div className="flex flex-1 items-center justify-center bg-muted/20 p-8">
-      <div className="max-w-xl rounded-2xl border border-border bg-surface p-10 text-center shadow-sm">
-        <Icon className="mx-auto h-12 w-12 text-primary" />
-        <h2 className="mt-4 text-2xl font-bold">{content.title}</h2>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">{content.text}</p>
-      </div>
     </div>
   );
 }
