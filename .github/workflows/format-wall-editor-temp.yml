@@ -1,0 +1,31 @@
+name: Format Wall Editor Temp
+on:
+  push:
+    branches:
+      - fix/wall-editor-interactions
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/wall-editor-interactions
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npx prettier --write src/components/cctv/PlanCanvas.tsx src/lib/cctv/wall-editor.ts tests/wall-editor.engineering.test.ts src/lib/cctv/types.ts
+      - name: Commit formatting if needed
+        run: |
+          if git diff --quiet; then
+            echo "Already formatted"
+            exit 0
+          fi
+          git config user.name "Alazab CI"
+          git config user.email "ci@alazab.com"
+          git add src/components/cctv/PlanCanvas.tsx src/lib/cctv/wall-editor.ts tests/wall-editor.engineering.test.ts src/lib/cctv/types.ts
+          git commit -m "style(plan): format wall editor"
+          git push origin HEAD:fix/wall-editor-interactions
