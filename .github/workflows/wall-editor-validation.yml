@@ -7,6 +7,8 @@ on:
     paths:
       - src/components/cctv/PlanCanvas.tsx
       - src/lib/cctv/types.ts
+      - src/lib/cctv/wall-editor.ts
+      - tests/wall-editor.engineering.test.ts
       - .github/workflows/wall-editor-validation.yml
 jobs:
   validate:
@@ -18,5 +20,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --no-audit --no-fund
+      - run: npx --yes vitest@3.2.4 run tests/wall-editor.engineering.test.ts
       - run: npm run build
-      - run: npx eslint src/components/cctv/PlanCanvas.tsx src/lib/cctv/types.ts
+      - run: npx eslint src/components/cctv/PlanCanvas.tsx src/lib/cctv/types.ts src/lib/cctv/wall-editor.ts tests/wall-editor.engineering.test.ts
