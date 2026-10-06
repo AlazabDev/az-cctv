@@ -16,6 +16,8 @@ export interface SiteMapData {
   zoom: number;
   address: string;
   cameras: MapCamera[];
+  /** Site boundary polygon used by the automatic design engine. */
+  boundary?: { lat: number; lng: number }[];
 }
 
 export const emptySiteMap: SiteMapData = { center: null, zoom: 18, address: "", cameras: [] };
@@ -26,6 +28,7 @@ export function normalizeSiteMap(raw: Partial<SiteMapData> | undefined | null): 
     zoom: typeof raw?.zoom === "number" ? raw.zoom : 18,
     address: raw?.address ?? "",
     cameras: Array.isArray(raw?.cameras) ? raw.cameras : [],
+    boundary: Array.isArray(raw?.boundary) ? raw.boundary : [],
   };
 }
 
