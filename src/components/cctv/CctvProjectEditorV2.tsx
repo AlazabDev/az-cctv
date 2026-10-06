@@ -38,6 +38,15 @@ import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
+import { AutoDesignPanel } from "@/components/cctv/AutoDesignPanel";
+import {
+  autoCables,
+  planDesignInput,
+  proposalsToDevices,
+  runAutoDesign,
+  type CoverageGoal,
+  type Proposal,
+} from "@/lib/cctv/auto-design";
 import {
   emptySiteMap,
   mapCamerasAsDevices,
@@ -175,6 +184,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [saving, setSaving] = useState(false);
   const [wallCurved, setWallCurved] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
+  const [aiProposals, setAiProposals] = useState<Proposal[] | null>(null);
+  const [aiCoverage, setAiCoverage] = useState(0);
   const [layoutDialogOpen, setLayoutDialogOpen] = useState(false);
   const [pendingLayoutName, setPendingLayoutName] = useState("");
   const [pendingCeilingHeight, setPendingCeilingHeight] = useState("3");
@@ -262,6 +273,38 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           : layout,
       ),
     );
+  }
+
+  function generateAutoDesign(goal: CoverageGoal, maxCameras: number) {
+    const specs = cameraCatalog.filter((c) => c.engineeringReady !== false);
+    const input = planDesignInput(plan, goal, specs.length ? specs : cameraCatalog, maxCameras);
+    if (!input) {
+      toast.error("ارفع المخطط أو ارسم الجدران أولاً");
+      return;
+    }
+    const result = runAutoDesign(input);
+    setAiProposals(result.proposals);
+    setAiCoverage(result.coverage);
+    if (!result.proposals.length) toast.error("لم يتم العثور على توزيع مناسب");
+  }
+
+  function applyAutoDesign() {
+    if (!aiProposals?.length) return;
+    const cams = proposalsToDevices(
+      aiProposals,
+      plan.pxPerMeter || 40,
+      plan.devices.filter((d) => d.kind === "camera").length,
+    );
+    const { cables, longRuns, noHub } = autoCables(plan, cams, cableType);
+    update((prev) => ({
+      ...prev,
+      devices: [...prev.devices, ...cams],
+      cables: [...prev.cables, ...cables],
+    }));
+    setAiProposals(null);
+    toast.success(`تمت إضافة ${cams.length} كاميرا${cables.length ? " مع التوصيلات" : ""}`);
+    if (noHub) toast.info("أضف سويتش أو NVR لتوليد الكابلات تلقائياً");
+    if (longRuns.length) toast.warning(`مسارات تتجاوز 90م: ${longRuns.join("، ")} — يُقترح سويتش وسيط أو فايبر`);
   }
 
   function clearSelection() {
@@ -754,7 +797,20 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           onRenameLayout={renameLayout}
           onDeleteLayout={deleteLayout}
           onReplaceLayout={openReplaceDialog}
-          plan={plan}
+          plan={
+            aiProposals
+              ? {
+                  ...plan,
+                  devices: [
+                    ...plan.devices,
+                    ...proposalsToDevices(aiProposals, plan.pxPerMeter || 40, 0).map((d, i) => ({
+                      ...d,
+                      name: `مقترح ${i + 1}`,
+                    })),
+                  ],
+                }
+              : plan
+          }
           imageUrl={imageUrl}
           mode={mode}
           drawer={drawer}
@@ -829,6 +885,19 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
       ) : (
         <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
+      )}
+      {activeModule === "plan" && (
+        <div className="no-print fixed bottom-4 left-4 z-30">
+          <AutoDesignPanel
+            proposals={aiProposals}
+            coverage={aiCoverage}
+            hint="يحلل الجدران والمقياس وارتفاع السقف ويقترح أقل عدد كاميرات يحقق مستوى التغطية، ثم يوصلها بأقرب سويتش/NVR عند الاعتماد."
+            onGenerate={generateAutoDesign}
+            onApply={applyAutoDesign}
+            onReject={() => setAiProposals(null)}
+            onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+          />
+        </div>
       )}
       <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
         <SheetContent side="left" className="no-print w-full p-0 sm:max-w-md">

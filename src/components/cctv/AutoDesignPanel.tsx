@@ -91,7 +91,7 @@ export function AutoDesignPanel({
           </div>
           <ul className="mt-2 max-h-56 space-y-1 overflow-y-auto">
             {proposals.map((p, i) => (
-              <li key={p.id} className="rounded border border-warning/40 bg-warning/5 p-2">
+              <li key={p.id} className="rounded border border-primary/40 bg-primary/5 p-2">
                 <div className="flex items-center justify-between font-bold">
                   <span>
                     #{i + 1} {p.spec.label}
