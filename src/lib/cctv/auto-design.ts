@@ -246,7 +246,7 @@ export function proposalsToDevices(proposals: Proposal[], pxPerMeter: number, st
     id: p.id,
     kind: "camera",
     specId: p.spec.id,
-    productId: p.spec.productId,
+    ...(p.spec.productId ? { productId: p.spec.productId } : {}),
     name: `Camera ${startIndex + i + 1}`,
     x: p.pos.x * pxPerMeter,
     y: p.pos.y * pxPerMeter,
