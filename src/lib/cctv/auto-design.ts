@@ -225,7 +225,15 @@ export function planDesignInput(
   const obstacles: Seg[] = plan.walls
     .filter((w) => w.kind !== "fence" && w.material !== "glass")
     .flatMap((w) => w.points.slice(1).map((p, i) => [toM(w.points[i]!), toM(p)] as Seg));
+  const segs: Seg[] = [
+    ...area.map((a, i) => [toM(a), toM(area[(i + 1) % area.length]!)] as Seg),
+    ...obstacles,
+  ];
   const mounts = [...area, ...wallPts].map(toM);
+  for (const [a, b] of segs) {
+    const n = Math.floor(Math.hypot(b.x - a.x, b.y - a.y) / 4);
+    for (let s = 1; s < n; s++) mounts.push({ x: a.x + ((b.x - a.x) * s) / n, y: a.y + ((b.y - a.y) * s) / n });
+  }
   // dedupe mounts closer than 0.5 m
   const uniq: Pt[] = [];
   for (const m of mounts) if (!uniq.some((u) => Math.hypot(u.x - m.x, u.y - m.y) < 0.5)) uniq.push(m);
