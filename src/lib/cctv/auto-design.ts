@@ -132,8 +132,8 @@ export function runAutoDesign(input: DesignInput): DesignResult {
   const maxPrice = Math.max(1, ...specs.map((s) => s.price || 0));
 
   while (proposals.length < input.maxCameras && coveredCount / samples.length < input.targetCoverage) {
-    let best: { score: number; gain: number[]; mi: number; spec: CameraSpec; rot: number; range: number } | null =
-      null;
+    type Cand = { score: number; gain: number[]; mi: number; spec: CameraSpec; rot: number; range: number };
+    let best = null as Cand | null;
     mounts.forEach((m, mi) => {
       if (proposals.some((p) => Math.hypot(p.pos.x - m.x, p.pos.y - m.y) < 1)) return;
       for (const spec of specs) {
@@ -159,8 +159,8 @@ export function runAutoDesign(input: DesignInput): DesignResult {
         }
       }
     });
-    if (!best || best.gain.length < Math.max(2, samples.length * 0.01)) break;
-    const b = best;
+    const b = best as Cand | null;
+    if (!b || b.gain.length < Math.max(2, samples.length * 0.01)) break;
     b.gain.forEach((i) => (covered[i] = 1));
     coveredCount += b.gain.length;
     const pos = mounts[b.mi]!;
