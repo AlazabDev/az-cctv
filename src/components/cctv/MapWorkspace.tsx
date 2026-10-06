@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import type * as Leaflet from "leaflet";
-import { Camera, Crosshair, LocateFixed, MapPin, Search, Trash2 } from "lucide-react";
+import { Camera, Crosshair, LocateFixed, MapPin, PenLine, Search, Trash2 } from "lucide-react";
+import { AutoDesignPanel } from "@/components/cctv/AutoDesignPanel";
+import {
+  localToGeo,
+  runAutoDesign,
+  screenToBearing,
+  siteDesignInput,
+  type CoverageGoal,
+  type Proposal,
+} from "@/lib/cctv/auto-design";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +45,11 @@ export function MapWorkspace({
   const specRef = useRef(specId);
   specRef.current = specId;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [drawingBoundary, setDrawingBoundary] = useState(false);
+  const boundaryRef = useRef(false);
+  boundaryRef.current = drawingBoundary;
+  const [proposals, setProposals] = useState<(Proposal & { lat: number; lng: number; bearing: number })[] | null>(null);
+  const [aiCoverage, setAiCoverage] = useState(0);
   const [query, setQuery] = useState(siteMap.address);
   const [latInput, setLatInput] = useState(siteMap.center?.lat.toFixed(6) ?? "");
   const [lngInput, setLngInput] = useState(siteMap.center?.lng.toFixed(6) ?? "");
@@ -77,8 +91,15 @@ export function MapWorkspace({
       L.control.scale({ metric: true, imperial: false }).addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
       map.on("click", (e: Leaflet.LeafletMouseEvent) => {
-        if (!placingRef.current) return;
         const cur = stateRef.current;
+        if (boundaryRef.current) {
+          onChangeRef.current({
+            ...cur,
+            boundary: [...(cur.boundary ?? []), { lat: e.latlng.lat, lng: e.latlng.lng }],
+          });
+          return;
+        }
+        if (!placingRef.current) return;
         const cam: MapCamera = {
           id: uid(),
           specId: specRef.current,
@@ -123,6 +144,24 @@ export function MapWorkspace({
         fillOpacity: 1,
       }).addTo(layer);
     }
+    const boundary = siteMap.boundary ?? [];
+    if (boundary.length >= 2) {
+      L.polygon(
+        boundary.map((b) => [b.lat, b.lng] as [number, number]),
+        { color: "#f97316", weight: 2, dashArray: "6 4", fillOpacity: 0.05, interactive: false },
+      ).addTo(layer);
+    }
+    for (const p of proposals ?? []) {
+      const d = distanceForPpm(p.spec, ppmLevels[1].ppm);
+      L.polygon(sectorLatLngs(p.lat, p.lng, p.bearing, p.spec.hfov, Math.max(d, p.targetDistanceM)), {
+        color: "#f97316",
+        weight: 1,
+        dashArray: "4 3",
+        fillOpacity: 0.25,
+        interactive: false,
+      }).addTo(layer);
+      L.circleMarker([p.lat, p.lng], { radius: 7, color: "#fff", fillColor: "#f97316", fillOpacity: 1 }).addTo(layer);
+    }
     for (const cam of siteMap.cameras) {
       const spec = cameraById(cam.specId);
       if (spec) {
@@ -157,7 +196,40 @@ export function MapWorkspace({
         });
       });
     }
-  }, [ready, siteMap, selectedId]);
+  }, [ready, siteMap, selectedId, proposals]);
+
+  function generate(goal: CoverageGoal, maxCameras: number) {
+    const boundary = siteMap.boundary ?? [];
+    if (boundary.length < 3) {
+      toast.error("ارسم حدود الموقع أولاً (3 نقاط على الأقل)");
+      return;
+    }
+    const specs = cameraCatalog.filter((c) => c.engineeringReady !== false);
+    const { input, origin } = siteDesignInput(boundary, goal, specs.length ? specs : cameraCatalog, maxCameras, 4);
+    const result = runAutoDesign(input);
+    setAiCoverage(result.coverage);
+    setProposals(
+      result.proposals.map((p) => ({ ...p, ...localToGeo(origin, p.pos), bearing: screenToBearing(p.rotation) })),
+    );
+    if (!result.proposals.length) toast.error("لم يتم العثور على توزيع مناسب");
+  }
+
+  function applyProposals() {
+    if (!proposals?.length) return;
+    const start = siteMap.cameras.length;
+    const cams: MapCamera[] = proposals.map((p, i) => ({
+      id: uid(),
+      specId: p.spec.id,
+      name: `Outdoor Cam ${start + i + 1}`,
+      lat: p.lat,
+      lng: p.lng,
+      rotation: p.bearing,
+      heightM: p.heightM,
+    }));
+    onChange({ ...siteMap, cameras: [...siteMap.cameras, ...cams] });
+    setProposals(null);
+    toast.success(`تمت إضافة ${cams.length} كاميرا خارجية إلى جدول الكميات`);
+  }
 
   function setSite(lat: number, lng: number, address?: string) {
     onChange({ ...siteMap, center: { lat, lng }, zoom: 18, address: address ?? siteMap.address });
@@ -267,7 +339,39 @@ export function MapWorkspace({
             {placing ? "انقر على الخريطة لوضع كاميرا" : "إضافة كاميرا"}
           </Button>
         </div>
-        <div ref={containerRef} className={`h-full w-full ${placing ? "cursor-crosshair" : ""}`} />
+        <div
+          ref={containerRef}
+          className={`h-full w-full ${placing || drawingBoundary ? "cursor-crosshair" : ""}`}
+        />
+        <div className="absolute bottom-6 left-3 z-[500] flex flex-col items-start gap-2">
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant={drawingBoundary ? "default" : "secondary"}
+              onClick={() => {
+                setPlacing(false);
+                setDrawingBoundary((v) => !v);
+              }}
+            >
+              <PenLine className="h-4 w-4" />
+              {drawingBoundary ? "إنهاء رسم الحدود" : "رسم حدود الموقع"}
+            </Button>
+            {(siteMap.boundary?.length ?? 0) > 0 && (
+              <Button size="sm" variant="outline" onClick={() => onChange({ ...siteMap, boundary: [] })}>
+                مسح الحدود
+              </Button>
+            )}
+          </div>
+          <AutoDesignPanel
+            proposals={proposals}
+            coverage={aiCoverage}
+            hint="ارسم حدود الموقع بالنقر على الخريطة، ثم ولّد توزيعاً لكاميرات المحيط على السور موجّهة للداخل."
+            onGenerate={generate}
+            onApply={applyProposals}
+            onReject={() => setProposals(null)}
+            onRemove={(id) => setProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+          />
+        </div>
       </div>
 
       <aside className="no-print w-80 shrink-0 overflow-y-auto border-r border-border bg-surface p-4 text-sm">
