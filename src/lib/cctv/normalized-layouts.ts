@@ -67,13 +67,13 @@ export function projectLayoutToPayload(
       walls: layout.walls,
       boundary: [],
       openings: [],
-    } as Json,
+    } as unknown as Json,
     design_data: {
       devices: layout.devices,
       cables: layout.cables,
       roomLabels: layout.roomLabels,
       showCoverage: layout.showCoverage,
-    } as Json,
+    } as unknown as Json,
     is_active: layout.id === activeLayoutId,
   };
 }
@@ -129,7 +129,7 @@ async function replaceSingleBackfillWithLegacyMulti(project: ProjectRow, existin
   // When V2 later stored multiple layouts in project.data, reuse that first UUID
   // and materialize the remaining layouts once, preserving all legacy content.
   if (existing.length === 1) {
-    legacy.layouts[0] = { ...legacy.layouts[0], id: existing[0]!.id };
+    legacy.layouts[0] = { ...legacy.layouts[0]!, id: existing[0]!.id };
   }
 
   const activeId = legacy.layouts[legacy.legacyActiveIndex]?.id ?? legacy.layouts[0]!.id;

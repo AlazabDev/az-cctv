@@ -325,6 +325,7 @@ export function PlanCanvas({
       return;
     }
 
+    if (drag.kind !== "wall-vertex") return;
     const snapped = snapVertex(raw, wall, drag.vertexIndex, e.shiftKey);
     const previous = drag.originalPoints[drag.vertexIndex - 1];
     const next = drag.originalPoints[drag.vertexIndex + 1];
