@@ -17,6 +17,12 @@
 
 ## Existing Capabilities / Backlog
 
+## Requested reference editor upgrades
+- [ ] Stage 1: floorplan preparation dialog, name/height, preview, rotation and crop before upload.
+- [ ] Stage 2: wall material/thickness controls and searchable device list/placement.
+- [ ] Stage 3: camera deployment controls, side-view geometry and interactive target distance/PPM.
+- [ ] Verify new controls, persistence and regression tests.
+
 - [x] إضافة التبويبات العلوية ومساحات العمل داخل المحرر
 - [x] إضافة درج كابلات الشبكة والفايبر وقائمة المسارات
 - [x] إكمال أداة الجدران وخصائصها
