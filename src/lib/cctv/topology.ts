@@ -194,7 +194,7 @@ export function recorderChannelsOf(d: PlacedDevice, topology: TopologyData = emp
 }
 
 export function poeWatt(d: PlacedDevice) {
-  return d.kind === "camera" ? cameraById(d.specId).poeWatt : 0;
+  return d.kind === "camera" ? (cameraById(d.specId)?.poeWatt ?? 0) : 0;
 }
 
 export function canTerminateFiber(device: PlacedDevice | null, topology: TopologyData) {
