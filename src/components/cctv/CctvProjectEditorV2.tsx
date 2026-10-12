@@ -276,8 +276,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   function generateAutoDesign(goal: CoverageGoal, maxCameras: number) {
-    const specs = cameraCatalog.filter((c) => c.engineeringReady !== false);
-    const input = planDesignInput(plan, goal, specs.length ? specs : cameraCatalog, maxCameras);
+    const specs = cameraCatalog.filter((c) => c.engineeringReady === true);
+    if (!specs.length) {
+      toast.error("لا توجد كاميرات بمواصفات هندسية مكتملة. أضف الدقة وزاوية الرؤية والعدسة في كتالوج المنتجات أولاً.");
+      return;
+    }
+    const input = planDesignInput(plan, goal, specs, maxCameras);
     if (!input) {
       toast.error("ارفع المخطط أو ارسم الجدران أولاً");
       return;
