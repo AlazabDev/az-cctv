@@ -24,7 +24,13 @@ export function ppmAtDistance(spec: CameraSpec, distanceM: number) {
 }
 
 /** مسار قطاع دائري (مخروط رؤية) بوحدات البكسل */
-export function sectorPath(cx: number, cy: number, radius: number, rotationDeg: number, fovDeg: number) {
+export function sectorPath(
+  cx: number,
+  cy: number,
+  radius: number,
+  rotationDeg: number,
+  fovDeg: number,
+) {
   if (fovDeg >= 359) {
     return `M ${cx - radius} ${cy} a ${radius} ${radius} 0 1 0 ${radius * 2} 0 a ${radius} ${radius} 0 1 0 ${-radius * 2} 0`;
   }

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlanData, PlacedDevice } from "@/lib/cctv/types";
-import { cableTypes, cameraById, wallMaterialById } from "@/lib/cctv/catalog";
+import { cameraById, wallMaterialById } from "@/lib/cctv/catalog";
 import { distanceForPpm, ppmLevels, sectorPath, wallPath } from "@/lib/cctv/geometry";
 import { Camera, HardDrive, Network, Server } from "lucide-react";
 
-export type CanvasMode = "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "label" | "scale";
+export type CanvasMode =
+  "select" | "camera" | "nvr" | "switch" | "rack" | "cable" | "wall" | "label" | "scale";
 
 interface Props {
   plan: PlanData;
@@ -14,7 +15,6 @@ interface Props {
   selectedWallId: string | null;
   selectedLabelId: string | null;
   cableDraft: { x: number; y: number }[];
-  cableDraftType: string;
   wallDraft: { x: number; y: number }[];
   wallCurved: boolean;
   scaleDraft: { x: number; y: number }[];
@@ -47,7 +47,6 @@ export function PlanCanvas({
   selectedWallId,
   selectedLabelId,
   cableDraft,
-  cableDraftType,
   wallDraft,
   wallCurved,
   scaleDraft,
@@ -65,7 +64,7 @@ export function PlanCanvas({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [hoverPoint, setHoverPoint] = useState<{ x: number; y: number } | null>(null);
   const panRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
-  const dragRef = useRef<{ id: string; kind: "device" | "label" } | null>(null);
+  const dragRef = useRef<{ id: string; type: "device" | "label" } | null>(null);
   const stateRef = useRef({ zoom, offset });
   stateRef.current = { zoom, offset };
 
@@ -128,8 +127,10 @@ export function PlanCanvas({
       });
       return;
     }
-    if (dragRef.current?.kind === "device") onMoveDevice(dragRef.current.id, p);
-    if (dragRef.current?.kind === "label") onMoveLabel(dragRef.current.id, p);
+    if (dragRef.current) {
+      if (dragRef.current.type === "label") onMoveLabel(dragRef.current.id, p);
+      else onMoveDevice(dragRef.current.id, p);
+    }
   };
 
   const endPointer = () => {
@@ -186,7 +187,10 @@ export function PlanCanvas({
           else onFinishCable();
         }}
       >
-        <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`} style={{ pointerEvents: "none" }}>
+        <g
+          transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}
+          style={{ pointerEvents: "none" }}
+        >
           {imageUrl ? (
             <image
               href={imageUrl}
@@ -241,21 +245,16 @@ export function PlanCanvas({
             );
           })}
 
-          {plan.cables.map((c) => {
-            const cable = cableTypes.find((item) => item.id === c.type);
-            const isFiber = cable?.category === "fiber";
-            return (
-              <polyline
-                key={c.id}
-                points={c.points.map((p) => `${p.x},${p.y}`).join(" ")}
-                fill="none"
-                stroke={cable?.color ?? "var(--color-cable)"}
-                strokeDasharray={isFiber ? `${8 / zoom} ${4 / zoom}` : undefined}
-                strokeWidth={(isFiber ? 3 : 2) / zoom}
-                strokeLinejoin="round"
-              />
-            );
-          })}
+          {plan.cables.map((c) => (
+            <polyline
+              key={c.id}
+              points={c.points.map((p) => `${p.x},${p.y}`).join(" ")}
+              fill="none"
+              stroke="var(--color-cable)"
+              strokeWidth={2 / zoom}
+              strokeLinejoin="round"
+            />
+          ))}
 
           {cableDraft.length > 0 && (
             <polyline
@@ -263,7 +262,7 @@ export function PlanCanvas({
                 .map((p) => `${p.x},${p.y}`)
                 .join(" ")}
               fill="none"
-              stroke={cableTypes.find((item) => item.id === cableDraftType)?.color ?? "var(--color-cable)"}
+              stroke="var(--color-cable)"
               strokeDasharray={`${6 / zoom} ${4 / zoom}`}
               strokeWidth={2 / zoom}
             />
@@ -271,7 +270,10 @@ export function PlanCanvas({
 
           {wallDraft.length > 0 && (
             <path
-              d={wallPath([...wallDraft, hoverPoint ?? wallDraft[wallDraft.length - 1]!], wallCurved)}
+              d={wallPath(
+                [...wallDraft, hoverPoint ?? wallDraft[wallDraft.length - 1]!],
+                wallCurved,
+              )}
               fill="none"
               stroke="var(--color-warning)"
               strokeDasharray={`${6 / zoom} ${4 / zoom}`}
@@ -282,7 +284,9 @@ export function PlanCanvas({
 
           {scaleDraft.length > 0 && (
             <polyline
-              points={[...scaleDraft, hoverPoint ?? scaleDraft[0]!].map((p) => `${p.x},${p.y}`).join(" ")}
+              points={[...scaleDraft, hoverPoint ?? scaleDraft[0]!]
+                .map((p) => `${p.x},${p.y}`)
+                .join(" ")}
               fill="none"
               stroke="var(--color-accent)"
               strokeWidth={2 / zoom}
@@ -291,6 +295,51 @@ export function PlanCanvas({
         </g>
 
         <g transform={`translate(${offset.x} ${offset.y}) scale(${zoom})`}>
+          {plan.labels.map((lbl) => {
+            const selected = lbl.id === selectedLabelId;
+            const w = Math.max(lbl.text.length * lbl.fontSize * 0.56 + 12, 24);
+            const h = lbl.fontSize * 1.7;
+            return (
+              <g
+                key={lbl.id}
+                transform={`translate(${lbl.x} ${lbl.y})`}
+                style={{ cursor: mode === "select" ? "move" : "default" }}
+                onPointerDown={(e) => {
+                  if (mode !== "select") return;
+                  e.stopPropagation();
+                  onSelectLabel(lbl.id);
+                  onSelect(null);
+                  onSelectWall(null);
+                  dragRef.current = { id: lbl.id, type: "label" };
+                  (e.target as Element).setPointerCapture?.(e.pointerId);
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <rect
+                  x={-w / 2}
+                  y={-h / 2}
+                  width={w}
+                  height={h}
+                  rx={3}
+                  fill="var(--color-surface)"
+                  fillOpacity={0.88}
+                  stroke={selected ? "var(--color-primary)" : "var(--color-border)"}
+                  strokeWidth={selected ? 1.5 : 1}
+                />
+                <text
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize={lbl.fontSize}
+                  fontWeight={600}
+                  fill="var(--color-foreground)"
+                  style={{ pointerEvents: "none" }}
+                >
+                  {lbl.text}
+                </text>
+              </g>
+            );
+          })}
+
           {plan.walls.map((w) => {
             const spec = wallMaterialById(w.material);
             const selected = w.id === selectedWallId;
@@ -302,12 +351,16 @@ export function PlanCanvas({
                   fill="none"
                   stroke="transparent"
                   strokeWidth={Math.max(spec.strokeWidth, 16) / zoom}
-                  style={{ cursor: mode === "select" ? "pointer" : "default", pointerEvents: mode === "select" ? "stroke" : "none" }}
+                  style={{
+                    cursor: mode === "select" ? "pointer" : "default",
+                    pointerEvents: mode === "select" ? "stroke" : "none",
+                  }}
                   onPointerDown={(e) => {
                     if (mode !== "select") return;
                     e.stopPropagation();
                     onSelectWall(w.id);
                     onSelect(null);
+                    onSelectLabel(null);
                   }}
                 />
                 {selected && (
@@ -336,7 +389,9 @@ export function PlanCanvas({
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   onSelect(d.id);
-                  dragRef.current = { id: d.id, kind: "device" };
+                  onSelectWall(null);
+                  onSelectLabel(null);
+                  dragRef.current = { id: d.id, type: "device" };
                   (e.target as Element).setPointerCapture?.(e.pointerId);
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -357,7 +412,13 @@ export function PlanCanvas({
                   stroke={selected ? "var(--color-foreground)" : "var(--color-background)"}
                   strokeWidth={selected ? 3 : 1.5}
                 />
-                <foreignObject x={-7} y={-7} width={14} height={14} style={{ pointerEvents: "none" }}>
+                <foreignObject
+                  x={-7}
+                  y={-7}
+                  width={14}
+                  height={14}
+                  style={{ pointerEvents: "none" }}
+                >
                   <div className="flex h-3.5 w-3.5 items-center justify-center text-background">
                     <DeviceGlyph kind={d.kind} />
                   </div>
@@ -372,53 +433,6 @@ export function PlanCanvas({
                   strokeWidth={3}
                 >
                   {d.name}
-                </text>
-              </g>
-            );
-          })}
-
-          {plan.roomLabels.map((label) => {
-            const selected = label.id === selectedLabelId;
-            const scale = 1 / zoom;
-            return (
-              <g
-                key={label.id}
-                transform={`translate(${label.x} ${label.y}) scale(${scale})`}
-                style={{ cursor: "move" }}
-                onPointerDown={(e) => {
-                  if (mode !== "select") return;
-                  e.stopPropagation();
-                  onSelectLabel(label.id);
-                  onSelect(null);
-                  onSelectWall(null);
-                  dragRef.current = { id: label.id, kind: "label" };
-                  (e.target as Element).setPointerCapture?.(e.pointerId);
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {selected && (
-                  <rect
-                    x={-(label.text.length * label.fontSize * 0.34) - 8}
-                    y={-label.fontSize}
-                    width={label.text.length * label.fontSize * 0.68 + 16}
-                    height={label.fontSize + 12}
-                    rx={4}
-                    fill="var(--color-primary)"
-                    fillOpacity={0.14}
-                    stroke="var(--color-primary)"
-                    strokeWidth={1.5}
-                  />
-                )}
-                <text
-                  textAnchor="middle"
-                  fontSize={label.fontSize}
-                  fontWeight={700}
-                  fill="var(--color-foreground)"
-                  stroke="var(--color-background)"
-                  strokeWidth={3}
-                  style={{ paintOrder: "stroke" }}
-                >
-                  {label.text}
                 </text>
               </g>
             );

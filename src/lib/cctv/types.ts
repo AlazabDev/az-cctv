@@ -45,21 +45,14 @@ export interface CableRun {
   id: string;
   type: string;
   points: { x: number; y: number }[];
-  /** Optional installer allowance in metres for vertical drops / rises. */
-  verticalAllowanceM?: number;
-  /** Extra installation slack. Defaults to 15% in commercial calculations. */
-  slackPercent?: number;
 }
 
-/**
- * Wall material IDs are catalog-driven. Keeping this as a string lets the
- * editor add new construction materials without a database schema migration.
- */
-export type WallMaterial = string;
+export type WallMaterial = "brick" | "glass" | "fence";
 
 export interface WallSegment {
   id: string;
   material: WallMaterial;
+  /** ≥2 points. Rendered as straight segments, or as a smooth curve through the points when `curved` is true. */
   points: { x: number; y: number }[];
   curved: boolean;
   note?: string;
@@ -73,12 +66,21 @@ export interface RoomLabel {
   fontSize: number;
 }
 
+export interface FeeLine {
+  id: string;
+  label: string;
+  amount: number;
+}
+
 export interface PlanData {
   pxPerMeter: number;
   devices: PlacedDevice[];
   cables: CableRun[];
   walls: WallSegment[];
-  roomLabels: RoomLabel[];
+  labels: RoomLabel[];
+  fees: FeeLine[];
+  taxPercent: number;
+  discountPercent: number;
   showCoverage: boolean;
   imageWidth?: number;
   imageHeight?: number;
@@ -89,6 +91,9 @@ export const emptyPlan: PlanData = {
   devices: [],
   cables: [],
   walls: [],
-  roomLabels: [],
+  labels: [],
+  fees: [],
+  taxPercent: 0,
+  discountPercent: 0,
   showCoverage: true,
 };

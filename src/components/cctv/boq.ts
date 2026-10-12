@@ -1,4 +1,10 @@
-import { cableTypes, cameraById, hardwareById, hardwareCatalog, storageOptions } from "@/lib/cctv/catalog";
+import {
+  cableTypes,
+  cameraById,
+  hardwareById,
+  hardwareCatalog,
+  storageOptions,
+} from "@/lib/cctv/catalog";
 import { cableLengthMeters, storageTb } from "@/lib/cctv/geometry";
 import type { PlanData } from "@/lib/cctv/types";
 
@@ -38,7 +44,13 @@ export function buildBoq(plan: PlanData, retentionDays: number) {
         existing.qty += 1;
         existing.total = existing.qty * existing.unitPrice;
       } else {
-        lines.push({ label: spec.label, qty: 1, unit: "قطعة", unitPrice: spec.price, total: spec.price });
+        lines.push({
+          label: spec.label,
+          qty: 1,
+          unit: "قطعة",
+          unitPrice: spec.price,
+          total: spec.price,
+        });
       }
     });
 
@@ -77,14 +89,33 @@ export function buildBoq(plan: PlanData, retentionDays: number) {
     });
   }
 
-  const grand = lines.reduce((s, l) => s + l.total, 0);
+  const productsSubtotal = lines.reduce((s, l) => s + l.total, 0);
+  const feesTotal = plan.fees.reduce((s, f) => s + f.amount, 0);
+  const beforeDiscount = productsSubtotal + feesTotal;
+  const discountAmount = beforeDiscount * (Math.max(0, plan.discountPercent) / 100);
+  const afterDiscount = beforeDiscount - discountAmount;
+  const taxAmount = afterDiscount * (Math.max(0, plan.taxPercent) / 100);
+  const grand = afterDiscount + taxAmount;
   const poeLoad = cameras.reduce((s, c) => s + (cameraById(c.specId)?.poeWatt ?? 0), 0);
 
-  return { lines, grand, cameras: cameras.length, totalBitrate, neededTb, poeLoad };
+  return {
+    lines,
+    productsSubtotal,
+    feesTotal,
+    discountAmount,
+    taxAmount,
+    grand,
+    cameras: cameras.length,
+    totalBitrate,
+    neededTb,
+    poeLoad,
+  };
 }
 
 export function suggestHardware(cameraCount: number) {
-  const nvr = hardwareCatalog.find((h) => h.kind === "nvr" && (h.channels ?? 0) >= cameraCount) ?? hardwareCatalog[2]!;
+  const nvr =
+    hardwareCatalog.find((h) => h.kind === "nvr" && (h.channels ?? 0) >= cameraCount) ??
+    hardwareCatalog[2]!;
   const sw = hardwareCatalog.find((h) => h.kind === "switch" && (h.ports ?? 0) >= cameraCount + 1);
   return { nvr, sw };
 }
