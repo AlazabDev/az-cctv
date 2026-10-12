@@ -22,9 +22,12 @@ export function dedupeConsecutivePoints(points: PlanPoint[], tolerance = EPSILON
 }
 
 export function sanitizeWallPoints(points: PlanPoint[], tolerance = EPSILON) {
-  return dedupeConsecutivePoints(points, tolerance).filter(
+  // Filter invalid coordinates BEFORE deduplication: otherwise a NaN/Infinity
+  // between two equal vertices prevents their collapse and creates zero-length edges.
+  const finitePoints = points.filter(
     (point) => Number.isFinite(point.x) && Number.isFinite(point.y),
   );
+  return dedupeConsecutivePoints(finitePoints, tolerance);
 }
 
 export function constrainOrthogonal(anchor: PlanPoint, point: PlanPoint) {
