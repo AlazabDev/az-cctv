@@ -8,3 +8,10 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Store walls, cable routes, and room labels inside each project's JSON plan so existing Supabase rows need no schema migration.
+
+- Projects store floors/areas as `data.layouts[]` (each with its own floorplanPath, scale, walls, devices, cables, labels) plus `data.activeLayoutId`; the active layout is also mirrored at the top level of `data` so legacy readers (design agent) keep working. Why: multi-layout projects without a schema migration.
+- Network topology is stored in cctv_projects.data.topology as child→parent maps keyed by device id; why: no schema change and survives across layouts.
+- Outdoor site map is stored in cctv_projects.data.siteMap (center, zoom, address, cameras with lat/lng); Leaflet is imported dynamically in the browser only; why: no schema change and SSR-safe.
+- TypeScript keeps strict + noUncheckedIndexedAccess but disables exactOptionalPropertyTypes and noPropertyAccessFromIndexSignature; why: they blocked builds on Supabase JSON/optional fields without catching real bugs.

@@ -15,6 +15,73 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_design_proposals: {
+        Row: {
+          cameras: Json
+          created_at: string
+          decided_at: string | null
+          id: string
+          iterations: number
+          layout_id: string | null
+          metrics: Json
+          project_id: string
+          status: string
+          summary: string | null
+          thread_id: string | null
+          user_id: string
+        }
+        Insert: {
+          cameras?: Json
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          iterations?: number
+          layout_id?: string | null
+          metrics?: Json
+          project_id: string
+          status?: string
+          summary?: string | null
+          thread_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          cameras?: Json
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          iterations?: number
+          layout_id?: string | null
+          metrics?: Json
+          project_id?: string
+          status?: string
+          summary?: string | null
+          thread_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_design_proposals_layout_id_fkey"
+            columns: ["layout_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_layouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_design_proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_design_proposals_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "agent_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_messages: {
         Row: {
           agent_name: string | null
@@ -64,6 +131,7 @@ export type Database = {
           created_at: string
           id: string
           last_response_id: string | null
+          layout_id: string | null
           project_id: string | null
           title: string | null
           updated_at: string
@@ -73,6 +141,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_response_id?: string | null
+          layout_id?: string | null
           project_id?: string | null
           title?: string | null
           updated_at?: string
@@ -82,6 +151,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_response_id?: string | null
+          layout_id?: string | null
           project_id?: string | null
           title?: string | null
           updated_at?: string
@@ -89,7 +159,148 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "agent_threads_layout_id_fkey"
+            columns: ["layout_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_layouts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agent_threads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cctv_layout_revisions: {
+        Row: {
+          ceiling_height_m: number
+          created_at: string
+          design_data: Json
+          geometry: Json
+          geometry_status: string
+          id: string
+          layout_id: string
+          project_id: string
+          px_per_meter: number | null
+          reason: string
+          revision_no: number
+          user_id: string
+        }
+        Insert: {
+          ceiling_height_m: number
+          created_at?: string
+          design_data: Json
+          geometry: Json
+          geometry_status: string
+          id?: string
+          layout_id: string
+          project_id: string
+          px_per_meter?: number | null
+          reason?: string
+          revision_no: number
+          user_id?: string
+        }
+        Update: {
+          ceiling_height_m?: number
+          created_at?: string
+          design_data?: Json
+          geometry?: Json
+          geometry_status?: string
+          id?: string
+          layout_id?: string
+          project_id?: string
+          px_per_meter?: number | null
+          reason?: string
+          revision_no?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cctv_layout_revisions_layout_id_fkey"
+            columns: ["layout_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_layouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cctv_layout_revisions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "cctv_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cctv_layouts: {
+        Row: {
+          ceiling_height_m: number
+          created_at: string
+          design_data: Json
+          floorplan_path: string | null
+          geometry: Json
+          geometry_status: string
+          id: string
+          image_height: number | null
+          image_width: number | null
+          is_active: boolean
+          name: string
+          project_id: string
+          px_per_meter: number | null
+          rendered_plan_path: string | null
+          sort_order: number
+          source_mime_type: string | null
+          source_page: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ceiling_height_m?: number
+          created_at?: string
+          design_data?: Json
+          floorplan_path?: string | null
+          geometry?: Json
+          geometry_status?: string
+          id?: string
+          image_height?: number | null
+          image_width?: number | null
+          is_active?: boolean
+          name: string
+          project_id: string
+          px_per_meter?: number | null
+          rendered_plan_path?: string | null
+          sort_order?: number
+          source_mime_type?: string | null
+          source_page?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          ceiling_height_m?: number
+          created_at?: string
+          design_data?: Json
+          floorplan_path?: string | null
+          geometry?: Json
+          geometry_status?: string
+          id?: string
+          image_height?: number | null
+          image_width?: number | null
+          is_active?: boolean
+          name?: string
+          project_id?: string
+          px_per_meter?: number | null
+          rendered_plan_path?: string | null
+          sort_order?: number
+          source_mime_type?: string | null
+          source_page?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cctv_layouts_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "cctv_projects"
@@ -136,6 +347,193 @@ export type Database = {
         }
         Relationships: []
       }
+      product_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          file_name: string
+          id: string
+          is_primary: boolean
+          product_id: string
+          public_url: string | null
+          sort_order: number
+          storage_bucket: string | null
+          storage_path: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          is_primary?: boolean
+          product_id: string
+          public_url?: string | null
+          sort_order?: number
+          storage_bucket?: string | null
+          storage_path?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          is_primary?: boolean
+          product_id?: string
+          public_url?: string | null
+          sort_order?: number
+          storage_bucket?: string | null
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_prices: {
+        Row: {
+          checked_at: string
+          created_at: string
+          currency: string
+          id: string
+          old_price: number | null
+          price: number
+          product_id: string
+          source_url: string | null
+          stock_status: string | null
+          supplier: string
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          old_price?: number | null
+          price: number
+          product_id: string
+          source_url?: string | null
+          stock_status?: string | null
+          supplier: string
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          old_price?: number | null
+          price?: number
+          product_id?: string
+          source_url?: string | null
+          stock_status?: string | null
+          supplier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          brand: string | null
+          category: string | null
+          category_id: string | null
+          created_at: string
+          currency: string
+          current_price: number | null
+          description: string | null
+          discount_percent: number | null
+          form_factor: string | null
+          id: string
+          image_name: string | null
+          image_url: string | null
+          is_active: boolean
+          model: string
+          name_ar: string | null
+          name_en: string | null
+          old_price: number | null
+          power_type: string | null
+          product_name: string | null
+          product_type: string | null
+          sku: string | null
+          source: string | null
+          source_row: number | null
+          source_url: string | null
+          specifications: Json
+          subcategory: string | null
+          technology: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          current_price?: number | null
+          description?: string | null
+          discount_percent?: number | null
+          form_factor?: string | null
+          id?: string
+          image_name?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          model: string
+          name_ar?: string | null
+          name_en?: string | null
+          old_price?: number | null
+          power_type?: string | null
+          product_name?: string | null
+          product_type?: string | null
+          sku?: string | null
+          source?: string | null
+          source_row?: number | null
+          source_url?: string | null
+          specifications?: Json
+          subcategory?: string | null
+          technology?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          category_id?: string | null
+          created_at?: string
+          currency?: string
+          current_price?: number | null
+          description?: string | null
+          discount_percent?: number | null
+          form_factor?: string | null
+          id?: string
+          image_name?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          model?: string
+          name_ar?: string | null
+          name_en?: string | null
+          old_price?: number | null
+          power_type?: string | null
+          product_name?: string | null
+          product_type?: string | null
+          sku?: string | null
+          source?: string | null
+          source_row?: number | null
+          source_url?: string | null
+          specifications?: Json
+          subcategory?: string | null
+          technology?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
@@ -162,7 +560,48 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      activate_cctv_layout: {
+        Args: { p_layout_id: string }
+        Returns: {
+          ceiling_height_m: number
+          created_at: string
+          design_data: Json
+          floorplan_path: string | null
+          geometry: Json
+          geometry_status: string
+          id: string
+          image_height: number | null
+          image_width: number | null
+          is_active: boolean
+          name: string
+          project_id: string
+          px_per_meter: number | null
+          rendered_plan_path: string | null
+          sort_order: number
+          source_mime_type: string | null
+          source_page: number | null
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cctv_layouts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approve_cctv_layout_geometry: {
+        Args: { p_geometry: Json; p_layout_id: string; p_px_per_meter?: number }
+        Returns: string
+      }
+      assert_layout_ready_for_design: {
+        Args: { p_layout_id: string }
+        Returns: boolean
+      }
+      snapshot_cctv_layout: {
+        Args: { p_layout_id: string; p_reason?: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,0 +1,65 @@
+name: Topology engineering validation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/lib/cctv/topology.ts"
+      - "src/lib/cctv/types.ts"
+      - "src/lib/cctv/catalog.ts"
+      - "src/components/cctv/boq.ts"
+      - "src/components/cctv/TopologyWorkspace.tsx"
+      - "src/lib/topology-ai.functions.ts"
+      - "tests/topology.engineering.test.ts"
+      - ".github/workflows/topology-validation.yml"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Check formatting
+        run: |
+          npx prettier --check \
+            src/lib/cctv/topology.ts \
+            src/lib/cctv/types.ts \
+            src/lib/cctv/catalog.ts \
+            src/components/cctv/boq.ts \
+            src/components/cctv/TopologyWorkspace.tsx \
+            src/lib/topology-ai.functions.ts \
+            tests/topology.engineering.test.ts
+
+      - name: Deterministic topology tests
+        run: npm run test:topology
+
+      - name: Lint topology engineering files
+        run: |
+          npx eslint \
+            src/lib/cctv/topology.ts \
+            src/lib/cctv/types.ts \
+            src/lib/cctv/catalog.ts \
+            src/components/cctv/boq.ts \
+            src/components/cctv/TopologyWorkspace.tsx \
+            src/lib/topology-ai.functions.ts \
+            tests/topology.engineering.test.ts
+
+      - name: Build
+        run: npm run build

@@ -1,0 +1,45 @@
+name: Stage 3 Normalized Multi-Layout CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/components/cctv/CctvProjectEditorV2.tsx"
+      - "src/lib/cctv/normalized-layouts.ts"
+      - "tests/**"
+      - ".github/workflows/stage3-normalized-layout-ci.yml"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Check formatting
+        run: npx prettier --check src/components/cctv/CctvProjectEditorV2.tsx src/lib/cctv/normalized-layouts.ts
+
+      - name: Lint Stage 3 files
+        run: npx eslint src/components/cctv/CctvProjectEditorV2.tsx src/lib/cctv/normalized-layouts.ts
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
