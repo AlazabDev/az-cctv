@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -182,6 +182,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [loaded, setLoaded] = useState(false);
   const [dialogTargetId, setDialogTargetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const persistQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
   const [wallCurved, setWallCurved] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
   const [aiProposals, setAiProposals] = useState<Proposal[] | null>(null);
@@ -566,19 +567,27 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     };
   }
 
-  async function persist(nextLayouts = layouts, nextActive = activeLayoutId) {
+  function persist(nextLayouts = layouts, nextActive = activeLayoutId): Promise<boolean> {
     const active = nextLayouts.find((l) => l.id === nextActive);
-    const { error } = await supabase
-      .from("cctv_projects")
-      .update({
-        name,
-        client_name: clientName,
-        currency,
-        floorplan_path: active?.floorplanPath ?? null,
-        data: buildProjectData(nextLayouts, nextActive) as never,
-      })
-      .eq("id", projectId);
-    return !error;
+    // Snapshot the payload at submission time, then serialize writes to prevent
+    // an earlier autosave finishing after a newer user edit.
+    const payload = {
+      name,
+      client_name: clientName,
+      currency,
+      floorplan_path: active?.floorplanPath ?? null,
+      data: buildProjectData(nextLayouts, nextActive) as never,
+    };
+    const queued = persistQueueRef.current.catch(() => false).then(async () => {
+      const { error } = await supabase
+        .from("cctv_projects")
+        .update(payload)
+        .eq("id", projectId);
+      if (error) console.error("Plan Design save failed:", error.message);
+      return !error;
+    });
+    persistQueueRef.current = queued;
+    return queued;
   }
 
   async function save() {
