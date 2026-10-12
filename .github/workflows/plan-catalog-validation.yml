@@ -1,0 +1,39 @@
+name: Plan Design and Product Catalog Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/components/cctv/**'
+      - 'src/lib/cctv/**'
+      - 'src/integrations/supabase/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/plan-catalog-validation.yml'
+  pull_request:
+    paths:
+      - 'src/components/cctv/**'
+      - 'src/lib/cctv/**'
+      - 'src/integrations/supabase/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
