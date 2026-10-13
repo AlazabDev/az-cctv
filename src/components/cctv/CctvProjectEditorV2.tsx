@@ -182,7 +182,9 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [loaded, setLoaded] = useState(false);
   const [dialogTargetId, setDialogTargetId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const persistQueueRef = useRef<Promise<boolean>>(Promise.resolve(true));
+  const persistSequenceRef = useRef(0);
   const [wallCurved, setWallCurved] = useState(false);
   const [agentOpen, setAgentOpen] = useState(false);
   const [aiProposals, setAiProposals] = useState<Proposal[] | null>(null);
@@ -578,13 +580,22 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       floorplan_path: active?.floorplanPath ?? null,
       data: buildProjectData(nextLayouts, nextActive) as never,
     };
+    const sequence = ++persistSequenceRef.current;
+    setSaveStatus("saving");
     const queued = persistQueueRef.current.catch(() => false).then(async () => {
-      const { error } = await supabase
+      const { data: savedRow, error } = await supabase
         .from("cctv_projects")
         .update(payload)
-        .eq("id", projectId);
-      if (error) console.error("Plan Design save failed:", error.message);
-      return !error;
+        .eq("id", projectId)
+        .select("id")
+        .maybeSingle();
+      const success = !error && Boolean(savedRow);
+      if (!success) console.error("Plan Design save failed:", error?.message ?? "No project row updated");
+      if (sequence === persistSequenceRef.current) {
+        setSaveStatus(success ? "saved" : "error");
+        if (!success) toast.error("تعذر الحفظ التلقائي — التعديلات الحالية لم تُحفظ");
+      }
+      return success;
     });
     persistQueueRef.current = queued;
     return queued;
@@ -794,9 +805,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           <Button variant="ghost" size="sm" onClick={exportCsv} title="تصدير CSV">
             <Download className="h-4 w-4" />
           </Button>
+          <span role="status" aria-live="polite" className={`text-xs ${saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}>
+            {saveStatus === "saving" ? "جارٍ الحفظ…" : saveStatus === "saved" ? "تم الحفظ" : saveStatus === "error" ? "فشل الحفظ" : ""}
+          </span>
           <Button size="sm" onClick={save} disabled={saving}>
             <Save className="h-4 w-4" />
-            {saving ? "Saving" : "Save"}
+            {saving ? "جارٍ الحفظ" : "حفظ"}
           </Button>
         </div>
       </header>
