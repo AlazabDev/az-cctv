@@ -1,0 +1,31 @@
+name: Apply React Fast Refresh refactor
+on:
+  push:
+    branches: ['fix/all-react-refresh-warnings-20261013']
+    paths: ['.github/workflows/refactor-fast-refresh-once.yml']
+permissions:
+  contents: write
+jobs:
+  refactor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/all-react-refresh-warnings-20261013
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/fix-fast-refresh.mjs
+      - run: npx prettier --write src/components/ui src/components/cctv src/hooks src/routes tests
+      - run: npm run lint -- --max-warnings 0
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
+      - name: Commit validated refactor
+        run: |
+          git add src/components/ui src/components/cctv src/hooks src/routes tests
+          git diff --cached --quiet && exit 0
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'refactor(ui): extract Fast Refresh helpers into separate modules'
+          git push origin HEAD:fix/all-react-refresh-warnings-20261013
