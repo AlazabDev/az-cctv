@@ -43,9 +43,18 @@ function ResetPage() {
         <h1 className="text-lg font-bold">كلمة مرور جديدة</h1>
         <div className="space-y-1.5">
           <Label>كلمة المرور</Label>
-          <Input type="password" required minLength={6} dir="ltr" value={pwd} onChange={(e) => setPwd(e.target.value)} />
+          <Input
+            type="password"
+            required
+            minLength={6}
+            dir="ltr"
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+          />
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>{loading ? "جارٍ..." : "حفظ"}</Button>
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "جارٍ..." : "حفظ"}
+        </Button>
       </form>
     </div>
   );
