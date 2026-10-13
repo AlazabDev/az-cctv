@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({
     meta: [
-      { title: "حسابي — كاميرا بلان" },
+      { title: "حسابي — AZCCTV" },
       { name: "description", content: "تعديل بيانات الحساب واسم الشركة وكلمة المرور." },
-      { property: "og:title", content: "حسابي — كاميرا بلان" },
-      { property: "og:description", content: "إعدادات الحساب في كاميرا بلان." },
+      { property: "og:title", content: "حسابي — AZCCTV" },
+      { property: "og:description", content: "إعدادات الحساب في AZCCTV." },
     ],
   }),
   component: AccountPage,
