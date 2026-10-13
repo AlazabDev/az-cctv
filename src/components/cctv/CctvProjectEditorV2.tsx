@@ -268,15 +268,18 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   );
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
-  const update = useCallback((updater: (value: PlanData) => PlanData) => {
-    setLayouts((prev) =>
-      prev.map((layout) =>
-        layout.id === activeLayoutId
-          ? { ...layout, ...updater(layout), id: layout.id, floorplanPath: layout.floorplanPath }
-          : layout,
-      ),
-    );
-  }, [activeLayoutId]);
+  const update = useCallback(
+    (updater: (value: PlanData) => PlanData) => {
+      setLayouts((prev) =>
+        prev.map((layout) =>
+          layout.id === activeLayoutId
+            ? { ...layout, ...updater(layout), id: layout.id, floorplanPath: layout.floorplanPath }
+            : layout,
+        ),
+      );
+    },
+    [activeLayoutId],
+  );
 
   function generateAutoDesign(goal: CoverageGoal, maxCameras: number) {
     const specs = cameraCatalog.filter((c) => c.engineeringReady === true);
@@ -680,7 +683,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           .maybeSingle()
       : { data: null };
     const ok = openOfferPdf({
-      companyName: profile?.company || "كاميرا بلان",
+      companyName: profile?.company || "AZCCTV",
       preparedBy: profile?.full_name ? `إعداد: ${profile.full_name}` : "",
       projectName: name,
       clientName,

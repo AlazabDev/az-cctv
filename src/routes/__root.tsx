@@ -46,7 +46,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">تعذّر تحميل الصفحة</h1>
-        <p className="mt-2 text-sm text-muted-foreground">حدث خطأ غير متوقع. جرّب التحديث أو العودة للرئيسية.</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          حدث خطأ غير متوقع. جرّب التحديث أو العودة للرئيسية.
+        </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -74,7 +76,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "كاميرا بلان — تصميم أنظمة المراقبة" },
+      { title: "AZCCTV — تصميم أنظمة المراقبة" },
       { name: "description", content: "أداة عربية لتصميم أنظمة كاميرات المراقبة على المخططات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
