@@ -281,7 +281,9 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   function generateAutoDesign(goal: CoverageGoal, maxCameras: number) {
     const specs = cameraCatalog.filter((c) => c.engineeringReady === true);
     if (!specs.length) {
-      toast.error("لا توجد كاميرات بمواصفات هندسية مكتملة. أضف الدقة وزاوية الرؤية والعدسة في كتالوج المنتجات أولاً.");
+      toast.error(
+        "لا توجد كاميرات بمواصفات هندسية مكتملة. أضف الدقة وزاوية الرؤية والعدسة في كتالوج المنتجات أولاً.",
+      );
       return;
     }
     const input = planDesignInput(plan, goal, specs, maxCameras);
@@ -311,7 +313,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setAiProposals(null);
     toast.success(`تمت إضافة ${cams.length} كاميرا${cables.length ? " مع التوصيلات" : ""}`);
     if (noHub) toast.info("أضف سويتش أو NVR لتوليد الكابلات تلقائياً");
-    if (longRuns.length) toast.warning(`مسارات تتجاوز 90م: ${longRuns.join("، ")} — يُقترح سويتش وسيط أو فايبر`);
+    if (longRuns.length)
+      toast.warning(`مسارات تتجاوز 90م: ${longRuns.join("، ")} — يُقترح سويتش وسيط أو فايبر`);
   }
 
   function clearSelection() {
@@ -582,21 +585,24 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     };
     const sequence = ++persistSequenceRef.current;
     setSaveStatus("saving");
-    const queued = persistQueueRef.current.catch(() => false).then(async () => {
-      const { data: savedRow, error } = await supabase
-        .from("cctv_projects")
-        .update(payload)
-        .eq("id", projectId)
-        .select("id")
-        .maybeSingle();
-      const success = !error && Boolean(savedRow);
-      if (!success) console.error("Plan Design save failed:", error?.message ?? "No project row updated");
-      if (sequence === persistSequenceRef.current) {
-        setSaveStatus(success ? "saved" : "error");
-        if (!success) toast.error("تعذر الحفظ التلقائي — التعديلات الحالية لم تُحفظ");
-      }
-      return success;
-    });
+    const queued = persistQueueRef.current
+      .catch(() => false)
+      .then(async () => {
+        const { data: savedRow, error } = await supabase
+          .from("cctv_projects")
+          .update(payload)
+          .eq("id", projectId)
+          .select("id")
+          .maybeSingle();
+        const success = !error && Boolean(savedRow);
+        if (!success)
+          console.error("Plan Design save failed:", error?.message ?? "No project row updated");
+        if (sequence === persistSequenceRef.current) {
+          setSaveStatus(success ? "saved" : "error");
+          if (!success) toast.error("تعذر الحفظ التلقائي — التعديلات الحالية لم تُحفظ");
+        }
+        return success;
+      });
     persistQueueRef.current = queued;
     return queued;
   }
@@ -805,8 +811,18 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           <Button variant="ghost" size="sm" onClick={exportCsv} title="تصدير CSV">
             <Download className="h-4 w-4" />
           </Button>
-          <span role="status" aria-live="polite" className={`text-xs ${saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}>
-            {saveStatus === "saving" ? "جارٍ الحفظ…" : saveStatus === "saved" ? "تم الحفظ" : saveStatus === "error" ? "فشل الحفظ" : ""}
+          <span
+            role="status"
+            aria-live="polite"
+            className={`text-xs ${saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            {saveStatus === "saving"
+              ? "جارٍ الحفظ…"
+              : saveStatus === "saved"
+                ? "تم الحفظ"
+                : saveStatus === "error"
+                  ? "فشل الحفظ"
+                  : ""}
           </span>
           <Button size="sm" onClick={save} disabled={saving}>
             <Save className="h-4 w-4" />

@@ -5,7 +5,8 @@
 type JsonObject = Record<string, unknown>;
 function object(value: unknown): JsonObject {
   return value !== null && typeof value === "object" && !Array.isArray(value)
-    ? value as JsonObject : {};
+    ? (value as JsonObject)
+    : {};
 }
 function array(value: unknown): JsonObject[] {
   return Array.isArray(value) ? value.map(object) : [];
@@ -17,13 +18,24 @@ function summaryLayout(raw: JsonObject, index: number) {
     name: String(raw.layoutName ?? `Layout ${index + 1}`),
     scalePxPerMeter: raw.pxPerMeter ?? null,
     ceilingHeightM: raw.ceilingHeightM ?? null,
-    cameras: devices.filter(d => d.kind === "camera").map(d => ({
-      name: d.name, productId: d.productId ?? d.specId,
-      x: d.x, y: d.y, heightM: d.heightM, rotation: d.rotation, tilt: d.tilt,
-    })),
-    hardware: devices.filter(d => d.kind !== "camera").map(d => ({
-      name: d.name, kind: d.kind, productId: d.productId ?? d.specId,
-    })),
+    cameras: devices
+      .filter((d) => d.kind === "camera")
+      .map((d) => ({
+        name: d.name,
+        productId: d.productId ?? d.specId,
+        x: d.x,
+        y: d.y,
+        heightM: d.heightM,
+        rotation: d.rotation,
+        tilt: d.tilt,
+      })),
+    hardware: devices
+      .filter((d) => d.kind !== "camera")
+      .map((d) => ({
+        name: d.name,
+        kind: d.kind,
+        productId: d.productId ?? d.specId,
+      })),
     cableRuns: array(raw.cables).length,
     walls: array(raw.walls).length,
   };
@@ -31,9 +43,7 @@ function summaryLayout(raw: JsonObject, index: number) {
 
 export function projectAgentContext(projectName: string, projectData: unknown) {
   const raw = object(projectData);
-  const layouts = Array.isArray(raw.layouts) && raw.layouts.length > 0
-    ? array(raw.layouts)
-    : [raw];
+  const layouts = Array.isArray(raw.layouts) && raw.layouts.length > 0 ? array(raw.layouts) : [raw];
   const siteMap = object(raw.siteMap);
   const topology = object(raw.topology);
   return {

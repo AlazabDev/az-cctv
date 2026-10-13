@@ -7,13 +7,22 @@ describe("project agent context", () => {
       activeLayoutId: "A",
       devices: [{ kind: "camera", name: "stale" }],
       layouts: [
-        { id: "A", layoutName: "Ground", pxPerMeter: 40,
+        {
+          id: "A",
+          layoutName: "Ground",
+          pxPerMeter: 40,
           devices: [{ kind: "camera", name: "C1", specId: "spec1", heightM: 3 }],
-          walls: [{ id: "w1" }], cables: [{ id: "c1" }] },
-        { id: "B", layoutName: "First", devices: [
-          { kind: "camera", name: "C2", specId: "spec2" },
-          { kind: "switch", name: "SW1", specId: "switch1" },
-        ] },
+          walls: [{ id: "w1" }],
+          cables: [{ id: "c1" }],
+        },
+        {
+          id: "B",
+          layoutName: "First",
+          devices: [
+            { kind: "camera", name: "C2", specId: "spec2" },
+            { kind: "switch", name: "SW1", specId: "switch1" },
+          ],
+        },
       ],
       topology: { parents: { C1: "SW1" }, recorders: { C1: "N1" } },
       siteMap: { cameras: [{ id: "outside" }], boundary: [{}, {}, {}] },
@@ -28,9 +37,10 @@ describe("project agent context", () => {
   });
 
   it("keeps legacy single-layout projects readable", () => {
-    const result = projectAgentContext("Legacy", { pxPerMeter: 20, devices: [
-      { kind: "camera", name: "Old camera", specId: "camera1" },
-    ] });
+    const result = projectAgentContext("Legacy", {
+      pxPerMeter: 20,
+      devices: [{ kind: "camera", name: "Old camera", specId: "camera1" }],
+    });
     expect(result.layouts).toHaveLength(1);
     expect(result.layouts[0]?.cameras).toHaveLength(1);
     expect(result.layouts[0]?.scalePxPerMeter).toBe(20);

@@ -62,9 +62,13 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
   return (
     <>
       {readyCameras === 0 && (
-        <div role="status" className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-foreground">
-          كتالوج المنتجات: {catalog.cameras.length} كاميرا تجارية، لكن لا توجد كاميرا معتمدة هندسيًا لحساب التغطية.
-          يمكنك تحرير المخطط، بينما يظل التوزيع التلقائي متوقفًا إلى حين استكمال الدقة وزاوية الرؤية والعدسة.
+        <div
+          role="status"
+          className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-foreground"
+        >
+          كتالوج المنتجات: {catalog.cameras.length} كاميرا تجارية، لكن لا توجد كاميرا معتمدة هندسيًا
+          لحساب التغطية. يمكنك تحرير المخطط، بينما يظل التوزيع التلقائي متوقفًا إلى حين استكمال
+          الدقة وزاوية الرؤية والعدسة.
         </div>
       )}
       <CctvProjectEditorV2 key={`catalog-${data.length}`} projectId={projectId} />

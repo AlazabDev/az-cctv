@@ -3,7 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { projectAgentContext } from "@/lib/cctv/project-agent-context";
 
-const ENDPOINT = process.env["AZURE_FOUNDRY_PROJECT_ENDPOINT"] ?? "https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway";
+const ENDPOINT =
+  process.env["AZURE_FOUNDRY_PROJECT_ENDPOINT"] ??
+  "https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway";
 const AGENT_NAME = process.env["AZURE_CCTV_AGENT_NAME"] ?? "az-agent-bim";
 const AGENT_VERSION = process.env["AZURE_CCTV_AGENT_VERSION"] ?? "8";
 
