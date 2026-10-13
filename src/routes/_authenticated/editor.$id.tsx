@@ -4,7 +4,7 @@ import { ProductCatalogGate } from "@/components/cctv/ProductCatalogGate";
 export const Route = createFileRoute("/_authenticated/editor/$id")({
   head: () => ({
     meta: [
-      { title: "CCTV Project Designer — كاميرا بلان" },
+      { title: "CCTV Project Designer — AZCCTV" },
       {
         name: "description",
         content:
