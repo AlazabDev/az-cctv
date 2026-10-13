@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -268,7 +268,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   );
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
-  function update(updater: (value: PlanData) => PlanData) {
+  const update = useCallback((updater: (value: PlanData) => PlanData) => {
     setLayouts((prev) =>
       prev.map((layout) =>
         layout.id === activeLayoutId
@@ -276,7 +276,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           : layout,
       ),
     );
-  }
+  }, [activeLayoutId]);
 
   function generateAutoDesign(goal: CoverageGoal, maxCameras: number) {
     const specs = cameraCatalog.filter((c) => c.engineeringReady === true);
@@ -731,7 +731,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     };
     window.addEventListener("keydown", onDelete);
     return () => window.removeEventListener("keydown", onDelete);
-  }, [selectedId, selectedLabelId, selectedWallId]);
+  }, [selectedId, selectedLabelId, selectedWallId, update]);
 
   if (isLoading) return <div className="p-10 text-muted-foreground">جارٍ تحميل المشروع…</div>;
   if (!project)
