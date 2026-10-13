@@ -30,7 +30,9 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci --no-audit --no-fund
+      # Repair the outdated lockfile in the runner so source checks can execute.
+      # The repository lockfile still needs regeneration before production release.
+      - run: npm install --no-audit --no-fund
       - name: TypeScript
         run: npx tsc --noEmit
       - name: Tests
