@@ -2,7 +2,7 @@ name: Plan Design and Product Catalog Validation
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'production/**']
     paths:
       - 'src/components/cctv/**'
       - 'src/lib/cctv/**'
