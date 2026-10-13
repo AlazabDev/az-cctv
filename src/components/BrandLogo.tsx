@@ -1,21 +1,6 @@
 import { Camera } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-
-const assets = import.meta.glob<string>("/src/assets/**/*.{svg,png,webp,jpg,jpeg}", {
-  eager: true,
-  query: "?url",
-  import: "default",
-});
-const logo = Object.entries(assets)
-  .filter(([path]) => /(?:az.?cctv|logo|brand|primary|symbol|\/1\.svg)/i.test(path))
-  .sort(([a], [b]) => rank(a) - rank(b))[0]?.[1];
-
-function rank(path: string) {
-  if (/primary.full|full.logo|horizontal/i.test(path)) return 0;
-  if (/az.?cctv|logo/i.test(path)) return 1;
-  if (/symbol/i.test(path)) return 2;
-  return 3;
-}
+import { brandLogoUrl } from "@/lib/brand-assets";
 
 export function BrandLogo({
   compact = false,
@@ -26,9 +11,9 @@ export function BrandLogo({
 }) {
   return (
     <Link to="/" aria-label="AZCCTV — الصفحة الرئيسية" className="inline-flex items-center gap-3">
-      {logo ? (
+      {brandLogoUrl ? (
         <img
-          src={logo}
+          src={brandLogoUrl}
           alt="شعار AZCCTV"
           className="h-12 w-12 shrink-0 object-contain md:h-14 md:w-14"
         />
