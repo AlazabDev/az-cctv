@@ -1,10 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { projectAgentContext } from "@/lib/cctv/project-agent-context";
 
-const ENDPOINT = "https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway";
-const AGENT_NAME = "az-agent-bim";
-const AGENT_VERSION = "8";
+const ENDPOINT =
+  process.env["AZURE_FOUNDRY_PROJECT_ENDPOINT"] ??
+  "https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway";
+const AGENT_NAME = process.env["AZURE_CCTV_AGENT_NAME"] ?? "az-agent-bim";
+const AGENT_VERSION = process.env["AZURE_CCTV_AGENT_VERSION"] ?? "8";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Json = any;
@@ -68,21 +71,10 @@ export const sendAgentMessage = createServerFn({ method: "POST" })
       threadId = t.id;
     }
 
-    const plan = (project.data ?? {}) as Json;
-    const devices = (Array.isArray(plan.devices) ? plan.devices : []) as Json[];
-    const summary = {
-      projectName: project.name,
-      pxPerMeter: plan.pxPerMeter,
-      cameras: devices
-        .filter((d) => d.kind === "camera")
-        .map((d) => ({ name: d.name, specId: d.specId, heightM: d.heightM, rotation: d.rotation })),
-      otherDevices: devices.filter((d) => d.kind !== "camera").map((d) => ({ kind: d.kind, specId: d.specId })),
-      cableRuns: Array.isArray(plan.cables) ? plan.cables.length : 0,
-      walls: Array.isArray(plan.walls) ? plan.walls.length : 0,
-    };
-    const input = previous
-      ? data.message
-      : `سياق المشروع الحالي (JSON):\n${JSON.stringify(summary)}\n\nسؤال المستخدم:\n${data.message}`;
+    // Always pass the CURRENT project snapshot, even on an existing thread.
+    // previous_response_id preserves conversation history, not database state.
+    const summary = projectAgentContext(project.name, project.data);
+    const input = `Current CCTV project (read-only JSON):\\n${JSON.stringify(summary)}\\n\\nUser question:\\n${data.message}`;
 
     await supabase
       .from("agent_messages")

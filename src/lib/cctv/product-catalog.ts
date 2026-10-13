@@ -63,7 +63,8 @@ export function productToCameraSpec(product: ProductRow): CameraSpec | null {
 
   // Camera geometry cannot be inferred safely from MP and focal length alone.
   // Require verified pixel resolution and the manufacturer's horizontal FOV.
-  const engineeringReady = hres > 0 && vres > 0 && focal > 0 && hfov > 0 && hfov < 180 && megapixel > 0;
+  const engineeringReady =
+    hres > 0 && vres > 0 && focal > 0 && hfov > 0 && hfov < 180 && megapixel > 0;
 
   return {
     id: product.id,
