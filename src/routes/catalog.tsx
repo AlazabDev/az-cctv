@@ -10,12 +10,12 @@ import { distanceForPpm, formatMoney } from "@/lib/cctv/geometry";
 export const Route = createFileRoute("/catalog")({
   head: () => ({
     meta: [
-      { title: "كتالوج أجهزة المراقبة — كاميرا بلان" },
+      { title: "كتالوج أجهزة المراقبة — AZCCTV" },
       {
         name: "description",
         content: "كتالوج المنتجات الفعلي المستخدم داخل محرر تصميم أنظمة المراقبة.",
       },
-      { property: "og:title", content: "كتالوج أجهزة المراقبة — كاميرا بلان" },
+      { property: "og:title", content: "كتالوج أجهزة المراقبة — AZCCTV" },
       {
         property: "og:description",
         content: "كاميرات ومسجلات NVR وسويتشات PoE من قاعدة المنتجات الفعلية.",
