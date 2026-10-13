@@ -9,9 +9,9 @@ import { distanceForPpm, ppmAtDistance, ppmLevels, storageTb } from "@/lib/cctv/
 export const Route = createFileRoute("/calculator")({
   head: () => ({
     meta: [
-      { title: "حاسبة التغطية والتخزين — كاميرا بلان" },
+      { title: "حاسبة التغطية والتخزين — AZCCTV" },
       { name: "description", content: "احسب مسافات الكشف والتعرف بالبكسل لكل متر، وسعة التخزين المطلوبة لنظام المراقبة." },
-      { property: "og:title", content: "حاسبة التغطية والتخزين — كاميرا بلان" },
+      { property: "og:title", content: "حاسبة التغطية والتخزين — AZCCTV" },
       { property: "og:description", content: "حاسبة PPM ومسافات الرؤية وسعة الهارد ديسك لأنظمة الكاميرات." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
