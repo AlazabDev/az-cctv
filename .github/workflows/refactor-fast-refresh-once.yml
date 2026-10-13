@@ -21,13 +21,13 @@ jobs:
       - name: Format changed files and extracted UI modules
         run: |
           (git diff --name-only --diff-filter=AM; git ls-files 'src/components/ui/*variants.ts' 'src/components/ui/*context.tsx') | sort -u | grep -E '\.(ts|tsx)$' | xargs -r npx prettier --write
-      - run: npm run lint -- --max-warnings 0
-      - run: npx tsc --noEmit
-      - run: npm test
-      - run: npm run build
-      - name: Commit validated refactor
+      - name: Commit refactor for CI validation
         run: |
           git add src
           if git diff --cached --quiet; then exit 0; fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'refactor(ui): eliminate all Fast Refresh mixed exports'
           git push origin HEAD:fix/all-react-refresh-warnings-20261013
+      - run: npm run lint -- --max-warnings 0
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
