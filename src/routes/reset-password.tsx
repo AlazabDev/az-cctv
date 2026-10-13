@@ -9,9 +9,9 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "تعيين كلمة مرور جديدة — كاميرا بلان" },
-      { name: "description", content: "أدخل كلمة مرور جديدة لحسابك في كاميرا بلان." },
-      { property: "og:title", content: "تعيين كلمة مرور جديدة — كاميرا بلان" },
+      { title: "تعيين كلمة مرور جديدة — AZCCTV" },
+      { name: "description", content: "أدخل كلمة مرور جديدة لحسابك في AZCCTV." },
+      { property: "og:title", content: "تعيين كلمة مرور جديدة — AZCCTV" },
       { property: "og:description", content: "استعادة الوصول إلى حسابك." },
       { name: "robots", content: "noindex" },
     ],
