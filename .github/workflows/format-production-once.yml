@@ -1,0 +1,32 @@
+name: Format changed production files
+on:
+  push:
+    branches: ['production/plan-catalog-agent-hardening-20261013']
+    paths: ['.github/workflows/format-production-once.yml']
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: production/plan-catalog-agent-hardening-20261013
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: |
+          npx prettier --write \
+            src/components/cctv/CctvProjectEditorV2.tsx \
+            src/components/cctv/ProductCatalogGate.tsx \
+            src/lib/cctv/product-catalog.ts \
+            src/lib/cctv/project-agent-context.ts \
+            src/lib/agent-chat.functions.ts \
+            tests/project-agent-context.test.ts
+      - run: |
+          git add src/components/cctv/CctvProjectEditorV2.tsx src/components/cctv/ProductCatalogGate.tsx src/lib/cctv/product-catalog.ts src/lib/cctv/project-agent-context.ts src/lib/agent-chat.functions.ts tests/project-agent-context.test.ts
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style: format production hardening files'
+          git push origin HEAD:production/plan-catalog-agent-hardening-20261013
