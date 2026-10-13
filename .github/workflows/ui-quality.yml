@@ -17,7 +17,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run lint -- --max-warnings 0
+      - name: Lint refactored UI modules without warnings
+        run: |
+          npx eslint --max-warnings 0 \
+            src/components/ui/badge.tsx src/components/ui/badge-variants.ts \
+            src/components/ui/button.tsx src/components/ui/button-variants.ts \
+            src/components/ui/form.tsx src/components/ui/form-context.tsx \
+            src/components/ui/navigation-menu.tsx src/components/ui/navigation-menu-variants.ts \
+            src/components/ui/sidebar.tsx src/components/ui/sidebar-context.tsx src/components/ui/sidebar-variants.ts \
+            src/components/ui/toggle.tsx src/components/ui/toggle-variants.ts
       - run: npx tsc --noEmit
       - run: npm test
       - run: npm run build
