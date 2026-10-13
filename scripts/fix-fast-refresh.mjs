@@ -24,7 +24,7 @@ function moveVariant(file, symbol, newFile) {
   source = source.replace(/import \{ type VariantProps \} from "class-variance-authority";/, 'import type { VariantProps } from "class-variance-authority";');
   const prefix = file.replace(".tsx", "");
   source = 'import { ' + symbol + ' } from "./' + prefix + '-variants";\n' + source;
-  source = replaceExact(source, symbol + " };", "};", "export " + symbol);
+  source = source.replace(symbol + " };", "};");
   source = source.replace("export { " + symbol + ", ", "export { ");
   source = source.replace("  " + symbol + ",\n", "");
   write(file, source);
