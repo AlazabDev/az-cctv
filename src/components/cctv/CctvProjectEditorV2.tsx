@@ -680,7 +680,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           .maybeSingle()
       : { data: null };
     const ok = openOfferPdf({
-      companyName: profile?.company || "كاميرا بلان",
+      companyName: profile?.company || "AZCCTV",
       preparedBy: profile?.full_name ? `إعداد: ${profile.full_name}` : "",
       projectName: name,
       clientName,
