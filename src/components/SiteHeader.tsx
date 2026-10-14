@@ -29,10 +29,13 @@ export function SiteHeader() {
 
   async function signOut() {
     setMenuOpen(false);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Sign-out failed:", error.message);
+      return;
+    }
     await qc.cancelQueries();
     qc.clear();
-    const { error } = await supabase.auth.signOut();
-    if (error) return;
     navigate({ to: "/auth", replace: true });
   }
 
