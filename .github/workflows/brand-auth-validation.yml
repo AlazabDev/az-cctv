@@ -1,0 +1,32 @@
+name: AZCCTV Brand and Authentication Validation
+on:
+  push:
+    branches: ['feature/brand-landing-auth-dashboard-20261014']
+  pull_request:
+    paths:
+      - 'src/routes/**'
+      - 'src/components/BrandLogo.tsx'
+      - 'src/components/SiteHeader.tsx'
+      - 'src/lib/brand-assets.ts'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Check changed files formatting
+        run: npx prettier --check src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
+      - name: ESLint
+        run: npm run lint
+      - name: Typescript
+        run: npx tsc --noEmit
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
