@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { emptyPlan } from "@/lib/cctv/types";
 import { SiteHeader } from "@/components/SiteHeader";
+import { brandLogoUrl } from "@/lib/brand-assets";
 
 export const Route = createFileRoute("/_authenticated/projects")({
   head: () => ({
@@ -144,15 +145,26 @@ function ProjectsDashboard() {
     <div className="min-h-screen bg-[#f5f7fb] text-[#030957]" dir="rtl">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-5 pb-20 pt-12">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="mb-3 text-xs font-black tracking-widest text-[#ad8000]">
-              WORKSPACE / لوحة التحكم
-            </p>
-            <h1 className="text-3xl font-black sm:text-4xl">إدارة مشاريع المراقبة</h1>
-            <p className="mt-3 text-sm text-slate-600">
-              كل مخططاتك وأجهزتك ومشاريعك من نقطة واحدة.
-            </p>
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6 rounded-[28px] bg-[#030957] px-6 py-8 text-white shadow-[0_20px_60px_rgba(3,9,87,.14)] sm:px-9">
+          <div className="flex items-center gap-5">
+            {brandLogoUrl && (
+              <img
+                src={brandLogoUrl}
+                alt="شعار AZCCTV"
+                width={80}
+                height={80}
+                className="h-16 w-16 rounded-2xl bg-white object-contain sm:h-20 sm:w-20"
+              />
+            )}
+            <div>
+              <p className="mb-2 text-xs font-black tracking-widest text-[#FFB900]">
+                AZCCTV / WORKSPACE
+              </p>
+              <h1 className="text-2xl font-black sm:text-4xl">لوحة إدارة المشاريع</h1>
+              <p className="mt-3 text-sm text-slate-300">
+                أنشئ مشروعًا، أضف المخططات، واستكمل تصميم الشبكة وتغطية الكاميرات.
+              </p>
+            </div>
           </div>
           <Button
             type="button"
@@ -164,6 +176,26 @@ function ProjectsDashboard() {
           </Button>
         </div>
 
+        <nav aria-label="اختصارات مساحة العمل" className="mb-8 flex flex-wrap gap-3">
+          <Link
+            to="/catalog"
+            className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
+          >
+            كتالوج الكاميرات
+          </Link>
+          <Link
+            to="/calculator"
+            className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
+          >
+            حاسبة التغطية
+          </Link>
+          <Link
+            to="/account"
+            className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
+          >
+            بيانات الشركة والحساب
+          </Link>
+        </nav>
         <section aria-label="ملخص المشاريع" className="mb-9 grid gap-4 sm:grid-cols-3">
           {[
             {

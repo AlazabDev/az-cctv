@@ -10,12 +10,18 @@ export function BrandLogo({
   light?: boolean;
 }) {
   return (
-    <Link to="/" aria-label="AZCCTV — الصفحة الرئيسية" className="inline-flex items-center gap-3">
+    <Link
+      to="/"
+      aria-label="AZCCTV — الصفحة الرئيسية"
+      className="inline-flex items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#FFB900]"
+    >
       {brandLogoUrl ? (
         <img
           src={brandLogoUrl}
-          alt="شعار AZCCTV"
-          className="h-12 w-12 shrink-0 object-contain md:h-14 md:w-14"
+          alt="شعار AZCCTV — كاميرا المراقبة"
+          width={56}
+          height={56}
+          className="h-12 w-12 shrink-0 rounded-xl object-contain shadow-[0_8px_24px_rgba(3,9,87,.12)] md:h-14 md:w-14"
         />
       ) : (
         <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#FFB900]/40 bg-[#030957] text-[#FFB900]">
