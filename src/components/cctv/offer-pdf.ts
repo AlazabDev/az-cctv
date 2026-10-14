@@ -27,7 +27,10 @@ export interface OfferPdfInput {
 }
 
 const esc = (s: string) =>
-  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+  s.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  );
 
 /**
  * Opens a print-ready, company-branded quotation in a new window. The browser's
@@ -37,7 +40,11 @@ const esc = (s: string) =>
 export function openOfferPdf(o: OfferPdfInput) {
   const money = (n: number) =>
     `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n)} ${esc(o.currency)}`;
-  const date = new Date().toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
+  const date = new Date().toLocaleDateString("ar-EG", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
   const ref = `Q-${Date.now().toString(36).toUpperCase()}`;
   const rows = o.lines
     .map(

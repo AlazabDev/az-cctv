@@ -71,7 +71,12 @@ export function AutoDesignPanel({
           />
         </label>
       </div>
-      <Button size="sm" variant="secondary" className="mt-2 w-full" onClick={() => onGenerate(goal, max)}>
+      <Button
+        size="sm"
+        variant="secondary"
+        className="mt-2 w-full"
+        onClick={() => onGenerate(goal, max)}
+      >
         {proposals ? <RefreshCw className="h-4 w-4" /> : <Wand2 className="h-4 w-4" />}
         {proposals ? "إعادة التوليد" : "توليد مقترح"}
       </Button>
@@ -101,8 +106,8 @@ export function AutoDesignPanel({
                   </button>
                 </div>
                 <div className="text-muted-foreground">
-                  اتجاه {Math.round(p.rotation)}° · ميل {p.tilt}° · ارتفاع {p.heightM}م · هدف {p.targetDistanceM}م ·{" "}
-                  {p.ppmAtTarget} PPM · منطقة عمياء {p.blindSpotM}م
+                  اتجاه {Math.round(p.rotation)}° · ميل {p.tilt}° · ارتفاع {p.heightM}م · هدف{" "}
+                  {p.targetDistanceM}م · {p.ppmAtTarget} PPM · منطقة عمياء {p.blindSpotM}م
                 </div>
                 <div>{p.reason}</div>
               </li>

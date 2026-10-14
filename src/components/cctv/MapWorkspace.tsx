@@ -48,7 +48,9 @@ export function MapWorkspace({
   const [drawingBoundary, setDrawingBoundary] = useState(false);
   const boundaryRef = useRef(false);
   boundaryRef.current = drawingBoundary;
-  const [proposals, setProposals] = useState<(Proposal & { lat: number; lng: number; bearing: number })[] | null>(null);
+  const [proposals, setProposals] = useState<
+    (Proposal & { lat: number; lng: number; bearing: number })[] | null
+  >(null);
   const [aiCoverage, setAiCoverage] = useState(0);
   const [query, setQuery] = useState(siteMap.address);
   const [latInput, setLatInput] = useState(siteMap.center?.lat.toFixed(6) ?? "");
@@ -153,14 +155,22 @@ export function MapWorkspace({
     }
     for (const p of proposals ?? []) {
       const d = distanceForPpm(p.spec, ppmLevels[1].ppm);
-      L.polygon(sectorLatLngs(p.lat, p.lng, p.bearing, p.spec.hfov, Math.max(d, p.targetDistanceM)), {
-        color: "#f97316",
-        weight: 1,
-        dashArray: "4 3",
-        fillOpacity: 0.25,
-        interactive: false,
+      L.polygon(
+        sectorLatLngs(p.lat, p.lng, p.bearing, p.spec.hfov, Math.max(d, p.targetDistanceM)),
+        {
+          color: "#f97316",
+          weight: 1,
+          dashArray: "4 3",
+          fillOpacity: 0.25,
+          interactive: false,
+        },
+      ).addTo(layer);
+      L.circleMarker([p.lat, p.lng], {
+        radius: 7,
+        color: "#fff",
+        fillColor: "#f97316",
+        fillOpacity: 1,
       }).addTo(layer);
-      L.circleMarker([p.lat, p.lng], { radius: 7, color: "#fff", fillColor: "#f97316", fillOpacity: 1 }).addTo(layer);
     }
     for (const cam of siteMap.cameras) {
       const spec = cameraById(cam.specId);
@@ -205,11 +215,21 @@ export function MapWorkspace({
       return;
     }
     const specs = cameraCatalog.filter((c) => c.engineeringReady !== false);
-    const { input, origin } = siteDesignInput(boundary, goal, specs.length ? specs : cameraCatalog, maxCameras, 4);
+    const { input, origin } = siteDesignInput(
+      boundary,
+      goal,
+      specs.length ? specs : cameraCatalog,
+      maxCameras,
+      4,
+    );
     const result = runAutoDesign(input);
     setAiCoverage(result.coverage);
     setProposals(
-      result.proposals.map((p) => ({ ...p, ...localToGeo(origin, p.pos), bearing: screenToBearing(p.rotation) })),
+      result.proposals.map((p) => ({
+        ...p,
+        ...localToGeo(origin, p.pos),
+        bearing: screenToBearing(p.rotation),
+      })),
     );
     if (!result.proposals.length) toast.error("لم يتم العثور على توزيع مناسب");
   }
@@ -357,7 +377,11 @@ export function MapWorkspace({
               {drawingBoundary ? "إنهاء رسم الحدود" : "رسم حدود الموقع"}
             </Button>
             {(siteMap.boundary?.length ?? 0) > 0 && (
-              <Button size="sm" variant="outline" onClick={() => onChange({ ...siteMap, boundary: [] })}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onChange({ ...siteMap, boundary: [] })}
+              >
                 مسح الحدود
               </Button>
             )}

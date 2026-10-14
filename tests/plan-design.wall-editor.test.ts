@@ -25,7 +25,10 @@ describe("Plan Design — wall editor regression", () => {
   });
 
   it("does not mutate coordinates supplied by the caller", () => {
-    const points = [{ x: 0, y: 0 }, { x: 1, y: 1 }];
+    const points = [
+      { x: 0, y: 0 },
+      { x: 1, y: 1 },
+    ];
     const result = sanitizeWallPoints(points);
     result[0]!.x = 100;
     expect(points[0]!.x).toBe(0);
@@ -44,7 +47,11 @@ describe("Plan Design — wall editor regression", () => {
   });
 
   it("inserts the projected vertex into the nearest wall segment", () => {
-    const wall = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }];
+    const wall = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ];
     const nearest = nearestSegment(wall, { x: 5, y: 2 });
     expect(nearest?.segmentIndex).toBe(0);
     expect(nearest?.point).toEqual({ x: 5, y: 0 });
@@ -54,7 +61,10 @@ describe("Plan Design — wall editor regression", () => {
   });
 
   it("preserves at least two wall vertices when deleting", () => {
-    const endpoints = [{ x: 0, y: 0 }, { x: 10, y: 0 }];
+    const endpoints = [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+    ];
     expect(deleteVertex(endpoints, 0)).toEqual(endpoints);
   });
 
@@ -62,7 +72,10 @@ describe("Plan Design — wall editor regression", () => {
     const wall = {
       id: "fence-1",
       material: "fence",
-      points: [{ x: 0, y: 0 }, { x: 0, y: 5 }],
+      points: [
+        { x: 0, y: 0 },
+        { x: 0, y: 5 },
+      ],
       curved: false,
     };
     const normalized = normalizeWallSegment(wall);

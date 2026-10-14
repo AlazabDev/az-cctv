@@ -34,7 +34,11 @@ function AccountPage() {
       if (!data.user) return;
       setUserId(data.user.id);
       setEmail(data.user.email ?? "");
-      const { data: p } = await supabase.from("profiles").select("full_name,company").eq("id", data.user.id).maybeSingle();
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("full_name,company")
+        .eq("id", data.user.id)
+        .maybeSingle();
       setFullName(p?.full_name ?? "");
       setCompany(p?.company ?? "");
     })();
@@ -44,7 +48,9 @@ function AccountPage() {
     e.preventDefault();
     if (!userId) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({ id: userId, full_name: fullName, company });
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: userId, full_name: fullName, company });
     setSaving(false);
     if (error) toast.error("تعذّر الحفظ");
     else toast.success("تم حفظ البيانات");
@@ -52,7 +58,10 @@ function AccountPage() {
 
   async function changePassword(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await supabase.auth.updateUser({ password: pwd, current_password: current } as never);
+    const { error } = await supabase.auth.updateUser({
+      password: pwd,
+      current_password: current,
+    } as never);
     if (error) toast.error(error.message);
     else {
       toast.success("تم تغيير كلمة المرور");
@@ -68,16 +77,48 @@ function AccountPage() {
         <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold">حسابي</h1>
         <form onSubmit={saveProfile} className="panel space-y-3 p-6">
           <h2 className="font-bold">البيانات الشخصية</h2>
-          <div className="space-y-1.5"><Label>البريد الإلكتروني</Label><Input value={email} disabled dir="ltr" /></div>
-          <div className="space-y-1.5"><Label>الاسم</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>الشركة (تظهر في عروض الأسعار)</Label><Input value={company} onChange={(e) => setCompany(e.target.value)} /></div>
-          <Button type="submit" disabled={saving}>{saving ? "جارٍ..." : "حفظ"}</Button>
+          <div className="space-y-1.5">
+            <Label>البريد الإلكتروني</Label>
+            <Input value={email} disabled dir="ltr" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>الاسم</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>الشركة (تظهر في عروض الأسعار)</Label>
+            <Input value={company} onChange={(e) => setCompany(e.target.value)} />
+          </div>
+          <Button type="submit" disabled={saving}>
+            {saving ? "جارٍ..." : "حفظ"}
+          </Button>
         </form>
         <form onSubmit={changePassword} className="panel space-y-3 p-6">
           <h2 className="font-bold">تغيير كلمة المرور</h2>
-          <div className="space-y-1.5"><Label>كلمة المرور الحالية</Label><Input type="password" required dir="ltr" value={current} onChange={(e) => setCurrent(e.target.value)} /></div>
-          <div className="space-y-1.5"><Label>كلمة المرور الجديدة</Label><Input type="password" required minLength={6} dir="ltr" value={pwd} onChange={(e) => setPwd(e.target.value)} /></div>
-          <Button type="submit" variant="secondary">تحديث كلمة المرور</Button>
+          <div className="space-y-1.5">
+            <Label>كلمة المرور الحالية</Label>
+            <Input
+              type="password"
+              required
+              dir="ltr"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>كلمة المرور الجديدة</Label>
+            <Input
+              type="password"
+              required
+              minLength={6}
+              dir="ltr"
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+            />
+          </div>
+          <Button type="submit" variant="secondary">
+            تحديث كلمة المرور
+          </Button>
         </form>
       </main>
     </div>

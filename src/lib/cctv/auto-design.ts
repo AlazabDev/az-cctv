@@ -131,13 +131,26 @@ export function runAutoDesign(input: DesignInput): DesignResult {
   const proposals: Proposal[] = [];
   const maxPrice = Math.max(1, ...specs.map((s) => s.price || 0));
 
-  while (proposals.length < input.maxCameras && coveredCount / samples.length < input.targetCoverage) {
-    type Cand = { score: number; gain: number[]; mi: number; spec: CameraSpec; rot: number; range: number };
+  while (
+    proposals.length < input.maxCameras &&
+    coveredCount / samples.length < input.targetCoverage
+  ) {
+    type Cand = {
+      score: number;
+      gain: number[];
+      mi: number;
+      spec: CameraSpec;
+      rot: number;
+      range: number;
+    };
     let best = null as Cand | null;
     mounts.forEach((m, mi) => {
       if (proposals.some((p) => Math.hypot(p.pos.x - m.x, p.pos.y - m.y) < 1)) return;
       for (const spec of specs) {
-        const range = Math.min(distanceForPpm(spec, ppm), spec.irRange > 0 ? spec.irRange * 1.2 : Infinity);
+        const range = Math.min(
+          distanceForPpm(spec, ppm),
+          spec.irRange > 0 ? spec.irRange * 1.2 : Infinity,
+        );
         if (range < 1) continue;
         const half = spec.hfov / 2;
         for (let rot = 0; rot < 360; rot += 15) {
@@ -232,11 +245,13 @@ export function planDesignInput(
   const mounts = [...area, ...wallPts].map(toM);
   for (const [a, b] of segs) {
     const n = Math.floor(Math.hypot(b.x - a.x, b.y - a.y) / 4);
-    for (let s = 1; s < n; s++) mounts.push({ x: a.x + ((b.x - a.x) * s) / n, y: a.y + ((b.y - a.y) * s) / n });
+    for (let s = 1; s < n; s++)
+      mounts.push({ x: a.x + ((b.x - a.x) * s) / n, y: a.y + ((b.y - a.y) * s) / n });
   }
   // dedupe mounts closer than 0.5 m
   const uniq: Pt[] = [];
-  for (const m of mounts) if (!uniq.some((u) => Math.hypot(u.x - m.x, u.y - m.y) < 0.5)) uniq.push(m);
+  for (const m of mounts)
+    if (!uniq.some((u) => Math.hypot(u.x - m.x, u.y - m.y) < 0.5)) uniq.push(m);
   return {
     area: area.map(toM),
     obstacles,
@@ -249,7 +264,11 @@ export function planDesignInput(
   };
 }
 
-export function proposalsToDevices(proposals: Proposal[], pxPerMeter: number, startIndex: number): PlacedDevice[] {
+export function proposalsToDevices(
+  proposals: Proposal[],
+  pxPerMeter: number,
+  startIndex: number,
+): PlacedDevice[] {
   return proposals.map((p, i) => ({
     id: p.id,
     kind: "camera",
@@ -283,14 +302,22 @@ export function autoCables(plan: PlanData, cameras: PlacedDevice[], cableType: s
     ];
     const len = (Math.abs(cam.x - hub.x) + Math.abs(cam.y - hub.y)) / k;
     if (len * 1.15 > 90) longRuns.push(cam.name);
-    cables.push({ id: Math.random().toString(36).slice(2, 10), type: cableType, points, slackPercent: 15 });
+    cables.push({
+      id: Math.random().toString(36).slice(2, 10),
+      type: cableType,
+      points,
+      slackPercent: 15,
+    });
   }
   return { cables, longRuns, noHub: false };
 }
 
 /* ---------------- Site map adapter ---------------- */
 
-export function geoToLocal(origin: { lat: number; lng: number }, p: { lat: number; lng: number }): Pt {
+export function geoToLocal(
+  origin: { lat: number; lng: number },
+  p: { lat: number; lng: number },
+): Pt {
   const R = 6371000;
   return {
     x: ((p.lng - origin.lng) * Math.PI * R * Math.cos((origin.lat * Math.PI) / 180)) / 180,
@@ -319,9 +346,19 @@ export function siteDesignInput(
     const b = area[(i + 1) % area.length]!;
     const len = Math.hypot(b.x - a.x, b.y - a.y);
     const n = Math.max(1, Math.floor(len / 8));
-    for (let s = 0; s < n; s++) mounts.push({ x: a.x + ((b.x - a.x) * s) / n, y: a.y + ((b.y - a.y) * s) / n });
+    for (let s = 0; s < n; s++)
+      mounts.push({ x: a.x + ((b.x - a.x) * s) / n, y: a.y + ((b.y - a.y) * s) / n });
   });
-  const input: DesignInput = { area, obstacles: [], mounts, heightM, goal, specs, maxCameras, targetCoverage: 0.9 };
+  const input: DesignInput = {
+    area,
+    obstacles: [],
+    mounts,
+    heightM,
+    goal,
+    specs,
+    maxCameras,
+    targetCoverage: 0.9,
+  };
   return { input, origin };
 }
 

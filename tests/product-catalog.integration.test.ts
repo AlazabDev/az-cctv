@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { buildProductCatalog, productToCameraSpec, type ProductRow } from "../src/lib/cctv/product-catalog";
+import {
+  buildProductCatalog,
+  productToCameraSpec,
+  type ProductRow,
+} from "../src/lib/cctv/product-catalog";
 
-function camera(specifications: Record<string, unknown>, extra: Record<string, unknown> = {}): ProductRow {
+function camera(
+  specifications: Record<string, unknown>,
+  extra: Record<string, unknown> = {},
+): ProductRow {
   return {
     id: "8b9105d7-a0fe-4a66-b797-fab2a0db6bd9",
     category: "CCTV Camera",

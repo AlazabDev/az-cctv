@@ -40,11 +40,19 @@ export function destination(lat: number, lng: number, bearingDeg: number, distM:
   const p1 = (lat * Math.PI) / 180;
   const l1 = (lng * Math.PI) / 180;
   const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(b));
-  const l2 = l1 + Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  const l2 =
+    l1 +
+    Math.atan2(Math.sin(b) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
   return [(p2 * 180) / Math.PI, (l2 * 180) / Math.PI] as [number, number];
 }
 
-export function sectorLatLngs(lat: number, lng: number, bearing: number, fov: number, distM: number) {
+export function sectorLatLngs(
+  lat: number,
+  lng: number,
+  bearing: number,
+  fov: number,
+  distM: number,
+) {
   const pts: [number, number][] = [[lat, lng]];
   const steps = 24;
   for (let i = 0; i <= steps; i++) {
