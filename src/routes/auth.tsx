@@ -36,6 +36,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -63,6 +64,7 @@ function AuthPage() {
         });
         if (error) throw error;
         if (!data.session) {
+          setConfirmationEmail(email.trim());
           toast.success("تم إرسال رسالة التأكيد إلى بريدك الإلكتروني.");
           setMode("signin");
           setPassword("");
@@ -85,7 +87,7 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/projects` },
+      options: { redirectTo: `${window.location.origin}/projects`, queryParams: { prompt: "select_account" } },
     });
     if (error) {
       toast.error(error.message);
@@ -164,6 +166,12 @@ function AuthPage() {
                     placeholder="الاسم الكامل"
                     className="h-11 text-[#030957]"
                   />
+                </div>
+              )}
+              {confirmationEmail && (
+                <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm leading-7 text-emerald-900">
+                  أرسلنا رابط تفعيل الحساب إلى <strong dir="ltr">{confirmationEmail}</strong>.
+                  افتح الرسالة لتأكيد بريدك، ثم سجّل الدخول هنا.
                 </div>
               )}
               <div className="space-y-2">
@@ -249,7 +257,7 @@ function AuthPage() {
               <span className="text-lg font-black text-[#4285F4]">G</span> Google
             </button>
             <p className="mt-6 text-center text-xs text-slate-500">
-              تُدار الحسابات باستخدام Supabase Auth.
+              دخول آمن لحسابك · يمكنك استعادة كلمة المرور عبر بريدك الإلكتروني.
             </p>
           </div>
         </div>
