@@ -87,7 +87,10 @@ function AuthPage() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/projects`, queryParams: { prompt: "select_account" } },
+      options: {
+        redirectTo: `${window.location.origin}/projects`,
+        queryParams: { prompt: "select_account" },
+      },
     });
     if (error) {
       toast.error(error.message);
@@ -169,9 +172,12 @@ function AuthPage() {
                 </div>
               )}
               {confirmationEmail && (
-                <div role="status" className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm leading-7 text-emerald-900">
-                  أرسلنا رابط تفعيل الحساب إلى <strong dir="ltr">{confirmationEmail}</strong>.
-                  افتح الرسالة لتأكيد بريدك، ثم سجّل الدخول هنا.
+                <div
+                  role="status"
+                  className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm leading-7 text-emerald-900"
+                >
+                  أرسلنا رابط تفعيل الحساب إلى <strong dir="ltr">{confirmationEmail}</strong>. افتح
+                  الرسالة لتأكيد بريدك، ثم سجّل الدخول هنا.
                 </div>
               )}
               <div className="space-y-2">

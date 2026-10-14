@@ -148,8 +148,13 @@ function ProjectsDashboard() {
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6 rounded-[28px] bg-[#030957] px-6 py-8 text-white shadow-[0_20px_60px_rgba(3,9,87,.14)] sm:px-9">
           <div className="flex items-center gap-5">
             {brandLogoUrl && (
-              <img src={brandLogoUrl} alt="شعار AZCCTV" width={80} height={80}
-                className="h-16 w-16 rounded-2xl bg-white object-contain sm:h-20 sm:w-20" />
+              <img
+                src={brandLogoUrl}
+                alt="شعار AZCCTV"
+                width={80}
+                height={80}
+                className="h-16 w-16 rounded-2xl bg-white object-contain sm:h-20 sm:w-20"
+              />
             )}
             <div>
               <p className="mb-2 text-xs font-black tracking-widest text-[#FFB900]">
@@ -172,13 +177,22 @@ function ProjectsDashboard() {
         </div>
 
         <nav aria-label="اختصارات مساحة العمل" className="mb-8 flex flex-wrap gap-3">
-          <Link to="/catalog" className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]">
+          <Link
+            to="/catalog"
+            className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
+          >
             كتالوج الكاميرات
           </Link>
-          <Link to="/calculator" className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]">
+          <Link
+            to="/calculator"
+            className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
+          >
             حاسبة التغطية
           </Link>
-          <Link to="/account" className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]">
+          <Link
+            to="/account"
+            className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
+          >
             بيانات الشركة والحساب
           </Link>
         </nav>

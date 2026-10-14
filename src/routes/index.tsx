@@ -125,12 +125,21 @@ function LandingPage() {
             <div>
               <div className="mb-8 flex items-center gap-4">
                 {brandLogoUrl && (
-                  <img src={brandLogoUrl} alt="AZCCTV" width={88} height={88}
-                    className="h-20 w-20 rounded-[22px] bg-white object-contain shadow-[0_18px_45px_rgba(0,0,0,.24)] sm:h-[88px] sm:w-[88px]" />
+                  <img
+                    src={brandLogoUrl}
+                    alt="AZCCTV"
+                    width={88}
+                    height={88}
+                    className="h-20 w-20 rounded-[22px] bg-white object-contain shadow-[0_18px_45px_rgba(0,0,0,.24)] sm:h-[88px] sm:w-[88px]"
+                  />
                 )}
                 <div>
-                  <p className="text-2xl font-black tracking-[.12em] text-white" dir="ltr">AZCCTV</p>
-                  <p className="mt-1 text-xs font-bold tracking-[.18em] text-[#FFB900]" dir="ltr">DESIGN · COVERAGE · DELIVERY</p>
+                  <p className="text-2xl font-black tracking-[.12em] text-white" dir="ltr">
+                    AZCCTV
+                  </p>
+                  <p className="mt-1 text-xs font-bold tracking-[.18em] text-[#FFB900]" dir="ltr">
+                    DESIGN · COVERAGE · DELIVERY
+                  </p>
                 </div>
               </div>
               <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#FFB900]/35 bg-[#FFB900]/10 px-4 py-2 text-xs font-bold text-[#FFCF56]">
@@ -253,15 +262,23 @@ function LandingPage() {
           </div>
         </section>
 
-        <section aria-label="مزايا تجربة العمل" className="border-b border-white/10 bg-[#0b1940] px-5 py-7">
+        <section
+          aria-label="مزايا تجربة العمل"
+          className="border-b border-white/10 bg-[#0b1940] px-5 py-7"
+        >
           <div className="mx-auto grid max-w-7xl gap-4 text-center sm:grid-cols-3">
             {[
               { label: "خطط المشاريع", value: "PLAN + MULTI-LAYOUT" },
               { label: "تحليل الرؤية", value: "DORI / PPM" },
               { label: "التسليم الهندسي", value: "TOPOLOGY + BOQ" },
             ].map((item) => (
-              <div key={item.value} className="rounded-xl border border-white/10 bg-white/5 px-5 py-4">
-                <p className="font-mono text-xs font-bold tracking-wider text-[#FFB900]" dir="ltr">{item.value}</p>
+              <div
+                key={item.value}
+                className="rounded-xl border border-white/10 bg-white/5 px-5 py-4"
+              >
+                <p className="font-mono text-xs font-bold tracking-wider text-[#FFB900]" dir="ltr">
+                  {item.value}
+                </p>
                 <p className="mt-1 text-sm text-white/80">{item.label}</p>
               </div>
             ))}
