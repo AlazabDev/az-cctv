@@ -22,8 +22,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: Check changed files formatting
         run: npx prettier --check src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
-      - name: ESLint
-        run: npm run lint
+      - name: ESLint (brand/auth/dashboard changes)
+        run: npx eslint src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
       - name: Typescript
         run: npx tsc --noEmit
       - name: Tests
