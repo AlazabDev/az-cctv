@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
+import { brandLogoUrl } from "@/lib/brand-assets";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -122,6 +123,16 @@ function LandingPage() {
           />
           <div className="relative mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-20 lg:grid-cols-[1fr_1.08fr] lg:items-center lg:pb-28 lg:pt-28">
             <div>
+              <div className="mb-8 flex items-center gap-4">
+                {brandLogoUrl && (
+                  <img src={brandLogoUrl} alt="AZCCTV" width={88} height={88}
+                    className="h-20 w-20 rounded-[22px] bg-white object-contain shadow-[0_18px_45px_rgba(0,0,0,.24)] sm:h-[88px] sm:w-[88px]" />
+                )}
+                <div>
+                  <p className="text-2xl font-black tracking-[.12em] text-white" dir="ltr">AZCCTV</p>
+                  <p className="mt-1 text-xs font-bold tracking-[.18em] text-[#FFB900]" dir="ltr">DESIGN · COVERAGE · DELIVERY</p>
+                </div>
+              </div>
               <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-[#FFB900]/35 bg-[#FFB900]/10 px-4 py-2 text-xs font-bold text-[#FFCF56]">
                 <CircleDot className="h-3.5 w-3.5" /> منصة هندسية متخصصة في أنظمة المراقبة
               </div>
@@ -239,6 +250,21 @@ function LandingPage() {
                 <span className="text-xs font-bold text-[#FFB900]">ENGINEERED FOR CLARITY</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section aria-label="مزايا تجربة العمل" className="border-b border-white/10 bg-[#0b1940] px-5 py-7">
+          <div className="mx-auto grid max-w-7xl gap-4 text-center sm:grid-cols-3">
+            {[
+              { label: "خطط المشاريع", value: "PLAN + MULTI-LAYOUT" },
+              { label: "تحليل الرؤية", value: "DORI / PPM" },
+              { label: "التسليم الهندسي", value: "TOPOLOGY + BOQ" },
+            ].map((item) => (
+              <div key={item.value} className="rounded-xl border border-white/10 bg-white/5 px-5 py-4">
+                <p className="font-mono text-xs font-bold tracking-wider text-[#FFB900]" dir="ltr">{item.value}</p>
+                <p className="mt-1 text-sm text-white/80">{item.label}</p>
+              </div>
+            ))}
           </div>
         </section>
 
