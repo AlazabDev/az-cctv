@@ -453,6 +453,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setCableDraft([]);
   }
 
+  function undoWallPoint() {
+    setWallDraft((points) => points.slice(0, -1));
+  }
+
+  function cancelWallDraft() {
+    setWallDraft([]);
+  }
+
   function finishWall() {
     if (mode === "wall" && wallDraft.length >= 2) {
       const wall: WallSegment = {
@@ -931,6 +939,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           }
           onFinishCable={finishCable}
           onFinishWall={finishWall}
+          onUndoWallPoint={undoWallPoint}
+          onCancelWallDraft={cancelWallDraft}
           onUpdate={update}
         />
       ) : activeModule === "offer" ? (
@@ -1158,6 +1168,8 @@ type PlanWorkspaceProps = {
   onMoveLabel: (id: string, point: { x: number; y: number }) => void;
   onFinishCable: () => void;
   onFinishWall: () => void;
+  onUndoWallPoint: () => void;
+  onCancelWallDraft: () => void;
   onUpdate: (updater: (plan: PlanData) => PlanData) => void;
 };
 
@@ -1319,6 +1331,8 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
           onMoveLabel={props.onMoveLabel}
           onFinishCable={props.onFinishCable}
           onFinishWall={props.onFinishWall}
+          onUndoWallPoint={props.onUndoWallPoint}
+          onCancelWallDraft={props.onCancelWallDraft}
         />
         <div className="no-print absolute right-3 top-3 z-20 flex w-[78px] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
           <button
