@@ -177,6 +177,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [cableDraft, setCableDraft] = useState<{ x: number; y: number }[]>([]);
   const [wallDraft, setWallDraft] = useState<{ x: number; y: number }[]>([]);
   const [scaleDraft, setScaleDraft] = useState<{ x: number; y: number }[]>([]);
+  const [calibrationLayoutId, setCalibrationLayoutId] = useState<string | null>(null);
+  const [wallMethodOpen, setWallMethodOpen] = useState(false);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const imageUrl = imageUrls[activeLayoutId] ?? null;
   const [loaded, setLoaded] = useState(false);
@@ -425,15 +427,25 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         return;
       }
       const pixels = Math.hypot(points[1]!.x - points[0]!.x, points[1]!.y - points[0]!.y);
-      const answer = window.prompt("المسافة الحقيقية بالمتر", "3");
+      const answer = window.prompt("أدخل الطول الحقيقي للضلع المحدد بالمتر", "");
+      const meters = Number(answer);
+      if (answer === null || !answer.trim()) {
+        setScaleDraft([]);
+        return;
+      }
+      if (!Number.isFinite(meters) || meters <= 0 || pixels < 2) {
+        toast.error("اختر ضلعًا واضحًا ثم أدخل طولًا حقيقيًا أكبر من صفر.");
+        setScaleDraft([]);
+        return;
+      }
+      update((prev) => ({ ...prev, pxPerMeter: pixels / meters }));
       setScaleDraft([]);
       setMode("select");
-      const meters = Number(answer);
-      if (!answer || !Number.isFinite(meters) || meters <= 0) return;
-      update((prev) => ({ ...prev, pxPerMeter: pixels / meters }));
-      toast.success(
-        `Scale calibrated: ${meters}m = ${pixels.toFixed(1)}px · 1m = ${(pixels / meters).toFixed(2)}px`,
-      );
+      if (calibrationLayoutId === activeLayoutId) {
+        setCalibrationLayoutId(null);
+        setWallMethodOpen(true);
+      }
+      toast.success(`تمت معايرة المخطط: ${(pixels / meters).toFixed(2)} بكسل لكل متر`);
     }
   }
 
@@ -513,6 +525,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       toast.error("تم رفع الملف لكن تعذّر حفظ بيانات المخطط");
       return false;
     }
+    setActiveModule("plan");
+    setCalibrationLayoutId(targetId);
+    setWallMethodOpen(false);
+    setMode("scale");
+    setDrawer(null);
+    toast.info("الخطوة الأولى: حدد نقطتي ضلع معلوم الطول على المخطط، ثم أدخل طوله الحقيقي بالمتر.");
     toast.success(`تم رفع المخطط «${layoutName}»`);
     return true;
   }
@@ -539,6 +557,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   function selectLayout(id: string) {
+    setCalibrationLayoutId(null);
+    setWallMethodOpen(false);
     if (id === activeLayoutId) return;
     clearSelection();
     clearDrafts();
@@ -959,6 +979,32 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         </SheetContent>
       </Sheet>
 
+      {calibrationLayoutId === activeLayoutId && mode === "scale" && (
+        <div role="status" className="no-print fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-xl border border-amber-400 bg-[#030957] px-6 py-3 text-center text-sm font-semibold text-white shadow-xl">
+          معايرة المخطط مطلوبة: اضغط نقطة بداية ضلع معلوم، ثم نقطة نهايته، وأدخل الطول الحقيقي بالمتر.
+        </div>
+      )}
+      {wallMethodOpen && (
+        <div className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="wall-method-title" dir="rtl">
+          <div className="w-full max-w-lg space-y-5 rounded-2xl bg-surface p-6 shadow-2xl">
+            <h2 id="wall-method-title" className="text-xl font-bold">اختيار طريقة تخطيط الحوائط</h2>
+            <p className="text-sm text-muted-foreground">تم ضبط مقياس المخطط. اختر طريقة الرسم قبل البدء.</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button className="h-auto min-h-20 whitespace-normal" variant="outline" onClick={() => {
+                setWallMethodOpen(false);
+                setMode("wall");
+                setDrawer("wall");
+              }}>تخطيط يدوي — رسم ذكي مع الالتقاط والمحاذاة</Button>
+              <Button className="h-auto min-h-20 whitespace-normal" variant="outline" onClick={() => {
+                setWallMethodOpen(false);
+                toast.info("استخراج الجدران تلقائيًا من الصورة غير معتمد بعد؛ استخدم الرسم اليدوي المساعد لحين اكتمال المحرك.");
+                setMode("wall");
+                setDrawer("wall");
+              }}>تخطيط تلقائي — قيد الاعتماد؛ الانتقال للرسم المساعد</Button>
+            </div>
+          </div>
+        </div>
+      )}
       {layoutDialogOpen && (
         <div
           className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
