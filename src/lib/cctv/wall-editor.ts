@@ -68,6 +68,41 @@ export function snapWallPoint(options: {
   return next;
 }
 
+/** Closest attachment location on an existing wall, including segment interiors. */
+export function nearestWallAttachment(
+  point: PlanPoint,
+  walls: Array<{ points: PlanPoint[] }>,
+  thresholdPlanUnits: number,
+): PlanPoint | null {
+  let best: PlanPoint | null = null;
+  let bestDistance = thresholdPlanUnits;
+  for (const wall of walls) {
+    for (const vertex of wall.points) {
+      const d = distance(point, vertex);
+      if (d <= bestDistance) {
+        best = { ...vertex };
+        bestDistance = d;
+      }
+    }
+    const segment = nearestSegment(wall.points, point);
+    if (segment && segment.distance < bestDistance) {
+      best = segment.point;
+      bestDistance = segment.distance;
+    }
+  }
+  return best;
+}
+
+/** Reject accidental sub-pixel wall edges at the current zoom level. */
+export function canAppendWallPoint(
+  anchor: PlanPoint | undefined,
+  next: PlanPoint,
+  zoom: number,
+  minimumScreenPx = 5,
+): boolean {
+  return !anchor || distance(anchor, next) * Math.max(zoom, 0.001) >= minimumScreenPx;
+}
+
 export function insertVertex(points: PlanPoint[], segmentIndex: number, point: PlanPoint) {
   if (segmentIndex < 0 || segmentIndex >= points.length - 1) {
     return points.map((p) => ({ ...p }));
