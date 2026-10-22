@@ -10,6 +10,8 @@ import {
 } from "@/lib/cctv/geometry";
 import {
   canAppendWallPoint,
+  constrainPolar45,
+  isWallClosure,
   deleteVertex,
   insertVertex,
   nearestWallAttachment,
@@ -43,6 +45,8 @@ interface Props {
   onMoveLabel: (id: string, p: { x: number; y: number }) => void;
   onFinishCable: () => void;
   onFinishWall: () => void;
+  onUndoWallPoint: () => void;
+  onCancelWallDraft: () => void;
 }
 
 const MIN_ZOOM = 0.15;
@@ -125,6 +129,8 @@ export function PlanCanvas({
   onMoveLabel,
   onFinishCable,
   onFinishWall,
+  onUndoWallPoint,
+  onCancelWallDraft,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
@@ -135,6 +141,7 @@ export function PlanCanvas({
   const [draftWallKind, setDraftWallKind] = useState<WallKind>("wall");
   const [draftWallColor, setDraftWallColor] = useState(DEFAULT_WALL_COLOR);
   const [orthogonalPreview, setOrthogonalPreview] = useState(false);
+  const [polarPreview, setPolarPreview] = useState(false);
   const panRef = useRef<{
     startX: number;
     startY: number;
@@ -243,9 +250,19 @@ export function PlanCanvas({
         return;
       }
 
+      if (mode === "wall" && (e.key === "Backspace" || (e.ctrlKey && e.key.toLowerCase() === "z"))) {
+        e.preventDefault();
+        onUndoWallPoint();
+        return;
+      }
+      if (mode === "wall" && e.key === "Enter") {
+        e.preventDefault();
+        finishWallWithStyle();
+        return;
+      }
       if (e.key !== "Escape") return;
       setSelectedVertexIndex(null);
-      if (mode === "wall") finishWallWithStyle();
+      if (mode === "wall") onCancelWallDraft();
       else onFinishCable();
     };
 
@@ -256,6 +273,8 @@ export function PlanCanvas({
     forcePlanCommit,
     mode,
     onFinishCable,
+    onUndoWallPoint,
+    onCancelWallDraft,
     selectedVertexIndex,
     selectedWall,
   ]);
@@ -293,6 +312,7 @@ export function PlanCanvas({
     const raw = toPlan(e.clientX, e.clientY);
     setHoverPoint(raw);
     setOrthogonalPreview(e.shiftKey);
+    setPolarPreview(e.altKey && !e.shiftKey);
 
     if (panRef.current) {
       setOffset({
@@ -347,14 +367,15 @@ export function PlanCanvas({
   const snappedDraftPoint = useMemo(() => {
     if (mode !== "wall" || !hoverPoint || wallDraft.length === 0) return hoverPoint;
     const anchor = wallDraft.at(-1);
+    const candidate = orthogonalPreview || polarPreview ? hoverPoint : (nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint);
     return snapWallPoint({
-      point: nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint,
+      point: polarPreview && anchor ? constrainPolar45(anchor, candidate) : candidate,
       anchor,
       candidates: [...allWallPoints, ...wallDraft.slice(0, -1)],
       thresholdPlanUnits: snapThreshold,
       orthogonal: orthogonalPreview,
     });
-  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, plan.walls, snapThreshold, wallDraft]);
+  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, polarPreview, plan.walls, snapThreshold, wallDraft]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (mode === "select") {
@@ -369,14 +390,20 @@ export function PlanCanvas({
 
     const raw = toPlan(e.clientX, e.clientY);
     if (mode === "wall") {
+      if (e.detail >= 2) return;
       const anchor = wallDraft.at(-1);
+      const candidate = e.shiftKey || e.altKey ? raw : (nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw);
       const point = snapWallPoint({
-        point: nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw,
+        point: e.altKey && !e.shiftKey && anchor ? constrainPolar45(anchor, candidate) : candidate,
         anchor,
         candidates: [...allWallPoints, ...wallDraft.slice(0, -1)],
         thresholdPlanUnits: snapThreshold,
         orthogonal: e.shiftKey,
       });
+      if (isWallClosure(wallDraft, point, snapThreshold)) {
+        if (canAppendWallPoint(anchor, wallDraft[0]!, zoom)) onCanvasPoint(wallDraft[0]!);
+        return;
+      }
       if (!canAppendWallPoint(anchor, point, zoom)) return;
       onCanvasPoint(point);
       return;
@@ -449,7 +476,8 @@ export function PlanCanvas({
         onPointerUp={endPointer}
         onPointerLeave={endPointer}
         onClick={handleClick}
-        onDoubleClick={() => {
+        onDoubleClick={(e) => {
+          e.preventDefault();
           if (mode === "cable") onFinishCable();
           if (mode === "wall") finishWallWithStyle();
         }}
@@ -879,7 +907,7 @@ export function PlanCanvas({
           )}
           {mode === "wall" ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
-              Snap للنهايات تلقائي · Shift لتقييد 90° · Double-click لإنهاء الرسم
+              التقاط ذكي · Shift لمحور 90° · Alt لزاوية 45° · Enter للإنهاء · Backspace للتراجع · Esc للإلغاء
             </span>
           ) : selectedWall ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
