@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { CctvProjectEditorV2 } from "@/components/cctv/CctvProjectEditorV2";
 import { cameraCatalog, hardwareCatalog, hydrateProductCatalog } from "@/lib/cctv/catalog";
 
 export function ProductCatalogGate({ projectId }: { projectId: string }) {
-  const { data, error, isLoading } = useQuery({
+  const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["cctv-product-catalog"],
     queryFn: async () => {
       const { data: products, error: queryError } = await supabase
@@ -32,6 +33,10 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
         <p className="text-sm text-muted-foreground">
           لا يمكن فتح محرر التصميم قبل تحميل المنتجات النشطة من قاعدة البيانات.
         </p>
+        <p className="mt-2 text-sm text-destructive" role="alert">{error instanceof Error ? error.message : "تعذّر الاتصال بالكتالوج."}</p>
+        <Button className="mt-4" type="button" disabled={isFetching} onClick={() => void refetch()}>
+          {isFetching ? "جارٍ إعادة المحاولة…" : "إعادة تحميل الكتالوج"}
+        </Button>
       </div>
     );
   }
@@ -42,26 +47,19 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
     (item) => item.kind === "nvr" || item.kind === "switch",
   );
 
-  if (!hasCamera || !hasNvrOrSwitch) {
-    return (
-      <div className="p-10">
-        <h1 className="mb-2 text-lg font-bold">كتالوج المنتجات غير مكتمل</h1>
-        <p className="text-sm text-muted-foreground">
-          يلزم وجود كاميرا نشطة واحدة على الأقل ومنتج NVR أو Network Switch واحد على الأقل قبل فتح
-          المحرر.
-        </p>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Cameras: {cameraCatalog.length} · Hardware: {hardwareCatalog.length}
-        </p>
-      </div>
-    );
-  }
-
   const readyCameras = catalog.cameras.filter((camera) => camera.engineeringReady === true).length;
 
   return (
     <>
-      {readyCameras === 0 && (
+      {(!hasCamera || !hasNvrOrSwitch) && (
+        <div role="alert" className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+          <strong>الكتالوج غير مكتمل.</strong> يمكنك فتح المخطط وإدارة المشروع، لكن إضافة المعدات وحسابات الشبكة والتغطية تتطلب منتجات نشطة ذات مواصفات مكتملة.
+          <Button type="button" variant="outline" size="sm" className="mr-3" disabled={isFetching} onClick={() => void refetch()}>
+            تحديث المنتجات
+          </Button>
+        </div>
+      )}
+      {hasCamera && readyCameras === 0 && (
         <div
           role="status"
           className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2 text-sm text-foreground"
