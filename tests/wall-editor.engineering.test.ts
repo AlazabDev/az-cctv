@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { WallSegment } from "../src/lib/cctv/types";
 import {
+  canAppendWallPoint,
+  nearestWallAttachment,
   constrainOrthogonal,
   dedupeConsecutivePoints,
   deleteVertex,
@@ -171,4 +173,19 @@ describe("wall editor deterministic geometry", () => {
     const reloaded = JSON.parse(JSON.stringify(fence)) as WallSegment;
     expect(normalizeWallSegment(reloaded)).toEqual(fence);
   });
+  it("attaches cursor to existing wall interiors, not only endpoints", () => {
+    expect(nearestWallAttachment({ x: 30, y: 4 }, [
+      { points: [{ x: 0, y: 0 }, { x: 100, y: 0 }] },
+    ], 8)).toEqual({ x: 30, y: 0 });
+    expect(nearestWallAttachment({ x: 30, y: 20 }, [
+      { points: [{ x: 0, y: 0 }, { x: 100, y: 0 }] },
+    ], 8)).toBeNull();
+  });
+
+  it("rejects short accidental wall clicks in screen pixels", () => {
+    expect(canAppendWallPoint({ x: 0, y: 0 }, { x: 1, y: 0 }, 2)).toBe(false);
+    expect(canAppendWallPoint({ x: 0, y: 0 }, { x: 3, y: 0 }, 2)).toBe(true);
+    expect(canAppendWallPoint(undefined, { x: 0, y: 0 }, 1)).toBe(true);
+  });
+
 });

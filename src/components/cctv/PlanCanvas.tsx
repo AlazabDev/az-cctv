@@ -9,8 +9,10 @@ import {
   wallPath,
 } from "@/lib/cctv/geometry";
 import {
+  canAppendWallPoint,
   deleteVertex,
   insertVertex,
+  nearestWallAttachment,
   nearestSegment,
   samePoint,
   snapWallPoint,
@@ -346,13 +348,13 @@ export function PlanCanvas({
     if (mode !== "wall" || !hoverPoint || wallDraft.length === 0) return hoverPoint;
     const anchor = wallDraft.at(-1);
     return snapWallPoint({
-      point: hoverPoint,
+      point: nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint,
       anchor,
-      candidates: allWallPoints,
+      candidates: [...allWallPoints, ...wallDraft.slice(0, -1)],
       thresholdPlanUnits: snapThreshold,
       orthogonal: orthogonalPreview,
     });
-  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, snapThreshold, wallDraft]);
+  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, plan.walls, snapThreshold, wallDraft]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (mode === "select") {
@@ -369,13 +371,13 @@ export function PlanCanvas({
     if (mode === "wall") {
       const anchor = wallDraft.at(-1);
       const point = snapWallPoint({
-        point: raw,
+        point: nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw,
         anchor,
-        candidates: allWallPoints,
+        candidates: [...allWallPoints, ...wallDraft.slice(0, -1)],
         thresholdPlanUnits: snapThreshold,
         orthogonal: e.shiftKey,
       });
-      if (anchor && samePoint(anchor, point)) return;
+      if (!canAppendWallPoint(anchor, point, zoom)) return;
       onCanvasPoint(point);
       return;
     }
