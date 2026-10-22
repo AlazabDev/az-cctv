@@ -192,6 +192,13 @@ export function PlanCanvas({
   }, [draftWallColor, draftWallKind, onFinishWall, wallDraft.length]);
 
   useEffect(() => {
+    if (mode !== "wall" || wallDraft.length < 4) return;
+    const first = wallDraft[0]!;
+    const last = wallDraft[wallDraft.length - 1]!;
+    if (samePoint(first, last)) finishWallWithStyle();
+  }, [mode, wallDraft, finishWallWithStyle]);
+
+  useEffect(() => {
     const pending = pendingNewWallStyleRef.current;
     if (!pending || !selectedWallId) return;
     const wall = plan.walls.find((item) => item.id === selectedWallId);
@@ -590,6 +597,14 @@ export function PlanCanvas({
                 strokeWidth={draftWallKind === "fence" ? 3 / zoom : wallStrokePx(10)}
                 strokeLinecap="round"
               />
+              {snappedDraftPoint && wallDraft.length > 0 && (
+                <g transform={`translate(${(wallDraft[wallDraft.length - 1]!.x + snappedDraftPoint.x) / 2} ${(wallDraft[wallDraft.length - 1]!.y + snappedDraftPoint.y) / 2}) scale(${1 / zoom})`} style={{ pointerEvents: "none" }}>
+                  <rect x={-38} y={-32} width={76} height={23} rx={5} fill="#030957" opacity={0.92}/>
+                  <text textAnchor="middle" y={-16} fontSize={12} fill="white">
+                    {(Math.hypot(snappedDraftPoint.x - wallDraft[wallDraft.length - 1]!.x, snappedDraftPoint.y - wallDraft[wallDraft.length - 1]!.y) / pxPerMeter).toFixed(2)} m
+                  </text>
+                </g>
+              )}
               {snappedDraftPoint && (
                 <circle
                   cx={snappedDraftPoint.x}
