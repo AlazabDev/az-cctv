@@ -179,6 +179,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [scaleDraft, setScaleDraft] = useState<{ x: number; y: number }[]>([]);
   const [calibrationLayoutId, setCalibrationLayoutId] = useState<string | null>(null);
   const [wallMethodOpen, setWallMethodOpen] = useState(false);
+  const [calibrationPixels, setCalibrationPixels] = useState<number | null>(null);
+  const [calibrationMeters, setCalibrationMeters] = useState("");
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const imageUrl = imageUrls[activeLayoutId] ?? null;
   const [loaded, setLoaded] = useState(false);
@@ -427,25 +429,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         return;
       }
       const pixels = Math.hypot(points[1]!.x - points[0]!.x, points[1]!.y - points[0]!.y);
-      const answer = window.prompt("أدخل الطول الحقيقي للضلع المحدد بالمتر", "");
-      const meters = Number(answer);
-      if (answer === null || !answer.trim()) {
+      if (pixels < 2 || !Number.isFinite(pixels)) {
+        toast.error("المسافة المحددة قصيرة جدًا. حدد ضلعًا أطول.");
         setScaleDraft([]);
         return;
       }
-      if (!Number.isFinite(meters) || meters <= 0 || pixels < 2) {
-        toast.error("اختر ضلعًا واضحًا ثم أدخل طولًا حقيقيًا أكبر من صفر.");
-        setScaleDraft([]);
-        return;
-      }
-      update((prev) => ({ ...prev, pxPerMeter: pixels / meters }));
-      setScaleDraft([]);
-      setMode("select");
-      if (calibrationLayoutId === activeLayoutId) {
-        setCalibrationLayoutId(null);
-        setWallMethodOpen(true);
-      }
-      toast.success(`تمت معايرة المخطط: ${(pixels / meters).toFixed(2)} بكسل لكل متر`);
+      setCalibrationPixels(pixels);
+      setCalibrationMeters("");
+      return;
     }
   }
 
@@ -979,6 +970,33 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         </SheetContent>
       </Sheet>
 
+      {calibrationPixels !== null && (
+        <div className="no-print fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="calibration-title" dir="rtl">
+          <form className="w-full max-w-md space-y-4 rounded-2xl bg-surface p-6 shadow-2xl" onSubmit={(event) => {
+            event.preventDefault();
+            const meters = Number(calibrationMeters);
+            if (!(meters > 0) || !Number.isFinite(meters)) return;
+            update((prev) => ({ ...prev, pxPerMeter: calibrationPixels / meters }));
+            setCalibrationPixels(null);
+            setScaleDraft([]);
+            setMode("select");
+            if (calibrationLayoutId === activeLayoutId) {
+              setCalibrationLayoutId(null);
+              setWallMethodOpen(true);
+            }
+            toast.success("تم اعتماد المقياس الحقيقي للمخطط");
+          }}>
+            <h2 id="calibration-title" className="text-xl font-bold">اعتماد مقياس المخطط</h2>
+            <p className="text-sm text-muted-foreground">تم قياس الضلع على الصورة: {calibrationPixels.toFixed(1)} بكسل. أدخل طوله الحقيقي بالمتر.</p>
+            <Label htmlFor="real-wall-distance">طول الضلع الحقيقي (متر) — إلزامي</Label>
+            <Input id="real-wall-distance" type="number" min="0.01" step="any" required autoFocus value={calibrationMeters} onChange={(event) => setCalibrationMeters(event.target.value)} />
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => { setCalibrationPixels(null); setScaleDraft([]); }}>إعادة تحديد الضلع</Button>
+              <Button type="submit" disabled={!(Number(calibrationMeters) > 0) || !Number.isFinite(Number(calibrationMeters))}>اعتماد المقياس والمتابعة</Button>
+            </div>
+          </form>
+        </div>
+      )}
       {calibrationLayoutId === activeLayoutId && mode === "scale" && (
         <div role="status" className="no-print fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-xl border border-amber-400 bg-[#030957] px-6 py-3 text-center text-sm font-semibold text-white shadow-xl">
           معايرة المخطط مطلوبة: اضغط نقطة بداية ضلع معلوم، ثم نقطة نهايته، وأدخل الطول الحقيقي بالمتر.
