@@ -168,8 +168,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
-  const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]!.id);
-  const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]!.id);
+  const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]?.id ?? "");
+  const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]?.id ?? "");
   const [cableType, setCableType] = useState(
     cableTypes.find((c) => c.id === "cat6-stp")?.id ?? cableTypes[0]!.id,
   );
@@ -357,7 +357,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   function addDevice(kind: PlacedDevice["kind"], point: { x: number; y: number }) {
-    const specId = kind === "camera" ? newCameraSpec : newHardwareSpec;
+    const specId = kind === "camera" ? newCameraSpec : kind === "rack" ? "design-rack" : newHardwareSpec;
+    const available = kind === "camera"
+      ? cameraCatalog.some((item) => item.id === specId)
+      : hardwareCatalog.some((item) => item.id === specId && item.kind === kind);
+    if (!available) {
+      toast.error("لا يمكن إضافة جهاز دون اختيار منتج مناسب من الكتالوج.");
+      return;
+    }
     const count = plan.devices.filter((device) => device.kind === kind).length + 1;
     const names: Record<PlacedDevice["kind"], string> = {
       camera: "Camera",
