@@ -57,6 +57,15 @@ export function productToCameraSpec(product: ProductRow): CameraSpec | null {
   const hres = positiveNumber(specs.hres) ?? positiveNumber(specs.resolution_x) ?? 0;
   const vres = positiveNumber(specs.vres) ?? positiveNumber(specs.resolution_y) ?? 0;
   const hfov = positiveNumber(specs.hfov_deg) ?? positiveNumber(specs.hfov) ?? 0;
+  const vfov = positiveNumber(specs.vfov_deg) ?? positiveNumber(specs.vfov);
+  const sensorFormat = typeof specs.sensor_format === "string" ? specs.sensor_format : undefined;
+  const focalOptionsMm = Array.isArray(specs.focal_options_mm)
+    ? [...new Set(specs.focal_options_mm.map(positiveNumber).filter((value): value is number => value !== undefined))].sort((a, b) => a - b)
+    : undefined;
+  const opticsSourceUrl = typeof specs.optics_source_url === "string" && /^https?:\\/\\//.test(specs.optics_source_url)
+    ? specs.optics_source_url
+    : undefined;
+  const opticsVerified = specs.optics_verified === true;
   const irRange = positiveNumber(specs.ir_range_m) ?? positiveNumber(specs.irRange) ?? 0;
   const poeWatt = positiveNumber(specs.poe_watt) ?? positiveNumber(specs.poeWatt) ?? 0;
   const bitrateMbps = positiveNumber(specs.bitrate_mbps) ?? positiveNumber(specs.bitrateMbps) ?? 0;
@@ -78,6 +87,11 @@ export function productToCameraSpec(product: ProductRow): CameraSpec | null {
     vres,
     focal,
     hfov,
+    vfov,
+    sensorFormat,
+    focalOptionsMm,
+    opticsSourceUrl,
+    opticsVerified,
     irRange,
     price: product.current_price ?? 0,
     currency: product.currency || "EGP",
