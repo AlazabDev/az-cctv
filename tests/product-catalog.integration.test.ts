@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cameraForPlacedDevice, hydrateProductCatalog } from "../src/lib/cctv/catalog";
 import {
   buildProductCatalog,
   productToCameraSpec,
@@ -60,6 +61,28 @@ describe("Stage 2 — product catalog engineering eligibility", () => {
       opticsVerified: true,
       opticsSourceUrl: "https://example.com/datasheet.pdf",
       engineeringReady: true,
+    });
+  });
+
+  it("preserves installed optics if the product master is updated later", () => {
+    const base = camera({
+      megapixel: 2, focal_mm: 2.8, hres: 1920, vres: 1080, hfov_deg: 81.2,
+    });
+    hydrateProductCatalog([base]);
+    const placement = {
+      id: "placed-1", kind: "camera" as const, specId: base.id, productId: base.id,
+      name: "Camera 1", x: 10, y: 10, rotation: 0, heightM: 4, tilt: 30,
+      focalMm: 2.8,
+      opticsSnapshot: {
+        productId: base.id, focalMm: 2.8, hfovDeg: 81.2,
+        vfovDeg: 54, hres: 1920, vres: 1080, verified: true,
+      },
+    };
+    hydrateProductCatalog([camera({
+      megapixel: 2, focal_mm: 4, hres: 1920, vres: 1080, hfov_deg: 65,
+    })]);
+    expect(cameraForPlacedDevice(placement)).toMatchObject({
+      focal: 2.8, hfov: 81.2, vfov: 54, hres: 1920, vres: 1080,
     });
   });
 
