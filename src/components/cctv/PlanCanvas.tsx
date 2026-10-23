@@ -541,6 +541,7 @@ export function PlanCanvas({
         onContextMenu={(e) => {
           // Browser context menu would interrupt CAD right-click gestures.
           e.preventDefault();
+          if (mode === "cable") onFinishCable();
         }}
       >
         <g
