@@ -13,6 +13,14 @@ export interface CameraSpec {
   vres: number;
   focal: number;
   hfov: number;
+  /** Manufacturer horizontal/vertical angles for the currently selected lens setting. */
+  vfov?: number;
+  sensorFormat?: string;
+  /** Supported focal lengths for a configurable/varifocal lens. */
+  focalOptionsMm?: number[];
+  /** Datasheet provenance; absence means geometry is not yet verified. */
+  opticsSourceUrl?: string;
+  opticsVerified?: boolean;
   irRange: number;
   price: number;
   currency?: string;
@@ -65,6 +73,19 @@ export interface PlacedDevice {
   rotation: number;
   heightM: number;
   tilt: number;
+  /** Physical lens setting in mm; fixed-lens cameras use the catalog default. */
+  focalMm?: number;
+  /** Locked optical fields from the approved product revision for audit/history. */
+  opticsSnapshot?: {
+    productId: string;
+    focalMm: number;
+    hfovDeg: number;
+    vfovDeg?: number;
+    hres: number;
+    vres: number;
+    verified?: boolean;
+    sourceUrl?: string;
+  };
   note?: string;
 }
 
