@@ -376,10 +376,25 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       switch: "Switch",
       rack: "Rack",
     };
+    const cameraSpec = kind === "camera" ? cameraById(specId) : undefined;
     const device: PlacedDevice = {
       id: uid(),
       kind,
       specId,
+      ...(cameraSpec?.productId ? { productId: cameraSpec.productId } : {}),
+      ...(cameraSpec && cameraSpec.focal > 0 ? {
+        focalMm: cameraSpec.focal,
+        opticsSnapshot: {
+          productId: cameraSpec.productId ?? specId,
+          focalMm: cameraSpec.focal,
+          hfovDeg: cameraSpec.hfov,
+          ...(cameraSpec.vfov ? { vfovDeg: cameraSpec.vfov } : {}),
+          hres: cameraSpec.hres,
+          vres: cameraSpec.vres,
+          verified: cameraSpec.opticsVerified === true,
+          ...(cameraSpec.opticsSourceUrl ? { sourceUrl: cameraSpec.opticsSourceUrl } : {}),
+        },
+      } : {}),
       name: `${names[kind]}${count}`,
       x: point.x,
       y: point.y,
