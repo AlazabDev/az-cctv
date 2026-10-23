@@ -62,7 +62,7 @@ export function productToCameraSpec(product: ProductRow): CameraSpec | null {
   const focalOptionsMm = Array.isArray(specs.focal_options_mm)
     ? [...new Set(specs.focal_options_mm.map(positiveNumber).filter((value): value is number => value !== undefined))].sort((a, b) => a - b)
     : undefined;
-  const opticsSourceUrl = typeof specs.optics_source_url === "string" && /^https?:\\/\\//.test(specs.optics_source_url)
+  const opticsSourceUrl = typeof specs.optics_source_url === "string" && (specs.optics_source_url.startsWith("https://") || specs.optics_source_url.startsWith("http://"))
     ? specs.optics_source_url
     : undefined;
   const opticsVerified = specs.optics_verified === true;
