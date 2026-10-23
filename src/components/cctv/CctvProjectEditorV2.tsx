@@ -941,6 +941,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           onFinishWall={finishWall}
           onUndoWallPoint={undoWallPoint}
           onCancelWallDraft={cancelWallDraft}
+          onExitWallMode={() => chooseTool("select", null)}
           onUpdate={update}
         />
       ) : activeModule === "offer" ? (
@@ -1170,6 +1171,7 @@ type PlanWorkspaceProps = {
   onFinishWall: () => void;
   onUndoWallPoint: () => void;
   onCancelWallDraft: () => void;
+  onExitWallMode: () => void;
   onUpdate: (updater: (plan: PlanData) => PlanData) => void;
 };
 
@@ -1333,6 +1335,7 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
           onFinishWall={props.onFinishWall}
           onUndoWallPoint={props.onUndoWallPoint}
           onCancelWallDraft={props.onCancelWallDraft}
+          onExitWallMode={props.onExitWallMode}
         />
         <div className="no-print absolute right-3 top-3 z-20 flex w-[78px] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
           <button
