@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PlanData, PlacedDevice, WallKind, WallSegment } from "@/lib/cctv/types";
-import { cableTypes, cameraById } from "@/lib/cctv/catalog";
+import { cableTypes, cameraForPlacedDevice } from "@/lib/cctv/catalog";
 import {
   distanceForPpm,
   polylineLengthMeters,
@@ -564,7 +564,7 @@ export function PlanCanvas({
             plan.devices
               .filter((d) => d.kind === "camera")
               .map((d) => {
-                const spec = cameraById(d.specId);
+                const spec = cameraForPlacedDevice(d);
                 if (!spec) return null;
                 return (
                   <g key={`cov-${d.id}`}>
