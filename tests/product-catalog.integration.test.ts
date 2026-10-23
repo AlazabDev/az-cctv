@@ -39,6 +39,30 @@ describe("Stage 2 — product catalog engineering eligibility", () => {
     expect(productToCameraSpec(camera({ ...specs, hres: 0 }))?.engineeringReady).toBe(false);
   });
 
+  it("reads documented optics from the canonical product record", () => {
+    const item = productToCameraSpec(camera({
+      megapixel: 4,
+      focal_mm: 2.8,
+      hres: 2560,
+      vres: 1440,
+      hfov_deg: 102,
+      vfov_deg: 54,
+      sensor_format: '1/2.8"',
+      focal_options_mm: [4, 2.8, 4],
+      optics_verified: true,
+      optics_source_url: "https://example.com/datasheet.pdf",
+    }));
+    expect(item).toMatchObject({
+      vfov: 54,
+      hfov: 102,
+      sensorFormat: '1/2.8"',
+      focalOptionsMm: [2.8, 4],
+      opticsVerified: true,
+      opticsSourceUrl: "https://example.com/datasheet.pdf",
+      engineeringReady: true,
+    });
+  });
+
   it("never treats an inactive camera as a selectable commercial product", () => {
     const catalog = buildProductCatalog([camera({}, { is_active: false })]);
     expect(catalog.cameras).toHaveLength(0);
