@@ -47,6 +47,7 @@ interface Props {
   onFinishWall: () => void;
   onUndoWallPoint: () => void;
   onCancelWallDraft: () => void;
+  onExitWallMode: () => void;
 }
 
 const MIN_ZOOM = 0.15;
@@ -131,6 +132,7 @@ export function PlanCanvas({
   onFinishWall,
   onUndoWallPoint,
   onCancelWallDraft,
+  onExitWallMode,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
@@ -143,11 +145,15 @@ export function PlanCanvas({
   const [orthogonalPreview, setOrthogonalPreview] = useState(false);
   const [polarPreview, setPolarPreview] = useState(false);
   const panRef = useRef<{
+    pointerId: number;
+    button: number;
     startX: number;
     startY: number;
     ox: number;
     oy: number;
+    moved: boolean;
   } | null>(null);
+  const lastRightClickRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const pendingNewWallStyleRef = useRef<{ kind: WallKind; color: string } | null>(null);
   const stateRef = useRef({ zoom, offset });
@@ -287,14 +293,20 @@ export function PlanCanvas({
   ]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button === 1 || (mode === "select" && e.target === e.currentTarget)) {
+    if (e.button === 2 || e.button === 1 || (mode === "select" && e.target === e.currentTarget)) {
+      // Right/middle drag pans the viewport without changing wall coordinates.
+      // Right click is processed on pointer-up only if the pointer did not move.
+      e.preventDefault();
       panRef.current = {
+        pointerId: e.pointerId,
+        button: e.button,
         startX: e.clientX,
         startY: e.clientY,
         ox: offset.x,
         oy: offset.y,
+        moved: false,
       };
-      (e.target as Element).setPointerCapture?.(e.pointerId);
+      (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     }
   };
 
@@ -322,10 +334,17 @@ export function PlanCanvas({
     setPolarPreview(e.altKey && !e.shiftKey);
 
     if (panRef.current) {
-      setOffset({
-        x: panRef.current.ox + (e.clientX - panRef.current.startX),
-        y: panRef.current.oy + (e.clientY - panRef.current.startY),
-      });
+      const pan = panRef.current;
+      if (Math.hypot(e.clientX - pan.startX, e.clientY - pan.startY) > 5) {
+        pan.moved = true;
+        lastRightClickRef.current = null;
+      }
+      if (pan.moved) {
+        setOffset({
+          x: pan.ox + (e.clientX - pan.startX),
+          y: pan.oy + (e.clientY - pan.startY),
+        });
+      }
       return;
     }
 
@@ -366,7 +385,38 @@ export function PlanCanvas({
     forcePlanCommit();
   };
 
-  const endPointer = () => {
+  const endPointer = (e: React.PointerEvent) => {
+    const pan = panRef.current;
+    if (pan && pan.pointerId === e.pointerId) {
+      if (pan.button === 2 && !pan.moved && mode === "wall") {
+        const now = Date.now();
+        const last = lastRightClickRef.current;
+        const isDouble = Boolean(
+          last &&
+          now - last.at <= 420 &&
+          Math.hypot(e.clientX - last.x, e.clientY - last.y) <= 12,
+        );
+        if (isDouble) {
+          lastRightClickRef.current = null;
+          // A second right click exits wall mode. The first click already detached
+          // (committed) the current polyline, so an empty draft is harmless.
+          onExitWallMode();
+        } else {
+          lastRightClickRef.current = { at: now, x: e.clientX, y: e.clientY };
+          finishWallWithStyle();
+        }
+      } else if (pan.moved) {
+        lastRightClickRef.current = null;
+      }
+      panRef.current = null;
+      if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    }
+    dragRef.current = null;
+  };
+
+  const cancelPointer = () => {
     panRef.current = null;
     dragRef.current = null;
   };
@@ -481,7 +531,7 @@ export function PlanCanvas({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endPointer}
-        onPointerLeave={endPointer}
+        onPointerCancel={cancelPointer}
         onClick={handleClick}
         onDoubleClick={(e) => {
           e.preventDefault();
@@ -489,9 +539,8 @@ export function PlanCanvas({
           if (mode === "wall") finishWallWithStyle();
         }}
         onContextMenu={(e) => {
+          // Browser context menu would interrupt CAD right-click gestures.
           e.preventDefault();
-          if (mode === "wall") finishWallWithStyle();
-          else onFinishCable();
         }}
       >
         <g
@@ -922,7 +971,7 @@ export function PlanCanvas({
           )}
           {mode === "wall" ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
-              التقاط ذكي · Shift لمحور 90° · Alt لزاوية 45° · Enter للإنهاء · Backspace للتراجع · Esc للإلغاء
+              يمين: فصل الخط · سحب يمين: تحريك المخطط · يمين مرتين: الخروج من الحوائط · Shift: 90° · Alt: 45°
             </span>
           ) : selectedWall ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
