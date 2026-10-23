@@ -55,7 +55,7 @@ import {
 } from "@/lib/cctv/site-map";
 import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
-import { cableTypes, cameraById, cameraCatalog, hardwareCatalog } from "@/lib/cctv/catalog";
+import { cableTypes, cameraById, cameraCatalog, cameraForPlacedDevice, hardwareCatalog } from "@/lib/cctv/catalog";
 import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
 import {
   emptyPlan,
@@ -1563,7 +1563,7 @@ function DeviceProperties({
   plan: PlanData;
   onUpdate: (updater: (plan: PlanData) => PlanData) => void;
 }) {
-  const spec = device.kind === "camera" ? cameraById(device.specId) : null;
+  const spec = device.kind === "camera" ? cameraForPlacedDevice(device) : null;
   const patch = (next: Partial<PlacedDevice>) =>
     onUpdate((prev) => ({
       ...prev,
