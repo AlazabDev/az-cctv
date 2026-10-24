@@ -1,35 +1,8 @@
-name: One-time test formatting closure
+name: One-time source formatter (retired)
 on:
-  push:
-    branches: [develop]
-    paths:
-      - '.github/workflows/format-closure.yml'
-permissions:
-  contents: write
+  workflow_dispatch:
 jobs:
-  format:
-    if: github.actor != 'github-actions[bot]'
+  completed:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: develop
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.12.4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec prettier --write tests src/lib/cctv/types.ts src/lib/cctv/wall-editor.ts
-      - name: Save test formatting
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tests src/lib/cctv/types.ts src/lib/cctv/wall-editor.ts
-          if ! git diff --cached --quiet; then
-            git commit -m "style(tests): format engineering validation sources"
-            git pull --rebase origin develop
-            git push origin HEAD:develop
-          fi
+      - run: echo 'Formatting has been completed; manual check only.'
