@@ -990,8 +990,9 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             onGenerate={generateAutoDesign}
             onApply={applyAutoDesign}
             onReject={() => setAiProposals(null)}
-            onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
-          />
+              onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+            />
+          </div>
         </div>
       )}
       <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
