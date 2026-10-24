@@ -85,8 +85,8 @@ export function CctvProjectEditor({ projectId }: { projectId: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedWallId, setSelectedWallId] = useState<string | null>(null);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
-  const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]!.id);
-  const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]!.id);
+  const [newCameraSpec, setNewCameraSpec] = useState(cameraCatalog[0]?.id ?? "");
+  const [newHardwareSpec, setNewHardwareSpec] = useState(hardwareCatalog[0]?.id ?? "");
   const [cableType, setCableType] = useState(
     cableTypes.find((c) => c.id === "cat6-stp")?.id ?? cableTypes[0]!.id,
   );
@@ -470,6 +470,9 @@ export function CctvProjectEditor({ projectId }: { projectId: string }) {
           }
           onFinishCable={finishCable}
           onFinishWall={finishWall}
+          onUndoWallPoint={() => setWallDraft((points) => points.slice(0, -1))}
+          onCancelWallDraft={() => setWallDraft([])}
+          onExitWallMode={() => chooseTool("select", null)}
           onUpdate={update}
         />
       ) : activeModule === "offer" ? (
@@ -525,6 +528,9 @@ function PlanDesignWorkspace(props: {
   onMoveLabel: (id: string, point: { x: number; y: number }) => void;
   onFinishCable: () => void;
   onFinishWall: () => void;
+  onUndoWallPoint: () => void;
+  onCancelWallDraft: () => void;
+  onExitWallMode: () => void;
   onUpdate: (updater: (plan: PlanData) => PlanData) => void;
 }) {
   const toolButtons = [
@@ -646,6 +652,9 @@ function PlanDesignWorkspace(props: {
           onMoveLabel={props.onMoveLabel}
           onFinishCable={props.onFinishCable}
           onFinishWall={props.onFinishWall}
+          onUndoWallPoint={props.onUndoWallPoint}
+          onCancelWallDraft={props.onCancelWallDraft}
+          onExitWallMode={props.onExitWallMode}
         />
 
         <div className="no-print absolute right-3 top-3 z-20 flex w-[78px] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-xl">

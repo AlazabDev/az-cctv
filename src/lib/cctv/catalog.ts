@@ -271,8 +271,14 @@ export function cameraForPlacedDevice(device: PlacedDevice): CameraSpec | undefi
   const current = cameraById(device.specId);
   const saved = device.opticsSnapshot;
   if (!current || !saved || saved.productId !== (device.productId ?? device.specId)) return current;
-  if (!(saved.focalMm > 0 && saved.hres > 0 && saved.vres > 0 &&
-      saved.hfovDeg > 0 && saved.hfovDeg < 180)) return current;
+  if (!(
+    saved.focalMm > 0 &&
+    saved.hres > 0 &&
+    saved.vres > 0 &&
+    saved.hfovDeg > 0 &&
+    saved.hfovDeg < 180
+  ))
+    return current;
   return {
     ...current,
     focal: saved.focalMm,

@@ -58,7 +58,13 @@ import {
 } from "@/lib/cctv/site-map";
 import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
-import { cableTypes, cameraById, cameraCatalog, cameraForPlacedDevice, hardwareCatalog } from "@/lib/cctv/catalog";
+import {
+  cableTypes,
+  cameraById,
+  cameraCatalog,
+  cameraForPlacedDevice,
+  hardwareCatalog,
+} from "@/lib/cctv/catalog";
 import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
 import {
   emptyPlan,
@@ -91,7 +97,6 @@ const defaultOffer: OfferSettings = {
   ],
   lineOverrides: {},
 };
-
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -360,10 +365,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   function addDevice(kind: PlacedDevice["kind"], point: { x: number; y: number }) {
-    const specId = kind === "camera" ? newCameraSpec : kind === "rack" ? "design-rack" : newHardwareSpec;
-    const available = kind === "camera"
-      ? cameraCatalog.some((item) => item.id === specId)
-      : hardwareCatalog.some((item) => item.id === specId && item.kind === kind);
+    const specId =
+      kind === "camera" ? newCameraSpec : kind === "rack" ? "design-rack" : newHardwareSpec;
+    const available =
+      kind === "camera"
+        ? cameraCatalog.some((item) => item.id === specId)
+        : hardwareCatalog.some((item) => item.id === specId && item.kind === kind);
     if (!available) {
       toast.error("لا يمكن إضافة جهاز دون اختيار منتج مناسب من الكتالوج.");
       return;
@@ -381,19 +388,21 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       kind,
       specId,
       ...(cameraSpec?.productId ? { productId: cameraSpec.productId } : {}),
-      ...(cameraSpec && cameraSpec.focal > 0 ? {
-        focalMm: cameraSpec.focal,
-        opticsSnapshot: {
-          productId: cameraSpec.productId ?? specId,
-          focalMm: cameraSpec.focal,
-          hfovDeg: cameraSpec.hfov,
-          ...(cameraSpec.vfov ? { vfovDeg: cameraSpec.vfov } : {}),
-          hres: cameraSpec.hres,
-          vres: cameraSpec.vres,
-          verified: cameraSpec.opticsVerified === true,
-          ...(cameraSpec.opticsSourceUrl ? { sourceUrl: cameraSpec.opticsSourceUrl } : {}),
-        },
-      } : {}),
+      ...(cameraSpec && cameraSpec.focal > 0
+        ? {
+            focalMm: cameraSpec.focal,
+            opticsSnapshot: {
+              productId: cameraSpec.productId ?? specId,
+              focalMm: cameraSpec.focal,
+              hfovDeg: cameraSpec.hfov,
+              ...(cameraSpec.vfov ? { vfovDeg: cameraSpec.vfov } : {}),
+              hres: cameraSpec.hres,
+              vres: cameraSpec.vres,
+              verified: cameraSpec.opticsVerified === true,
+              ...(cameraSpec.opticsSourceUrl ? { sourceUrl: cameraSpec.opticsSourceUrl } : {}),
+            },
+          }
+        : {}),
       name: `${names[kind]}${count}`,
       x: point.x,
       y: point.y,
@@ -842,341 +851,410 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         />
       )}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <header className="no-print flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
-        <div className="flex min-w-[300px] items-center gap-2">
-          <Link
-            to="/projects"
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="العودة للمشاريع"
-          >
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            className="h-8 w-48 border-0 bg-transparent px-1 font-bold shadow-none"
-          />
-          <span className="text-muted-foreground">/</span>
-          <span
-            className="max-w-36 truncate rounded-md bg-muted px-2 py-1 text-xs font-semibold"
-            title={plan.layoutName || name}
-          >
-            {plan.layoutName || name}
-          </span>
-        </div>
-        <div className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-muted-foreground">منصة تصميم أنظمة المراقبة</div>
-        <div className="flex min-w-[310px] items-center justify-end gap-2">
-          <div className="relative">
-            <select
-              value={currency}
-              onChange={(event) => setCurrency(event.target.value)}
-              className="h-8 appearance-none rounded-md border border-border bg-background py-1 pl-7 pr-3 text-xs font-semibold"
+        <header className="no-print flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
+          <div className="flex min-w-[300px] items-center gap-2">
+            <Link
+              to="/projects"
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="العودة للمشاريع"
             >
-              <option value="EGP">EGP</option>
-              <option value="SAR">SAR</option>
-              <option value="USD">USD</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
-          </div>
-          <Button variant="outline" size="sm" onClick={() => setAgentOpen(true)}>
-            <Bot className="h-4 w-4" />
-            المساعد
-          </Button>
-          <Button variant="secondary" size="sm" onClick={exportPdf}>
-            <FileText className="h-4 w-4" />
-            PDF
-          </Button>
-          <Button variant="ghost" size="sm" onClick={exportCsv} title="تصدير CSV">
-            <Download className="h-4 w-4" />
-          </Button>
-          <span
-            role="status"
-            aria-live="polite"
-            className={`text-xs ${saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}
-          >
-            {saveStatus === "saving"
-              ? "جارٍ الحفظ…"
-              : saveStatus === "saved"
-                ? "تم الحفظ"
-                : saveStatus === "error"
-                  ? "فشل الحفظ"
-                  : ""}
-          </span>
-          <Button size="sm" onClick={save} disabled={saving}>
-            <Save className="h-4 w-4" />
-            {saving ? "جارٍ الحفظ" : "حفظ"}
-          </Button>
-        </div>
-      </header>
-
-      {activeModule === "plan" ? (
-        <PlanDesignWorkspace
-          layouts={layouts}
-          activeLayoutId={activeLayoutId}
-          imageUrls={imageUrls}
-          onSelectLayout={selectLayout}
-          onRenameLayout={renameLayout}
-          onDeleteLayout={deleteLayout}
-          onReplaceLayout={openReplaceDialog}
-          plan={
-            aiProposals
-              ? {
-                  ...plan,
-                  devices: [
-                    ...plan.devices,
-                    ...proposalsToDevices(aiProposals, plan.pxPerMeter || 40, 0).map((d, i) => ({
-                      ...d,
-                      name: `مقترح ${i + 1}`,
-                    })),
-                  ],
-                }
-              : plan
-          }
-          imageUrl={imageUrl}
-          mode={mode}
-          drawer={drawer}
-          selectedId={selectedId}
-          selectedWallId={selectedWallId}
-          selectedLabelId={selectedLabelId}
-          newCameraSpec={newCameraSpec}
-          newHardwareSpec={newHardwareSpec}
-          cableType={cableType}
-          wallThicknessCm={wallThicknessCm}
-          wallCurved={wallCurved}
-          cableDraft={cableDraft}
-          wallDraft={wallDraft}
-          scaleDraft={scaleDraft}
-          selected={selected}
-          selectedWall={selectedWall}
-          selectedLabel={selectedLabel}
-          onOpenLayoutDialog={openLayoutDialog}
-          onChooseTool={chooseTool}
-          onDrawerChange={setDrawer}
-          onCameraSpecChange={setNewCameraSpec}
-          onHardwareSpecChange={setNewHardwareSpec}
-          onCableTypeChange={setCableType}
-          onWallThicknessChange={setWallThicknessCm}
-          onWallCurvedChange={setWallCurved}
-          onCanvasPoint={onCanvasPoint}
-          onSelect={(id) => {
-            clearSelection();
-            setSelectedId(id);
-          }}
-          onSelectWall={(id) => {
-            clearSelection();
-            setSelectedWallId(id);
-          }}
-          onSelectLabel={(id) => {
-            clearSelection();
-            setSelectedLabelId(id);
-          }}
-          onMoveDevice={(deviceId, point) =>
-            update((prev) => ({
-              ...prev,
-              devices: prev.devices.map((device) =>
-                device.id === deviceId ? { ...device, ...point } : device,
-              ),
-            }))
-          }
-          onMoveLabel={(labelId, point) =>
-            update((prev) => ({
-              ...prev,
-              roomLabels: prev.roomLabels.map((label) =>
-                label.id === labelId ? { ...label, ...point } : label,
-              ),
-            }))
-          }
-          onFinishCable={finishCable}
-          onFinishWall={finishWall}
-          onUndoWallPoint={undoWallPoint}
-          onCancelWallDraft={cancelWallDraft}
-          onExitWallMode={() => chooseTool("select", null)}
-          onUpdate={update}
-        />
-      ) : activeModule === "offer" ? (
-        <OfferList
-          clientName={clientName}
-          onClientNameChange={setClientName}
-          currency={currency}
-          retention={retention}
-          onRetentionChange={setRetention}
-          boq={boq}
-          suggestion={suggestion}
-          offer={offer}
-          onOfferChange={setOffer}
-        />
-      ) : activeModule === "topology" ? (
-        <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
-      ) : activeModule === "map" ? (
-        <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" dir="rtl">
-          <h2 className="text-lg font-semibold">CCTV agent — مساعد تصميم المشروع</h2>
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <AgentPanel projectId={projectId} projectName={name} />
-          </div>
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <AutoDesignPanel
-            proposals={aiProposals}
-            coverage={aiCoverage}
-            hint="يحلل الجدران والمقياس وارتفاع السقف ويقترح أقل عدد كاميرات يحقق مستوى التغطية، ثم يوصلها بأقرب سويتش/NVR عند الاعتماد."
-            onGenerate={generateAutoDesign}
-            onApply={applyAutoDesign}
-            onReject={() => setAiProposals(null)}
-              onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              className="h-8 w-48 border-0 bg-transparent px-1 font-bold shadow-none"
             />
+            <span className="text-muted-foreground">/</span>
+            <span
+              className="max-w-36 truncate rounded-md bg-muted px-2 py-1 text-xs font-semibold"
+              title={plan.layoutName || name}
+            >
+              {plan.layoutName || name}
+            </span>
           </div>
-        </div>
-      )}
-      <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
-        <SheetContent side="left" className="no-print w-full p-0 sm:max-w-md">
-          <SheetTitle className="sr-only">مساعد التصميم</SheetTitle>
-          <AgentPanel projectId={projectId} projectName={name} />
-        </SheetContent>
-      </Sheet>
-
-      {calibrationPixels !== null && (
-        <div className="no-print fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="calibration-title" dir="rtl">
-          <form className="w-full max-w-md space-y-4 rounded-2xl bg-surface p-6 shadow-2xl" onSubmit={(event) => {
-            event.preventDefault();
-            const meters = Number(calibrationMeters);
-            if (!(meters > 0) || !Number.isFinite(meters)) return;
-            update((prev) => ({ ...prev, pxPerMeter: calibrationPixels / meters }));
-            setCalibrationPixels(null);
-            setScaleDraft([]);
-            setMode("select");
-            if (calibrationLayoutId === activeLayoutId) {
-              setCalibrationLayoutId(null);
-              setWallMethodOpen(true);
-            }
-            toast.success("تم اعتماد المقياس الحقيقي للمخطط");
-          }}>
-            <h2 id="calibration-title" className="text-xl font-bold">اعتماد مقياس المخطط</h2>
-            <p className="text-sm text-muted-foreground">تم قياس الضلع على الصورة: {calibrationPixels.toFixed(1)} بكسل. أدخل طوله الحقيقي بالمتر.</p>
-            <Label htmlFor="real-wall-distance">طول الضلع الحقيقي (متر) — إلزامي</Label>
-            <Input id="real-wall-distance" type="number" min="0.01" step="any" required autoFocus value={calibrationMeters} onChange={(event) => setCalibrationMeters(event.target.value)} />
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => { setCalibrationPixels(null); setScaleDraft([]); }}>إعادة تحديد الضلع</Button>
-              <Button type="submit" disabled={!(Number(calibrationMeters) > 0) || !Number.isFinite(Number(calibrationMeters))}>اعتماد المقياس والمتابعة</Button>
-            </div>
-          </form>
-        </div>
-      )}
-      {calibrationLayoutId === activeLayoutId && mode === "scale" && (
-        <div role="status" className="no-print fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-xl border border-amber-400 bg-[#030957] px-6 py-3 text-center text-sm font-semibold text-white shadow-xl">
-          معايرة المخطط مطلوبة: اضغط نقطة بداية ضلع معلوم، ثم نقطة نهايته، وأدخل الطول الحقيقي بالمتر.
-        </div>
-      )}
-      {wallMethodOpen && (
-        <div className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="wall-method-title" dir="rtl">
-          <div className="w-full max-w-lg space-y-5 rounded-2xl bg-surface p-6 shadow-2xl">
-            <h2 id="wall-method-title" className="text-xl font-bold">اختيار طريقة تخطيط الحوائط</h2>
-            <p className="text-sm text-muted-foreground">تم ضبط مقياس المخطط. اختر طريقة الرسم قبل البدء.</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Button className="h-auto min-h-20 whitespace-normal" variant="outline" onClick={() => {
-                setWallMethodOpen(false);
-                setMode("wall");
-                setDrawer("wall");
-              }}>تخطيط يدوي — رسم ذكي مع الالتقاط والمحاذاة</Button>
-              <Button className="h-auto min-h-20 whitespace-normal" variant="outline" onClick={() => {
-                setWallMethodOpen(false);
-                toast.info("استخراج الجدران تلقائيًا من الصورة غير معتمد بعد؛ استخدم الرسم اليدوي المساعد لحين اكتمال المحرك.");
-                setMode("wall");
-                setDrawer("wall");
-              }}>تخطيط تلقائي — قيد الاعتماد؛ الانتقال للرسم المساعد</Button>
-            </div>
+          <div className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-muted-foreground">
+            منصة تصميم أنظمة المراقبة
           </div>
-        </div>
-      )}
-      {layoutDialogOpen && (
-        <div
-          className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="layout-upload-title"
-        >
-          <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div>
-                <h2 id="layout-upload-title" className="text-lg font-bold">
-                  {dialogTargetId ? "تحديث المخطط" : "إضافة مخطط جديد"}
-                </h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  حدد اسم المخطط وارتفاع السقف ثم اختر الملف. لا يبدأ الرفع قبل اكتمال البيانات.
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => !uploadingLayout && setLayoutDialogOpen(false)}
+          <div className="flex min-w-[310px] items-center justify-end gap-2">
+            <div className="relative">
+              <select
+                value={currency}
+                onChange={(event) => setCurrency(event.target.value)}
+                className="h-8 appearance-none rounded-md border border-border bg-background py-1 pl-7 pr-3 text-xs font-semibold"
               >
-                <X className="h-4 w-4" />
-              </Button>
+                <option value="EGP">EGP</option>
+                <option value="SAR">SAR</option>
+                <option value="USD">USD</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="space-y-4 p-5">
-              <div>
-                <Label htmlFor="layout-name">اسم المخطط</Label>
-                <Input
-                  id="layout-name"
-                  className="mt-1"
-                  value={pendingLayoutName}
-                  onChange={(event) => setPendingLayoutName(event.target.value)}
-                  autoFocus
-                />
+            <Button variant="outline" size="sm" onClick={() => setAgentOpen(true)}>
+              <Bot className="h-4 w-4" />
+              المساعد
+            </Button>
+            <Button variant="secondary" size="sm" onClick={exportPdf}>
+              <FileText className="h-4 w-4" />
+              PDF
+            </Button>
+            <Button variant="ghost" size="sm" onClick={exportCsv} title="تصدير CSV">
+              <Download className="h-4 w-4" />
+            </Button>
+            <span
+              role="status"
+              aria-live="polite"
+              className={`text-xs ${saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}
+            >
+              {saveStatus === "saving"
+                ? "جارٍ الحفظ…"
+                : saveStatus === "saved"
+                  ? "تم الحفظ"
+                  : saveStatus === "error"
+                    ? "فشل الحفظ"
+                    : ""}
+            </span>
+            <Button size="sm" onClick={save} disabled={saving}>
+              <Save className="h-4 w-4" />
+              {saving ? "جارٍ الحفظ" : "حفظ"}
+            </Button>
+          </div>
+        </header>
+
+        {activeModule === "plan" ? (
+          <PlanDesignWorkspace
+            layouts={layouts}
+            activeLayoutId={activeLayoutId}
+            imageUrls={imageUrls}
+            onSelectLayout={selectLayout}
+            onRenameLayout={renameLayout}
+            onDeleteLayout={deleteLayout}
+            onReplaceLayout={openReplaceDialog}
+            plan={
+              aiProposals
+                ? {
+                    ...plan,
+                    devices: [
+                      ...plan.devices,
+                      ...proposalsToDevices(aiProposals, plan.pxPerMeter || 40, 0).map((d, i) => ({
+                        ...d,
+                        name: `مقترح ${i + 1}`,
+                      })),
+                    ],
+                  }
+                : plan
+            }
+            imageUrl={imageUrl}
+            mode={mode}
+            drawer={drawer}
+            selectedId={selectedId}
+            selectedWallId={selectedWallId}
+            selectedLabelId={selectedLabelId}
+            newCameraSpec={newCameraSpec}
+            newHardwareSpec={newHardwareSpec}
+            cableType={cableType}
+            wallThicknessCm={wallThicknessCm}
+            wallCurved={wallCurved}
+            cableDraft={cableDraft}
+            wallDraft={wallDraft}
+            scaleDraft={scaleDraft}
+            selected={selected}
+            selectedWall={selectedWall}
+            selectedLabel={selectedLabel}
+            onOpenLayoutDialog={openLayoutDialog}
+            onChooseTool={chooseTool}
+            onDrawerChange={setDrawer}
+            onCameraSpecChange={setNewCameraSpec}
+            onHardwareSpecChange={setNewHardwareSpec}
+            onCableTypeChange={setCableType}
+            onWallThicknessChange={setWallThicknessCm}
+            onWallCurvedChange={setWallCurved}
+            onCanvasPoint={onCanvasPoint}
+            onSelect={(id) => {
+              clearSelection();
+              setSelectedId(id);
+            }}
+            onSelectWall={(id) => {
+              clearSelection();
+              setSelectedWallId(id);
+            }}
+            onSelectLabel={(id) => {
+              clearSelection();
+              setSelectedLabelId(id);
+            }}
+            onMoveDevice={(deviceId, point) =>
+              update((prev) => ({
+                ...prev,
+                devices: prev.devices.map((device) =>
+                  device.id === deviceId ? { ...device, ...point } : device,
+                ),
+              }))
+            }
+            onMoveLabel={(labelId, point) =>
+              update((prev) => ({
+                ...prev,
+                roomLabels: prev.roomLabels.map((label) =>
+                  label.id === labelId ? { ...label, ...point } : label,
+                ),
+              }))
+            }
+            onFinishCable={finishCable}
+            onFinishWall={finishWall}
+            onUndoWallPoint={undoWallPoint}
+            onCancelWallDraft={cancelWallDraft}
+            onExitWallMode={() => chooseTool("select", null)}
+            onUpdate={update}
+          />
+        ) : activeModule === "offer" ? (
+          <OfferList
+            clientName={clientName}
+            onClientNameChange={setClientName}
+            currency={currency}
+            retention={retention}
+            onRetentionChange={setRetention}
+            boq={boq}
+            suggestion={suggestion}
+            offer={offer}
+            onOfferChange={setOffer}
+          />
+        ) : activeModule === "topology" ? (
+          <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
+        ) : activeModule === "map" ? (
+          <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" dir="rtl">
+            <h2 className="text-lg font-semibold">CCTV agent — مساعد تصميم المشروع</h2>
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <AgentPanel projectId={projectId} projectName={name} />
+            </div>
+            <div className="rounded-xl border border-border bg-surface p-4">
+              <AutoDesignPanel
+                proposals={aiProposals}
+                coverage={aiCoverage}
+                hint="يحلل الجدران والمقياس وارتفاع السقف ويقترح أقل عدد كاميرات يحقق مستوى التغطية، ثم يوصلها بأقرب سويتش/NVR عند الاعتماد."
+                onGenerate={generateAutoDesign}
+                onApply={applyAutoDesign}
+                onReject={() => setAiProposals(null)}
+                onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+              />
+            </div>
+          </div>
+        )}
+        <Sheet open={agentOpen} onOpenChange={setAgentOpen}>
+          <SheetContent side="left" className="no-print w-full p-0 sm:max-w-md">
+            <SheetTitle className="sr-only">مساعد التصميم</SheetTitle>
+            <AgentPanel projectId={projectId} projectName={name} />
+          </SheetContent>
+        </Sheet>
+
+        {calibrationPixels !== null && (
+          <div
+            className="no-print fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="calibration-title"
+            dir="rtl"
+          >
+            <form
+              className="w-full max-w-md space-y-4 rounded-2xl bg-surface p-6 shadow-2xl"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const meters = Number(calibrationMeters);
+                if (!(meters > 0) || !Number.isFinite(meters)) return;
+                update((prev) => ({ ...prev, pxPerMeter: calibrationPixels / meters }));
+                setCalibrationPixels(null);
+                setScaleDraft([]);
+                setMode("select");
+                if (calibrationLayoutId === activeLayoutId) {
+                  setCalibrationLayoutId(null);
+                  setWallMethodOpen(true);
+                }
+                toast.success("تم اعتماد المقياس الحقيقي للمخطط");
+              }}
+            >
+              <h2 id="calibration-title" className="text-xl font-bold">
+                اعتماد مقياس المخطط
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                تم قياس الضلع على الصورة: {calibrationPixels.toFixed(1)} بكسل. أدخل طوله الحقيقي
+                بالمتر.
+              </p>
+              <Label htmlFor="real-wall-distance">طول الضلع الحقيقي (متر) — إلزامي</Label>
+              <Input
+                id="real-wall-distance"
+                type="number"
+                min="0.01"
+                step="any"
+                required
+                autoFocus
+                value={calibrationMeters}
+                onChange={(event) => setCalibrationMeters(event.target.value)}
+              />
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setCalibrationPixels(null);
+                    setScaleDraft([]);
+                  }}
+                >
+                  إعادة تحديد الضلع
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    !(Number(calibrationMeters) > 0) || !Number.isFinite(Number(calibrationMeters))
+                  }
+                >
+                  اعتماد المقياس والمتابعة
+                </Button>
               </div>
-              <div>
-                <Label htmlFor="ceiling-height">ارتفاع السقف</Label>
-                <div className="mt-1 flex items-center gap-2">
+            </form>
+          </div>
+        )}
+        {calibrationLayoutId === activeLayoutId && mode === "scale" && (
+          <div
+            role="status"
+            className="no-print fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-xl border border-amber-400 bg-[#030957] px-6 py-3 text-center text-sm font-semibold text-white shadow-xl"
+          >
+            معايرة المخطط مطلوبة: اضغط نقطة بداية ضلع معلوم، ثم نقطة نهايته، وأدخل الطول الحقيقي
+            بالمتر.
+          </div>
+        )}
+        {wallMethodOpen && (
+          <div
+            className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wall-method-title"
+            dir="rtl"
+          >
+            <div className="w-full max-w-lg space-y-5 rounded-2xl bg-surface p-6 shadow-2xl">
+              <h2 id="wall-method-title" className="text-xl font-bold">
+                اختيار طريقة تخطيط الحوائط
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                تم ضبط مقياس المخطط. اختر طريقة الرسم قبل البدء.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button
+                  className="h-auto min-h-20 whitespace-normal"
+                  variant="outline"
+                  onClick={() => {
+                    setWallMethodOpen(false);
+                    setMode("wall");
+                    setDrawer("wall");
+                  }}
+                >
+                  تخطيط يدوي — رسم ذكي مع الالتقاط والمحاذاة
+                </Button>
+                <Button
+                  className="h-auto min-h-20 whitespace-normal"
+                  variant="outline"
+                  onClick={() => {
+                    setWallMethodOpen(false);
+                    toast.info(
+                      "استخراج الجدران تلقائيًا من الصورة غير معتمد بعد؛ استخدم الرسم اليدوي المساعد لحين اكتمال المحرك.",
+                    );
+                    setMode("wall");
+                    setDrawer("wall");
+                  }}
+                >
+                  تخطيط تلقائي — قيد الاعتماد؛ الانتقال للرسم المساعد
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        {layoutDialogOpen && (
+          <div
+            className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="layout-upload-title"
+          >
+            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4">
+                <div>
+                  <h2 id="layout-upload-title" className="text-lg font-bold">
+                    {dialogTargetId ? "تحديث المخطط" : "إضافة مخطط جديد"}
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    حدد اسم المخطط وارتفاع السقف ثم اختر الملف. لا يبدأ الرفع قبل اكتمال البيانات.
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => !uploadingLayout && setLayoutDialogOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="space-y-4 p-5">
+                <div>
+                  <Label htmlFor="layout-name">اسم المخطط</Label>
                   <Input
-                    id="ceiling-height"
-                    type="number"
-                    min={0.1}
-                    step={0.1}
-                    value={pendingCeilingHeight}
-                    onChange={(event) => setPendingCeilingHeight(event.target.value)}
+                    id="layout-name"
+                    className="mt-1"
+                    value={pendingLayoutName}
+                    onChange={(event) => setPendingLayoutName(event.target.value)}
+                    autoFocus
                   />
-                  <span className="rounded-md border border-border bg-muted px-3 py-2 text-sm">
-                    m
-                  </span>
+                </div>
+                <div>
+                  <Label htmlFor="ceiling-height">ارتفاع السقف</Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <Input
+                      id="ceiling-height"
+                      type="number"
+                      min={0.1}
+                      step={0.1}
+                      value={pendingCeilingHeight}
+                      onChange={(event) => setPendingCeilingHeight(event.target.value)}
+                    />
+                    <span className="rounded-md border border-border bg-muted px-3 py-2 text-sm">
+                      m
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="layout-file">ملف المخطط</Label>
+                  <Input
+                    id="layout-file"
+                    className="mt-1"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => setPendingLayoutFile(event.target.files?.[0] ?? null)}
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    PNG / JPG / WEBP — دعم PDF سيضاف عند ربط عارض PDF بالمحرر.
+                  </p>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="layout-file">ملف المخطط</Label>
-                <Input
-                  id="layout-file"
-                  className="mt-1"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setPendingLayoutFile(event.target.files?.[0] ?? null)}
-                />
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  PNG / JPG / WEBP — دعم PDF سيضاف عند ربط عارض PDF بالمحرر.
-                </p>
+              <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
+                <Button
+                  variant="outline"
+                  disabled={uploadingLayout}
+                  onClick={() => setLayoutDialogOpen(false)}
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  disabled={
+                    uploadingLayout ||
+                    !pendingLayoutName.trim() ||
+                    !pendingLayoutFile ||
+                    !(Number(pendingCeilingHeight) > 0)
+                  }
+                  onClick={() => void confirmLayoutUpload()}
+                >
+                  {uploadingLayout ? "جارٍ الرفع…" : "رفع المخطط"}
+                </Button>
               </div>
             </div>
-            <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
-              <Button
-                variant="outline"
-                disabled={uploadingLayout}
-                onClick={() => setLayoutDialogOpen(false)}
-              >
-                إلغاء
-              </Button>
-              <Button
-                disabled={
-                  uploadingLayout ||
-                  !pendingLayoutName.trim() ||
-                  !pendingLayoutFile ||
-                  !(Number(pendingCeilingHeight) > 0)
-                }
-                onClick={() => void confirmLayoutUpload()}
-              >
-                {uploadingLayout ? "جارٍ الرفع…" : "رفع المخطط"}
-              </Button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

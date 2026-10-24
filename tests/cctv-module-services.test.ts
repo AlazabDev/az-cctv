@@ -22,7 +22,9 @@ describe("CCTV five-module service ownership", () => {
   it("distinguishes planned work from existing implementation", () => {
     const all = cctvModuleRegistry.flatMap((module) => module.services);
     expect(all.some((service) => service.status === "planned")).toBe(true);
-    expect(all.every((service) => service.status === "planned" || service.source.length > 0)).toBe(true);
+    expect(all.every((service) => service.status === "planned" || service.source.length > 0)).toBe(
+      true,
+    );
     expect(getCctvModule("topology").label).toBe("CCTV network");
   });
 });

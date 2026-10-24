@@ -33,7 +33,9 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
         <p className="text-sm text-muted-foreground">
           لا يمكن فتح محرر التصميم قبل تحميل المنتجات النشطة من قاعدة البيانات.
         </p>
-        <p className="mt-2 text-sm text-destructive" role="alert">{error instanceof Error ? error.message : "تعذّر الاتصال بالكتالوج."}</p>
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          {error instanceof Error ? error.message : "تعذّر الاتصال بالكتالوج."}
+        </p>
         <Button className="mt-4" type="button" disabled={isFetching} onClick={() => void refetch()}>
           {isFetching ? "جارٍ إعادة المحاولة…" : "إعادة تحميل الكتالوج"}
         </Button>
@@ -52,9 +54,20 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
   return (
     <>
       {(!hasCamera || !hasNvrOrSwitch) && (
-        <div role="alert" className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
-          <strong>الكتالوج غير مكتمل.</strong> يمكنك فتح المخطط وإدارة المشروع، لكن إضافة المعدات وحسابات الشبكة والتغطية تتطلب منتجات نشطة ذات مواصفات مكتملة.
-          <Button type="button" variant="outline" size="sm" className="mr-3" disabled={isFetching} onClick={() => void refetch()}>
+        <div
+          role="alert"
+          className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm"
+        >
+          <strong>الكتالوج غير مكتمل.</strong> يمكنك فتح المخطط وإدارة المشروع، لكن إضافة المعدات
+          وحسابات الشبكة والتغطية تتطلب منتجات نشطة ذات مواصفات مكتملة.
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mr-3"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
             تحديث المنتجات
           </Button>
         </div>
