@@ -33,6 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { PlanCanvas, type CanvasMode } from "@/components/cctv/PlanCanvas";
+import { CctvPrimarySidebar, type CctvModuleId } from "@/components/cctv/CctvPrimarySidebar";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
@@ -66,7 +67,7 @@ import {
   type WallThicknessCm,
 } from "@/lib/cctv/types";
 
-type ModuleId = "plan" | "topology" | "map" | "offer" | "agent";
+type ModuleId = CctvModuleId;
 type DrawerId = "camera" | "device" | "wall" | "cable" | "annotation" | "layers" | null;
 type EditableRoomLabel = RoomLabel & { note?: string };
 type OfferFee = { id: string; label: string; amount: number };
@@ -89,13 +90,6 @@ const defaultOffer: OfferSettings = {
   lineOverrides: {},
 };
 
-const moduleItems: { id: ModuleId; label: string; icon: typeof Layers3 }[] = [
-  { id: "plan", label: "CCTV system", icon: Layers3 },
-  { id: "topology", label: "CCTV network", icon: Waypoints },
-  { id: "map", label: "CCTV maps", icon: Map },
-  { id: "offer", label: "CCTV cost", icon: ShoppingCart },
-  { id: "agent", label: "CCTV agent", icon: Layers3 },
-];
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -788,7 +782,17 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     );
 
   return (
-    <div className="flex h-screen min-h-0 flex-col bg-background">
+    <div className="flex h-screen min-h-0 bg-background" dir="rtl">
+      <CctvPrimarySidebar
+        activeModule={activeModule}
+        onSelectModule={(id) => {
+          setActiveModule(id);
+          setDrawer(null);
+          setMode("select");
+          clearDrafts();
+        }}
+      />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="no-print flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
         <div className="flex min-w-[300px] items-center gap-2">
           <Link
@@ -811,27 +815,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             {plan.layoutName || name}
           </span>
         </div>
-        <nav
-          className="flex h-full flex-1 items-stretch justify-center"
-          aria-label="Project modules"
-        >
-          {moduleItems.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => {
-                setActiveModule(id);
-                setDrawer(null);
-                setMode("select");
-                clearDrafts();
-              }}
-              className={`flex min-w-[112px] items-center justify-center gap-2 border-b-2 px-4 text-sm font-medium transition ${activeModule === id ? "border-primary bg-primary/5 text-primary" : "border-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground"}`}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </button>
-          ))}
-        </nav>
+        <div className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-muted-foreground">منصة تصميم أنظمة المراقبة</div>
         <div className="flex min-w-[310px] items-center justify-end gap-2">
           <div className="relative">
             <select
@@ -1144,6 +1128,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
