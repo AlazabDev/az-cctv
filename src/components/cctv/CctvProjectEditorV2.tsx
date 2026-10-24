@@ -34,6 +34,8 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { PlanCanvas, type CanvasMode } from "@/components/cctv/PlanCanvas";
 import { CctvPrimarySidebar, type CctvModuleId } from "@/components/cctv/CctvPrimarySidebar";
+import { CctvServiceSidebar } from "@/components/cctv/CctvServiceSidebar";
+import type { CctvService } from "@/lib/cctv/module-services";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
@@ -158,6 +160,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [topology, setTopology] = useState<TopologyData>(emptyTopology);
   const [siteMap, setSiteMap] = useState<SiteMapData>(emptySiteMap);
   const [activeModule, setActiveModule] = useState<ModuleId>("plan");
+  const [serviceSidebarOpen, setServiceSidebarOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<DrawerId>(null);
   const [mode, setMode] = useState<CanvasMode>("select");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -786,12 +790,57 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       <CctvPrimarySidebar
         activeModule={activeModule}
         onSelectModule={(id) => {
+          if (id === activeModule) {
+            setServiceSidebarOpen((open) => !open);
+            return;
+          }
           setActiveModule(id);
+          setServiceSidebarOpen(true);
+          setSelectedServiceId(null);
           setDrawer(null);
           setMode("select");
           clearDrafts();
         }}
       />
+      {serviceSidebarOpen && (
+        <CctvServiceSidebar
+          moduleId={activeModule}
+          selectedServiceId={selectedServiceId}
+          onClose={() => setServiceSidebarOpen(false)}
+          onSelectService={(service: CctvService) => {
+            setSelectedServiceId(service.id);
+            if (activeModule !== "plan") return;
+            switch (service.id) {
+              case "projects":
+                navigate({ to: "/projects" });
+                break;
+              case "layouts":
+              case "floorplans":
+                openLayoutDialog();
+                break;
+              case "calibration":
+                chooseTool("scale", null);
+                break;
+              case "walls":
+                chooseTool("wall", "wall");
+                break;
+              case "cameras":
+              case "optics":
+                chooseTool("camera", "camera");
+                break;
+              case "room-labels":
+                chooseTool("label", "annotation");
+                break;
+              case "product-master":
+                navigate({ to: "/catalog" });
+                break;
+              default:
+                // Coverage remains visible through the existing system workspace.
+                chooseTool("select", null);
+            }
+          }}
+        />
+      )}
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <header className="no-print flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface px-4">
         <div className="flex min-w-[300px] items-center gap-2">
