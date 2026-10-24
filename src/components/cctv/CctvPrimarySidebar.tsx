@@ -45,7 +45,7 @@ export function CctvPrimarySidebar({ activeModule, onSelectModule }: Props) {
       <nav className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="المديولات الخمسة">
         {!collapsed && <p className="px-3 pb-2 pt-3 text-[11px] font-bold text-muted-foreground">المديولات</p>}
         <div className="space-y-1">
-          {cctvModuleRegistry.map(({ id, label, services }) => {
+          {cctvModuleRegistry.map(({ id, label }) => {
             const Icon = moduleIcons[id];
             const selected = activeModule === id;
             return (
@@ -55,26 +55,13 @@ export function CctvPrimarySidebar({ activeModule, onSelectModule }: Props) {
                   onClick={() => onSelectModule(id)}
                   title={label}
                   aria-current={selected ? "page" : undefined}
-                  aria-expanded={selected && !collapsed}
+                  aria-expanded={selected}
                   className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-right text-sm font-semibold transition-colors ${selected ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
                 >
                   <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                   {!collapsed && <span>{label}</span>}
                 </button>
-                {selected && !collapsed && (
-                  <div className="mr-5 space-y-0.5 border-r border-border pr-3" aria-label={`خدمات ${label}`}>
-                    {services.map((service) => (
-                      <div
-                        key={service.id}
-                        title={service.status === "planned" ? "خدمة مخططة ولم تُنفذ بعد" : service.label}
-                        className="flex items-start gap-2 rounded-md px-2 py-1 text-xs leading-5 text-muted-foreground"
-                      >
-                        <span className="min-w-0 flex-1">{service.label}</span>
-                        {service.status === "planned" && <span className="shrink-0 text-[10px]">لاحقًا</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
+
               </div>
             );
           })}
