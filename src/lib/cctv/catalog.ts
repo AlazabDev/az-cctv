@@ -1,6 +1,6 @@
 import type { ProductRow } from "./product-catalog";
 import { buildProductCatalog } from "./product-catalog";
-import type { CameraSpec, HardwareSpec } from "./types";
+import type { CameraSpec, HardwareSpec, PlacedDevice } from "./types";
 
 /**
  * Commercial products are hydrated from public.products at runtime.
@@ -264,6 +264,25 @@ export function cameraById(id: string) {
     cameraCatalog.find((camera) => camera.id === id) ??
     legacyCameraCatalog.find((camera) => camera.id === id)
   );
+}
+
+/** The saved optical profile takes precedence over later commercial catalog changes. */
+export function cameraForPlacedDevice(device: PlacedDevice): CameraSpec | undefined {
+  const current = cameraById(device.specId);
+  const saved = device.opticsSnapshot;
+  if (!current || !saved || saved.productId !== (device.productId ?? device.specId)) return current;
+  if (!(saved.focalMm > 0 && saved.hres > 0 && saved.vres > 0 &&
+      saved.hfovDeg > 0 && saved.hfovDeg < 180)) return current;
+  return {
+    ...current,
+    focal: saved.focalMm,
+    hres: saved.hres,
+    vres: saved.vres,
+    hfov: saved.hfovDeg,
+    vfov: saved.vfovDeg,
+    opticsVerified: saved.verified === true,
+    opticsSourceUrl: saved.sourceUrl,
+  };
 }
 
 export function hardwareById(id: string) {

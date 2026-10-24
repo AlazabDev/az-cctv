@@ -55,7 +55,7 @@ import {
 } from "@/lib/cctv/site-map";
 import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
-import { cableTypes, cameraById, cameraCatalog, hardwareCatalog } from "@/lib/cctv/catalog";
+import { cableTypes, cameraById, cameraCatalog, cameraForPlacedDevice, hardwareCatalog } from "@/lib/cctv/catalog";
 import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
 import {
   emptyPlan,
@@ -376,10 +376,25 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       switch: "Switch",
       rack: "Rack",
     };
+    const cameraSpec = kind === "camera" ? cameraById(specId) : undefined;
     const device: PlacedDevice = {
       id: uid(),
       kind,
       specId,
+      ...(cameraSpec?.productId ? { productId: cameraSpec.productId } : {}),
+      ...(cameraSpec && cameraSpec.focal > 0 ? {
+        focalMm: cameraSpec.focal,
+        opticsSnapshot: {
+          productId: cameraSpec.productId ?? specId,
+          focalMm: cameraSpec.focal,
+          hfovDeg: cameraSpec.hfov,
+          ...(cameraSpec.vfov ? { vfovDeg: cameraSpec.vfov } : {}),
+          hres: cameraSpec.hres,
+          vres: cameraSpec.vres,
+          verified: cameraSpec.opticsVerified === true,
+          ...(cameraSpec.opticsSourceUrl ? { sourceUrl: cameraSpec.opticsSourceUrl } : {}),
+        },
+      } : {}),
       name: `${names[kind]}${count}`,
       x: point.x,
       y: point.y,
@@ -451,6 +466,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       }));
     }
     setCableDraft([]);
+  }
+
+  function undoWallPoint() {
+    setWallDraft((points) => points.slice(0, -1));
+  }
+
+  function cancelWallDraft() {
+    setWallDraft([]);
   }
 
   function finishWall() {
@@ -931,6 +954,9 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           }
           onFinishCable={finishCable}
           onFinishWall={finishWall}
+          onUndoWallPoint={undoWallPoint}
+          onCancelWallDraft={cancelWallDraft}
+          onExitWallMode={() => chooseTool("select", null)}
           onUpdate={update}
         />
       ) : activeModule === "offer" ? (
@@ -1158,6 +1184,9 @@ type PlanWorkspaceProps = {
   onMoveLabel: (id: string, point: { x: number; y: number }) => void;
   onFinishCable: () => void;
   onFinishWall: () => void;
+  onUndoWallPoint: () => void;
+  onCancelWallDraft: () => void;
+  onExitWallMode: () => void;
   onUpdate: (updater: (plan: PlanData) => PlanData) => void;
 };
 
@@ -1319,6 +1348,9 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
           onMoveLabel={props.onMoveLabel}
           onFinishCable={props.onFinishCable}
           onFinishWall={props.onFinishWall}
+          onUndoWallPoint={props.onUndoWallPoint}
+          onCancelWallDraft={props.onCancelWallDraft}
+          onExitWallMode={props.onExitWallMode}
         />
         <div className="no-print absolute right-3 top-3 z-20 flex w-[78px] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
           <button
@@ -1531,7 +1563,7 @@ function DeviceProperties({
   plan: PlanData;
   onUpdate: (updater: (plan: PlanData) => PlanData) => void;
 }) {
-  const spec = device.kind === "camera" ? cameraById(device.specId) : null;
+  const spec = device.kind === "camera" ? cameraForPlacedDevice(device) : null;
   const patch = (next: Partial<PlacedDevice>) =>
     onUpdate((prev) => ({
       ...prev,

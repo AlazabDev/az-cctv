@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { WallSegment } from "../src/lib/cctv/types";
 import {
   canAppendWallPoint,
+  constrainPolar45,
+  isWallClosure,
   nearestWallAttachment,
   constrainOrthogonal,
   dedupeConsecutivePoints,
@@ -186,6 +188,20 @@ describe("wall editor deterministic geometry", () => {
     expect(canAppendWallPoint({ x: 0, y: 0 }, { x: 1, y: 0 }, 2)).toBe(false);
     expect(canAppendWallPoint({ x: 0, y: 0 }, { x: 3, y: 0 }, 2)).toBe(true);
     expect(canAppendWallPoint(undefined, { x: 0, y: 0 }, 1)).toBe(true);
+  });
+
+  it("tracks CAD polar angles in 45 degree steps", () => {
+    const diagonal = constrainPolar45({ x: 0, y: 0 }, { x: 10, y: 9 });
+    expect(diagonal.x).toBeCloseTo(diagonal.y, 8);
+    const horizontal = constrainPolar45({ x: 0, y: 0 }, { x: 12, y: 1 });
+    expect(horizontal.y).toBeCloseTo(0, 8);
+  });
+
+  it("closes wall only after at least three vertices", () => {
+    const first = { x: 0, y: 0 };
+    expect(isWallClosure([first, { x: 10, y: 0 }], first, 3)).toBe(false);
+    expect(isWallClosure([first, { x: 10, y: 0 }, { x: 10, y: 10 }], { x: 1, y: 1 }, 3)).toBe(true);
+    expect(isWallClosure([first, { x: 10, y: 0 }, { x: 10, y: 10 }], { x: 8, y: 8 }, 3)).toBe(false);
   });
 
 });

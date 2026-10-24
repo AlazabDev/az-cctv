@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PlanData, PlacedDevice, WallKind, WallSegment } from "@/lib/cctv/types";
-import { cableTypes, cameraById } from "@/lib/cctv/catalog";
+import { cableTypes, cameraForPlacedDevice } from "@/lib/cctv/catalog";
 import {
   distanceForPpm,
   polylineLengthMeters,
@@ -10,6 +10,8 @@ import {
 } from "@/lib/cctv/geometry";
 import {
   canAppendWallPoint,
+  constrainPolar45,
+  isWallClosure,
   deleteVertex,
   insertVertex,
   nearestWallAttachment,
@@ -43,6 +45,9 @@ interface Props {
   onMoveLabel: (id: string, p: { x: number; y: number }) => void;
   onFinishCable: () => void;
   onFinishWall: () => void;
+  onUndoWallPoint: () => void;
+  onCancelWallDraft: () => void;
+  onExitWallMode: () => void;
 }
 
 const MIN_ZOOM = 0.15;
@@ -125,6 +130,9 @@ export function PlanCanvas({
   onMoveLabel,
   onFinishCable,
   onFinishWall,
+  onUndoWallPoint,
+  onCancelWallDraft,
+  onExitWallMode,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
@@ -135,12 +143,17 @@ export function PlanCanvas({
   const [draftWallKind, setDraftWallKind] = useState<WallKind>("wall");
   const [draftWallColor, setDraftWallColor] = useState(DEFAULT_WALL_COLOR);
   const [orthogonalPreview, setOrthogonalPreview] = useState(false);
+  const [polarPreview, setPolarPreview] = useState(false);
   const panRef = useRef<{
+    pointerId: number;
+    button: number;
     startX: number;
     startY: number;
     ox: number;
     oy: number;
+    moved: boolean;
   } | null>(null);
+  const lastRightClickRef = useRef<{ at: number; x: number; y: number } | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const pendingNewWallStyleRef = useRef<{ kind: WallKind; color: string } | null>(null);
   const stateRef = useRef({ zoom, offset });
@@ -183,6 +196,13 @@ export function PlanCanvas({
     }
     onFinishWall();
   }, [draftWallColor, draftWallKind, onFinishWall, wallDraft.length]);
+
+  useEffect(() => {
+    if (mode !== "wall" || wallDraft.length < 4) return;
+    const first = wallDraft[0]!;
+    const last = wallDraft[wallDraft.length - 1]!;
+    if (samePoint(first, last)) finishWallWithStyle();
+  }, [mode, wallDraft, finishWallWithStyle]);
 
   useEffect(() => {
     const pending = pendingNewWallStyleRef.current;
@@ -243,9 +263,19 @@ export function PlanCanvas({
         return;
       }
 
+      if (mode === "wall" && (e.key === "Backspace" || (e.ctrlKey && e.key.toLowerCase() === "z"))) {
+        e.preventDefault();
+        onUndoWallPoint();
+        return;
+      }
+      if (mode === "wall" && e.key === "Enter") {
+        e.preventDefault();
+        finishWallWithStyle();
+        return;
+      }
       if (e.key !== "Escape") return;
       setSelectedVertexIndex(null);
-      if (mode === "wall") finishWallWithStyle();
+      if (mode === "wall") onCancelWallDraft();
       else onFinishCable();
     };
 
@@ -256,19 +286,27 @@ export function PlanCanvas({
     forcePlanCommit,
     mode,
     onFinishCable,
+    onUndoWallPoint,
+    onCancelWallDraft,
     selectedVertexIndex,
     selectedWall,
   ]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (e.button === 1 || (mode === "select" && e.target === e.currentTarget)) {
+    if (e.button === 2 || e.button === 1 || (mode === "select" && e.target === e.currentTarget)) {
+      // Right/middle drag pans the viewport without changing wall coordinates.
+      // Right click is processed on pointer-up only if the pointer did not move.
+      e.preventDefault();
       panRef.current = {
+        pointerId: e.pointerId,
+        button: e.button,
         startX: e.clientX,
         startY: e.clientY,
         ox: offset.x,
         oy: offset.y,
+        moved: false,
       };
-      (e.target as Element).setPointerCapture?.(e.pointerId);
+      (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
     }
   };
 
@@ -293,12 +331,20 @@ export function PlanCanvas({
     const raw = toPlan(e.clientX, e.clientY);
     setHoverPoint(raw);
     setOrthogonalPreview(e.shiftKey);
+    setPolarPreview(e.altKey && !e.shiftKey);
 
     if (panRef.current) {
-      setOffset({
-        x: panRef.current.ox + (e.clientX - panRef.current.startX),
-        y: panRef.current.oy + (e.clientY - panRef.current.startY),
-      });
+      const pan = panRef.current;
+      if (Math.hypot(e.clientX - pan.startX, e.clientY - pan.startY) > 5) {
+        pan.moved = true;
+        lastRightClickRef.current = null;
+      }
+      if (pan.moved) {
+        setOffset({
+          x: pan.ox + (e.clientX - pan.startX),
+          y: pan.oy + (e.clientY - pan.startY),
+        });
+      }
       return;
     }
 
@@ -339,7 +385,38 @@ export function PlanCanvas({
     forcePlanCommit();
   };
 
-  const endPointer = () => {
+  const endPointer = (e: React.PointerEvent) => {
+    const pan = panRef.current;
+    if (pan && pan.pointerId === e.pointerId) {
+      if (pan.button === 2 && !pan.moved && mode === "wall") {
+        const now = Date.now();
+        const last = lastRightClickRef.current;
+        const isDouble = Boolean(
+          last &&
+          now - last.at <= 420 &&
+          Math.hypot(e.clientX - last.x, e.clientY - last.y) <= 12,
+        );
+        if (isDouble) {
+          lastRightClickRef.current = null;
+          // A second right click exits wall mode. The first click already detached
+          // (committed) the current polyline, so an empty draft is harmless.
+          onExitWallMode();
+        } else {
+          lastRightClickRef.current = { at: now, x: e.clientX, y: e.clientY };
+          finishWallWithStyle();
+        }
+      } else if (pan.moved) {
+        lastRightClickRef.current = null;
+      }
+      panRef.current = null;
+      if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    }
+    dragRef.current = null;
+  };
+
+  const cancelPointer = () => {
     panRef.current = null;
     dragRef.current = null;
   };
@@ -347,14 +424,15 @@ export function PlanCanvas({
   const snappedDraftPoint = useMemo(() => {
     if (mode !== "wall" || !hoverPoint || wallDraft.length === 0) return hoverPoint;
     const anchor = wallDraft.at(-1);
+    const candidate = orthogonalPreview || polarPreview ? hoverPoint : (nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint);
     return snapWallPoint({
-      point: nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint,
+      point: polarPreview && anchor ? constrainPolar45(anchor, candidate) : candidate,
       anchor,
       candidates: [...allWallPoints, ...wallDraft.slice(0, -1)],
       thresholdPlanUnits: snapThreshold,
       orthogonal: orthogonalPreview,
     });
-  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, plan.walls, snapThreshold, wallDraft]);
+  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, polarPreview, plan.walls, snapThreshold, wallDraft]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (mode === "select") {
@@ -369,14 +447,20 @@ export function PlanCanvas({
 
     const raw = toPlan(e.clientX, e.clientY);
     if (mode === "wall") {
+      if (e.detail >= 2) return;
       const anchor = wallDraft.at(-1);
+      const candidate = e.shiftKey || e.altKey ? raw : (nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw);
       const point = snapWallPoint({
-        point: nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw,
+        point: e.altKey && !e.shiftKey && anchor ? constrainPolar45(anchor, candidate) : candidate,
         anchor,
         candidates: [...allWallPoints, ...wallDraft.slice(0, -1)],
         thresholdPlanUnits: snapThreshold,
         orthogonal: e.shiftKey,
       });
+      if (isWallClosure(wallDraft, point, snapThreshold)) {
+        if (canAppendWallPoint(anchor, wallDraft[0]!, zoom)) onCanvasPoint(wallDraft[0]!);
+        return;
+      }
       if (!canAppendWallPoint(anchor, point, zoom)) return;
       onCanvasPoint(point);
       return;
@@ -447,16 +531,17 @@ export function PlanCanvas({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endPointer}
-        onPointerLeave={endPointer}
+        onPointerCancel={cancelPointer}
         onClick={handleClick}
-        onDoubleClick={() => {
+        onDoubleClick={(e) => {
+          e.preventDefault();
           if (mode === "cable") onFinishCable();
           if (mode === "wall") finishWallWithStyle();
         }}
         onContextMenu={(e) => {
+          // Browser context menu would interrupt CAD right-click gestures.
           e.preventDefault();
-          if (mode === "wall") finishWallWithStyle();
-          else onFinishCable();
+          if (mode === "cable") onFinishCable();
         }}
       >
         <g
@@ -479,7 +564,7 @@ export function PlanCanvas({
             plan.devices
               .filter((d) => d.kind === "camera")
               .map((d) => {
-                const spec = cameraById(d.specId);
+                const spec = cameraForPlacedDevice(d);
                 if (!spec) return null;
                 return (
                   <g key={`cov-${d.id}`}>
@@ -562,6 +647,14 @@ export function PlanCanvas({
                 strokeWidth={draftWallKind === "fence" ? 3 / zoom : wallStrokePx(10)}
                 strokeLinecap="round"
               />
+              {snappedDraftPoint && wallDraft.length > 0 && (
+                <g transform={`translate(${(wallDraft[wallDraft.length - 1]!.x + snappedDraftPoint.x) / 2} ${(wallDraft[wallDraft.length - 1]!.y + snappedDraftPoint.y) / 2}) scale(${1 / zoom})`} style={{ pointerEvents: "none" }}>
+                  <rect x={-38} y={-32} width={76} height={23} rx={5} fill="#030957" opacity={0.92}/>
+                  <text textAnchor="middle" y={-16} fontSize={12} fill="white">
+                    {(Math.hypot(snappedDraftPoint.x - wallDraft[wallDraft.length - 1]!.x, snappedDraftPoint.y - wallDraft[wallDraft.length - 1]!.y) / pxPerMeter).toFixed(2)} m
+                  </text>
+                </g>
+              )}
               {snappedDraftPoint && (
                 <circle
                   cx={snappedDraftPoint.x}
@@ -879,7 +972,7 @@ export function PlanCanvas({
           )}
           {mode === "wall" ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
-              Snap للنهايات تلقائي · Shift لتقييد 90° · Double-click لإنهاء الرسم
+              يمين: فصل الخط · سحب يمين: تحريك المخطط · يمين مرتين: الخروج من الحوائط · Shift: 90° · Alt: 45°
             </span>
           ) : selectedWall ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">

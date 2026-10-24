@@ -36,6 +36,25 @@ export function constrainOrthogonal(anchor: PlanPoint, point: PlanPoint) {
   return dx >= dy ? { x: point.x, y: anchor.y } : { x: anchor.x, y: point.y };
 }
 
+/** CAD-style polar tracking: lock to the nearest multiple of 45 degrees. */
+export function constrainPolar45(anchor: PlanPoint, point: PlanPoint): PlanPoint {
+  const dx = point.x - anchor.x;
+  const dy = point.y - anchor.y;
+  const length = Math.hypot(dx, dy);
+  if (length <= EPSILON) return { ...anchor };
+  const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+  return { x: anchor.x + length * Math.cos(angle), y: anchor.y + length * Math.sin(angle) };
+}
+
+/** Close a wall outline only when there are at least three distinct vertices. */
+export function isWallClosure(
+  points: PlanPoint[],
+  target: PlanPoint,
+  thresholdPlanUnits: number,
+): boolean {
+  return points.length >= 3 && distance(points[0]!, target) <= thresholdPlanUnits;
+}
+
 export function nearestSnapPoint(
   point: PlanPoint,
   candidates: PlanPoint[],
