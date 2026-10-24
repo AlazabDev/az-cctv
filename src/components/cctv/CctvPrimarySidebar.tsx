@@ -1,0 +1,94 @@
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Bot, CircleHelp, MapPinned, Network, PanelLeftClose, PanelLeftOpen, Settings, ShoppingCart, Video } from "lucide-react";
+
+export type CctvModuleId = "plan" | "topology" | "map" | "offer" | "agent";
+
+export const cctvModules: {
+  id: CctvModuleId;
+  label: string;
+  icon: typeof Video;
+}[] = [
+  { id: "plan", label: "CCTV system", icon: Video },
+  { id: "topology", label: "CCTV network", icon: Network },
+  { id: "map", label: "CCTV maps", icon: MapPinned },
+  { id: "offer", label: "CCTV cost", icon: ShoppingCart },
+  { id: "agent", label: "CCTV agent", icon: Bot },
+];
+
+type Props = {
+  activeModule: CctvModuleId;
+  onSelectModule: (module: CctvModuleId) => void;
+};
+
+export function CctvPrimarySidebar({ activeModule, onSelectModule }: Props) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  return (
+    <aside
+      dir="rtl"
+      aria-label="التنقل الرئيسي لنظام CCTV"
+      className={`no-print flex h-full shrink-0 flex-col border-l border-border bg-surface transition-[width] duration-200 ${collapsed ? "w-[68px]" : "w-[228px]"}`}
+    >
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-3">
+        {!collapsed && <span className="truncate text-sm font-black text-primary">AZ-CCTV</span>}
+        <button
+          type="button"
+          onClick={() => setCollapsed((current) => !current)}
+          className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+          aria-label={collapsed ? "توسيع القائمة" : "طي القائمة"}
+          title={collapsed ? "توسيع القائمة" : "طي القائمة"}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+        </button>
+      </div>
+      <nav className="min-h-0 flex-1 overflow-y-auto p-2" aria-label="المديولات الخمسة">
+        {!collapsed && <p className="px-3 pb-2 pt-3 text-[11px] font-bold text-muted-foreground">المديولات</p>}
+        <div className="space-y-1">
+          {cctvModules.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onSelectModule(id)}
+              title={label}
+              aria-current={activeModule === id ? "page" : undefined}
+              className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-right text-sm font-semibold transition-colors ${activeModule === id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+            >
+              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+              {!collapsed && <span>{label}</span>}
+            </button>
+          ))}
+        </div>
+      </nav>
+      <div className="shrink-0 border-t border-border p-2">
+        {!collapsed && <p className="px-3 py-2 text-[11px] font-bold text-muted-foreground">الدعم والإعدادات</p>}
+        <button
+          type="button"
+          onClick={() => setHelpOpen((current) => !current)}
+          title="الدعم"
+          aria-expanded={helpOpen}
+          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-right text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <CircleHelp className="h-5 w-5 shrink-0" />
+          {!collapsed && <span>الدعم</span>}
+        </button>
+        {helpOpen && (
+          <div role="region" aria-label="إرشادات الدعم" className="mx-2 mb-2 rounded-lg border border-border bg-background p-3 text-xs leading-6 text-muted-foreground">
+            <p>يمكنك إدارة المشروع من المديولات الخمسة، والحفظ من شريط المشروع العلوي.</p>
+            <p>للإبلاغ عن مشكلة، اذكر اسم المديول والخطوة التي ظهرت فيها المشكلة.</p>
+          </div>
+        )}
+        <Link
+          to="/account"
+          title="الإعدادات"
+          className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-right text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Settings className="h-5 w-5 shrink-0" />
+          {!collapsed && <span>الإعدادات</span>}
+        </Link>
+      </div>
+    </aside>
+  );
+}
