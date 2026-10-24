@@ -15,18 +15,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci --no-audit --no-fund
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Check changed files formatting
-        run: npx prettier --check src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
+        run: pnpm exec prettier --check src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
       - name: ESLint (brand/auth/dashboard changes)
-        run: npx eslint src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
+        run: pnpm exec eslint src/lib/brand-assets.ts src/components/BrandLogo.tsx src/components/SiteHeader.tsx src/routes/index.tsx src/routes/auth.tsx src/routes/_authenticated/projects.tsx
       - name: Typescript
-        run: npx tsc --noEmit
+        run: pnpm exec tsc --noEmit
       - name: Tests
-        run: npm test
+        run: pnpm test
       - name: Build
-        run: npm run build
+        run: pnpm run build
