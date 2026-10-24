@@ -60,11 +60,20 @@ export function productToCameraSpec(product: ProductRow): CameraSpec | null {
   const vfov = positiveNumber(specs.vfov_deg) ?? positiveNumber(specs.vfov);
   const sensorFormat = typeof specs.sensor_format === "string" ? specs.sensor_format : undefined;
   const focalOptionsMm = Array.isArray(specs.focal_options_mm)
-    ? [...new Set(specs.focal_options_mm.map(positiveNumber).filter((value): value is number => value !== undefined))].sort((a, b) => a - b)
+    ? [
+        ...new Set(
+          specs.focal_options_mm
+            .map(positiveNumber)
+            .filter((value): value is number => value !== undefined),
+        ),
+      ].sort((a, b) => a - b)
     : undefined;
-  const opticsSourceUrl = typeof specs.optics_source_url === "string" && (specs.optics_source_url.startsWith("https://") || specs.optics_source_url.startsWith("http://"))
-    ? specs.optics_source_url
-    : undefined;
+  const opticsSourceUrl =
+    typeof specs.optics_source_url === "string" &&
+    (specs.optics_source_url.startsWith("https://") ||
+      specs.optics_source_url.startsWith("http://"))
+      ? specs.optics_source_url
+      : undefined;
   const opticsVerified = specs.optics_verified === true;
   const irRange = positiveNumber(specs.ir_range_m) ?? positiveNumber(specs.irRange) ?? 0;
   const poeWatt = positiveNumber(specs.poe_watt) ?? positiveNumber(specs.poeWatt) ?? 0;

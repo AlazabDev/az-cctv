@@ -7,10 +7,11 @@ export function cameraDeployment(device: Pick<PlacedDevice, "heightM" | "tilt">,
   const tilt = Math.min(89.9, Math.max(0, device.tilt));
   // Prefer manufacturer-verified vertical FOV; aspect-ratio approximation is
   // only a fallback for legacy products without complete optical information.
-  const vfov = spec.vfov && spec.vfov > 0 && spec.vfov < 180
-    ? spec.vfov
-    : (2 * Math.atan((Math.tan((spec.hfov * Math.PI) / 360) * spec.vres) / spec.hres) * 180) /
-      Math.PI;
+  const vfov =
+    spec.vfov && spec.vfov > 0 && spec.vfov < 180
+      ? spec.vfov
+      : (2 * Math.atan((Math.tan((spec.hfov * Math.PI) / 360) * spec.vres) / spec.hres) * 180) /
+        Math.PI;
   const distance = tilt > 0 ? height / Math.tan((tilt * Math.PI) / 180) : Infinity;
   const lower = Math.min(89.9, tilt + vfov / 2);
   const upper = tilt - vfov / 2;

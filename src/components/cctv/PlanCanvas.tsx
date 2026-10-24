@@ -263,7 +263,10 @@ export function PlanCanvas({
         return;
       }
 
-      if (mode === "wall" && (e.key === "Backspace" || (e.ctrlKey && e.key.toLowerCase() === "z"))) {
+      if (
+        mode === "wall" &&
+        (e.key === "Backspace" || (e.ctrlKey && e.key.toLowerCase() === "z"))
+      ) {
         e.preventDefault();
         onUndoWallPoint();
         return;
@@ -392,9 +395,7 @@ export function PlanCanvas({
         const now = Date.now();
         const last = lastRightClickRef.current;
         const isDouble = Boolean(
-          last &&
-          now - last.at <= 420 &&
-          Math.hypot(e.clientX - last.x, e.clientY - last.y) <= 12,
+          last && now - last.at <= 420 && Math.hypot(e.clientX - last.x, e.clientY - last.y) <= 12,
         );
         if (isDouble) {
           lastRightClickRef.current = null;
@@ -424,7 +425,10 @@ export function PlanCanvas({
   const snappedDraftPoint = useMemo(() => {
     if (mode !== "wall" || !hoverPoint || wallDraft.length === 0) return hoverPoint;
     const anchor = wallDraft.at(-1);
-    const candidate = orthogonalPreview || polarPreview ? hoverPoint : (nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint);
+    const candidate =
+      orthogonalPreview || polarPreview
+        ? hoverPoint
+        : (nearestWallAttachment(hoverPoint, plan.walls, snapThreshold) ?? hoverPoint);
     return snapWallPoint({
       point: polarPreview && anchor ? constrainPolar45(anchor, candidate) : candidate,
       anchor,
@@ -432,7 +436,16 @@ export function PlanCanvas({
       thresholdPlanUnits: snapThreshold,
       orthogonal: orthogonalPreview,
     });
-  }, [allWallPoints, hoverPoint, mode, orthogonalPreview, polarPreview, plan.walls, snapThreshold, wallDraft]);
+  }, [
+    allWallPoints,
+    hoverPoint,
+    mode,
+    orthogonalPreview,
+    polarPreview,
+    plan.walls,
+    snapThreshold,
+    wallDraft,
+  ]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (mode === "select") {
@@ -449,7 +462,10 @@ export function PlanCanvas({
     if (mode === "wall") {
       if (e.detail >= 2) return;
       const anchor = wallDraft.at(-1);
-      const candidate = e.shiftKey || e.altKey ? raw : (nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw);
+      const candidate =
+        e.shiftKey || e.altKey
+          ? raw
+          : (nearestWallAttachment(raw, plan.walls, snapThreshold) ?? raw);
       const point = snapWallPoint({
         point: e.altKey && !e.shiftKey && anchor ? constrainPolar45(anchor, candidate) : candidate,
         anchor,
@@ -648,10 +664,27 @@ export function PlanCanvas({
                 strokeLinecap="round"
               />
               {snappedDraftPoint && wallDraft.length > 0 && (
-                <g transform={`translate(${(wallDraft[wallDraft.length - 1]!.x + snappedDraftPoint.x) / 2} ${(wallDraft[wallDraft.length - 1]!.y + snappedDraftPoint.y) / 2}) scale(${1 / zoom})`} style={{ pointerEvents: "none" }}>
-                  <rect x={-38} y={-32} width={76} height={23} rx={5} fill="#030957" opacity={0.92}/>
+                <g
+                  transform={`translate(${(wallDraft[wallDraft.length - 1]!.x + snappedDraftPoint.x) / 2} ${(wallDraft[wallDraft.length - 1]!.y + snappedDraftPoint.y) / 2}) scale(${1 / zoom})`}
+                  style={{ pointerEvents: "none" }}
+                >
+                  <rect
+                    x={-38}
+                    y={-32}
+                    width={76}
+                    height={23}
+                    rx={5}
+                    fill="#030957"
+                    opacity={0.92}
+                  />
                   <text textAnchor="middle" y={-16} fontSize={12} fill="white">
-                    {(Math.hypot(snappedDraftPoint.x - wallDraft[wallDraft.length - 1]!.x, snappedDraftPoint.y - wallDraft[wallDraft.length - 1]!.y) / pxPerMeter).toFixed(2)} m
+                    {(
+                      Math.hypot(
+                        snappedDraftPoint.x - wallDraft[wallDraft.length - 1]!.x,
+                        snappedDraftPoint.y - wallDraft[wallDraft.length - 1]!.y,
+                      ) / pxPerMeter
+                    ).toFixed(2)}{" "}
+                    m
                   </text>
                 </g>
               )}
@@ -972,7 +1005,8 @@ export function PlanCanvas({
           )}
           {mode === "wall" ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
-              يمين: فصل الخط · سحب يمين: تحريك المخطط · يمين مرتين: الخروج من الحوائط · Shift: 90° · Alt: 45°
+              يمين: فصل الخط · سحب يمين: تحريك المخطط · يمين مرتين: الخروج من الحوائط · Shift: 90° ·
+              Alt: 45°
             </span>
           ) : selectedWall ? (
             <span className="rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground">
