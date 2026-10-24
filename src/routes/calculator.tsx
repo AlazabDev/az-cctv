@@ -29,11 +29,11 @@ export const Route = createFileRoute("/calculator")({
 const selectCls = "h-9 w-full rounded-md border border-input bg-background px-3 text-sm";
 
 function CalculatorPage() {
-  const [camId, setCamId] = useState(cameraCatalog[0]!.id);
+  const [camId, setCamId] = useState(cameraCatalog[0]?.id ?? "");
   const [distance, setDistance] = useState(10);
-  const cam = cameraCatalog.find((c) => c.id === camId)!;
-  const ppm = ppmAtDistance(cam, distance);
-  const level = ppmLevels.find((l) => ppm >= l.ppm);
+  const cam = cameraCatalog.find((c) => c.id === camId) ?? cameraCatalog[0];
+  const ppm = cam ? ppmAtDistance(cam, distance) : 0;
+  const level = cam ? ppmLevels.find((l) => ppm >= l.ppm) : undefined;
 
   const [count, setCount] = useState(8);
   const [bitrate, setBitrate] = useState(4);
@@ -57,9 +57,10 @@ function CalculatorPage() {
               <Label>الكاميرا</Label>
               <select
                 className={selectCls}
-                value={camId}
+                value={cam?.id ?? ""}
                 onChange={(e) => setCamId(e.target.value)}
               >
+                {cameraCatalog.length === 0 && <option value="">لا توجد كاميرات متاحة</option>}
                 {cameraCatalog.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
@@ -101,7 +102,7 @@ function CalculatorPage() {
                 <tr key={l.id} className="border-t border-border/50">
                   <td className="py-2">{l.label}</td>
                   <td>{l.ppm}</td>
-                  <td>{distanceForPpm(cam, l.ppm).toFixed(1)} م</td>
+                  <td>{cam ? distanceForPpm(cam, l.ppm).toFixed(1) : "—"} م</td>
                 </tr>
               ))}
             </tbody>
