@@ -32,5 +32,6 @@ jobs:
           git add src/components/cctv src/lib/cctv src/routes/catalog.tsx src/routes/calculator.tsx
           if ! git diff --cached --quiet; then
             git commit -m "style(cctv): apply repository prettier formatting"
+            git pull --rebase origin develop
             git push origin HEAD:develop
           fi
