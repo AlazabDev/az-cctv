@@ -66,7 +66,7 @@ import {
   type WallThicknessCm,
 } from "@/lib/cctv/types";
 
-type ModuleId = "plan" | "map" | "offer" | "topology";
+type ModuleId = "plan" | "topology" | "map" | "offer" | "agent";
 type DrawerId = "camera" | "device" | "wall" | "cable" | "annotation" | "layers" | null;
 type EditableRoomLabel = RoomLabel & { note?: string };
 type OfferFee = { id: string; label: string; amount: number };
@@ -89,11 +89,12 @@ const defaultOffer: OfferSettings = {
   lineOverrides: {},
 };
 
-const moduleItems = [
-  { id: "plan" as const, label: "Plan Design", icon: Layers3 },
-  { id: "map" as const, label: "Map Design", icon: Map },
-  { id: "offer" as const, label: "Offer List", icon: ShoppingCart },
-  { id: "topology" as const, label: "Topology", icon: Waypoints },
+const moduleItems: { id: ModuleId; label: string; icon: typeof Layers3 }[] = [
+  { id: "plan", label: "CCTV system", icon: Layers3 },
+  { id: "topology", label: "CCTV network", icon: Waypoints },
+  { id: "map", label: "CCTV maps", icon: Map },
+  { id: "offer", label: "CCTV cost", icon: ShoppingCart },
+  { id: "agent", label: "CCTV agent", icon: Layers3 },
 ];
 
 function uid() {
@@ -973,12 +974,16 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         />
       ) : activeModule === "topology" ? (
         <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
-      ) : (
+      ) : activeModule === "map" ? (
         <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
-      )}
-      {activeModule === "plan" && (
-        <div className="no-print fixed bottom-4 left-4 z-30">
-          <AutoDesignPanel
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" dir="rtl">
+          <h2 className="text-lg font-semibold">CCTV agent — مساعد تصميم المشروع</h2>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <AgentPanel projectId={projectId} projectName={name} />
+          </div>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <AutoDesignPanel
             proposals={aiProposals}
             coverage={aiCoverage}
             hint="يحلل الجدران والمقياس وارتفاع السقف ويقترح أقل عدد كاميرات يحقق مستوى التغطية، ثم يوصلها بأقرب سويتش/NVR عند الاعتماد."
