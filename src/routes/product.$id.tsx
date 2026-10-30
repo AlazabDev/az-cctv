@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { ArrowRight, ArrowUpLeft, CheckCircle2, ImageOff, Layers, Share2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { useDesignFromStore } from "@/hooks/use-design-from-store";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { compareStorageKey, productImages, productPrice, productTitle, isAvailable, trackStoreEvent, type StoreProduct } from "@/lib/store/catalog";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/product/$id")({
 
 function ProductPage(){
  const product=Route.useLoaderData() as StoreProduct|null;
+ const designFromStore=useDesignFromStore();
  const [selected,setSelected]=useState(0);
  const [broken,setBroken]=useState(false);
  const [saved,setSaved]=useState(false);
@@ -69,7 +71,7 @@ function ProductPage(){
      <div className="mt-4 flex items-center gap-2 text-sm font-semibold">{availability===true?<CheckCircle2 size={17} className="text-emerald-600"/>:<ShieldCheck size={17} className="text-slate-500"/>}<span>{availability===true?"متوفر بحسب آخر بيانات المورد":availability===false?"غير متوفر بحسب آخر بيانات المورد":"تحقق من التوفر قبل الطلب"}</span></div>
     </div>
     <div className="grid gap-3 sm:grid-cols-2">
-     <Link to="/calculator" onClick={()=>trackStoreEvent("designer_cta",product.id)} className="flex items-center justify-center gap-2 rounded-xl bg-[#FFB900] px-4 py-4 text-center text-sm font-black text-[#030957] transition hover:bg-[#ffd04c]"><Layers size={18}/> صمم نظامك الآن <ArrowUpLeft size={17}/></Link>
+     <button type="button" onClick={()=>void designFromStore(product.id)} className="flex items-center justify-center gap-2 rounded-xl bg-[#FFB900] px-4 py-4 text-center text-sm font-black text-[#030957] transition hover:bg-[#ffd04c]"><Layers size={18}/> استخدم هذا المنتج في تصميمي <ArrowUpLeft size={17}/></button>
      <button onClick={addCompare} className="rounded-xl border-2 border-[#030957] px-4 py-4 text-sm font-extrabold text-[#030957]">{saved?"تمت الإضافة للمقارنة ✓":"أضف للمقارنة"}</button>
     </div>
     <div className="mt-4 flex gap-3"><button onClick={()=>void share()} className="inline-flex items-center gap-2 text-sm font-semibold text-[#030957]"><Share2 size={16}/> مشاركة المنتج</button><Link to="/compare" className="inline-flex items-center gap-2 text-sm font-semibold text-[#030957]">قارن المنتجات <ArrowRight size={15}/></Link></div>
