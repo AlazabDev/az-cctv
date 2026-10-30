@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CatalogRouteImport } from './routes/catalog'
+import { Route as StoreRouteImport } from './routes/store'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
@@ -43,6 +44,11 @@ const CatalogRoute = CatalogRouteImport.update({
   path: '/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoreRoute = StoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
+  '/store': typeof StoreRoute
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
   '/projects': typeof AuthenticatedProjectsRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
+  '/store': typeof StoreRoute
   '/reset-password': typeof ResetPasswordRoute
   '/account': typeof AuthenticatedAccountRoute
   '/projects': typeof AuthenticatedProjectsRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
+  '/store': typeof StoreRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calculator'
     | '/catalog'
+    | '/store'
     | '/reset-password'
     | '/account'
     | '/projects'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calculator'
     | '/catalog'
+    | '/store'
     | '/reset-password'
     | '/account'
     | '/projects'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calculator'
     | '/catalog'
+    | '/store'
     | '/reset-password'
     | '/_authenticated/account'
     | '/_authenticated/projects'
@@ -136,6 +148,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CalculatorRoute: typeof CalculatorRoute
   CatalogRoute: typeof CatalogRoute
+  StoreRoute: typeof StoreRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/catalog'
       fullPath: '/catalog'
       preLoaderRoute: typeof CatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -228,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CalculatorRoute: CalculatorRoute,
   CatalogRoute: CatalogRoute,
+  StoreRoute: StoreRoute,
   ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
