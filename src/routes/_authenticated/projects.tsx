@@ -58,7 +58,7 @@ function ProjectsDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const [storeIds,setStoreIds]=useState<string[]>([]);
+  const [storeIds, setStoreIds] = useState<string[]>([]);
   useEffect(() => setStoreIds(readSelectedDesignProducts()), []);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
