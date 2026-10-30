@@ -449,6 +449,8 @@ export type Database = {
           id: string;
           image_name: string | null;
           image_url: string | null;
+          metadata: Json;
+          source_sheet: string | null;
           is_active: boolean;
           model: string;
           name_ar: string | null;
@@ -479,6 +481,8 @@ export type Database = {
           id?: string;
           image_name?: string | null;
           image_url?: string | null;
+          metadata?: Json;
+          source_sheet?: string | null;
           is_active?: boolean;
           model: string;
           name_ar?: string | null;
@@ -509,6 +513,8 @@ export type Database = {
           id?: string;
           image_name?: string | null;
           image_url?: string | null;
+          metadata?: Json;
+          source_sheet?: string | null;
           is_active?: boolean;
           model?: string;
           name_ar?: string | null;
