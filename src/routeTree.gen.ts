@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as StoreRouteImport } from './routes/store'
+import { Route as SitemapXmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -61,6 +62,11 @@ const ProductIdRoute = ProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapXmlRoute = SitemapXmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
+  '/sitemap.xml': typeof SitemapXmlRoute
   '/product/$id': typeof ProductIdRoute
   '/compare': typeof CompareRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
+  '/sitemap.xml': typeof SitemapXmlRoute
   '/product/$id': typeof ProductIdRoute
   '/compare': typeof CompareRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
+  '/sitemap.xml': typeof SitemapXmlRoute
   '/product/$id': typeof ProductIdRoute
   '/compare': typeof CompareRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/catalog'
     | '/store'
+    | '/sitemap.xml'
     | '/product/$id'
     | '/compare'
     | '/reset-password'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/catalog'
     | '/store'
+    | '/sitemap.xml'
     | '/product/$id'
     | '/compare'
     | '/reset-password'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/catalog'
     | '/store'
+    | '/sitemap.xml'
     | '/product/$id'
     | '/compare'
     | '/reset-password'
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   CalculatorRoute: typeof CalculatorRoute
   CatalogRoute: typeof CatalogRoute
   StoreRoute: typeof StoreRoute
+  SitemapXmlRoute: typeof SitemapXmlRoute
   ProductIdRoute: typeof ProductIdRoute
   CompareRoute: typeof CompareRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -236,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapXmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -289,6 +309,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalculatorRoute: CalculatorRoute,
   CatalogRoute: CatalogRoute,
   StoreRoute: StoreRoute,
+  SitemapXmlRoute: SitemapXmlRoute,
   ProductIdRoute: ProductIdRoute,
   CompareRoute: CompareRoute,
   ResetPasswordRoute: ResetPasswordRoute,
