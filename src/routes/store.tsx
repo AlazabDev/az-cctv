@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { compareStorageKey, productTitle, trackStoreEvent } from "@/lib/store/catalog";
-import { ArrowLeft, ArrowUpRight, Camera, ChevronLeft, ChevronRight, ImageOff, Layers3, Search, SlidersHorizontal, Wifi, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Camera, ChevronLeft, ChevronRight, ImageOff, Layers3, Search, SlidersHorizontal, Wifi } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -21,11 +21,6 @@ const PAGE_SIZE = 24;
 const money = (value: number | null, currency: string) =>
   value == null ? "السعر غير متاح" : new Intl.NumberFormat("ar-EG", { style: "currency", currency: currency || "EGP", maximumFractionDigits: 2 }).format(value);
 const names = (p: Product) => p.product_name || p.name_ar || p.name_en || [p.brand, p.model].filter(Boolean).join(" ");
-function gallery(p: Product): string[] {
-  const meta = p.metadata && typeof p.metadata === "object" && !Array.isArray(p.metadata) ? p.metadata : {};
-  const arr = "images" in meta && Array.isArray(meta.images) ? meta.images.filter((x): x is string => typeof x === "string" && /^https:\/\//.test(x)) : [];
-  return [...new Set([p.image_url, ...arr].filter((x): x is string => typeof x === "string" && /^https:\/\//.test(x)))];
-}
 function availability(p: Product): boolean | undefined {
   const m = p.metadata && typeof p.metadata === "object" && !Array.isArray(p.metadata) ? p.metadata : {};
   return "available" in m && typeof m.available === "boolean" ? m.available : undefined;
@@ -35,40 +30,6 @@ function ProductImage({ src, alt, className }: { src: string | undefined; alt: s
   useEffect(() => setFailed(false), [src]);
   return src && !failed ? <img src={src} alt={alt} className={className} loading="lazy" onError={() => setFailed(true)} /> :
     <span className="flex h-full w-full items-center justify-center text-slate-400"><ImageOff className="h-9 w-9" aria-label="الصورة غير متاحة" /></span>;
-}
-function ProductDetails({ product, onClose }: { product: Product; onClose: () => void }) {
-  const images = gallery(product);
-  const [current, setCurrent] = useState(0);
-  useEffect(() => { setCurrent(0); }, [product.id]);
-  useEffect(() => {
-    const keydown = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", keydown);
-    return () => document.removeEventListener("keydown", keydown);
-  }, [onClose]);
-  const stock = availability(product);
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#030957]/85 p-3 backdrop-blur-sm" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-    <section role="dialog" aria-modal="true" aria-label={names(product)} className="relative flex max-h-[94vh] w-full max-w-5xl flex-col overflow-y-auto rounded-3xl bg-white text-slate-900 shadow-2xl lg:flex-row" dir="rtl">
-      <button onClick={onClose} aria-label="إغلاق التفاصيل" className="absolute left-4 top-4 z-10 rounded-full bg-white/90 p-2 shadow"><X size={20}/></button>
-      <div className="w-full bg-slate-50 p-5 lg:w-1/2">
-        <div className="flex h-72 items-center justify-center rounded-2xl bg-white p-5 sm:h-96"><ProductImage key={images[current]} src={images[current]} alt={names(product)} className="max-h-full max-w-full object-contain"/></div>
-        {images.length > 1 && <div className="mt-3 flex gap-2 overflow-x-auto pb-2">{images.map((url, i) => <button key={url} onClick={() => setCurrent(i)} aria-label={`الصورة ${i + 1}`} className={`h-16 w-16 shrink-0 rounded-lg border-2 bg-white p-1 ${current === i ? "border-[#030957]" : "border-slate-200"}`}><ProductImage src={url} alt="" className="h-full w-full object-contain"/></button>)}</div>}
-        <div className="mt-2 text-center text-xs text-slate-500">{images.length ? `الصورة ${current + 1} من ${images.length}` : "لا توجد صور"}</div>
-      </div>
-      <div className="w-full p-6 sm:p-9 lg:w-1/2">
-        <div className="mb-4 text-xs font-bold tracking-wide text-[#36548d]">{product.brand || "معدات تقنية"} / {product.subcategory || product.category || "منتجات"}</div>
-        <h2 className="text-2xl font-black leading-snug">{names(product)}</h2>
-        <div dir="ltr" className="mt-3 text-right font-mono text-sm text-slate-500">{product.model}</div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-y border-slate-100 py-5">
-          <strong className="text-2xl text-[#030957]">{money(product.current_price, product.currency)}</strong>
-          <span className={`rounded-full px-3 py-1 text-xs font-bold ${stock === true ? "bg-emerald-50 text-emerald-700" : stock === false ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>{stock === true ? "متوفر لدى المورد" : stock === false ? "غير متوفر لدى المورد" : "التوفر غير مؤكد"}</span>
-        </div>
-        {product.sku && <p className="mt-4 text-xs text-slate-500">كود المورد: <span dir="ltr" className="font-mono">{product.sku}</span></p>}
-        <h3 className="mt-6 font-extrabold">الوصف والمواصفات</h3>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-8 text-slate-600">{product.description || "لا يوجد وصف تفصيلي لهذا المنتج."}</p>
-        {product.source_url && /^https:\/\/kimostore\.net\/products\//.test(product.source_url) && <a href={product.source_url} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#FFB900] px-5 py-3 text-sm font-extrabold text-[#030957]">صفحة المنتج لدى المورد <ArrowUpRight size={16}/></a>}
-      </div>
-    </section>
-  </div>;
 }
 function StorePage() {
   const [category, setCategory] = useState("all");
