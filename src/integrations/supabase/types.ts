@@ -535,114 +535,186 @@ export type Database = {
       }
       products: {
         Row: {
+          amazon_raw: Json
+          amazon_url: string | null
+          asin: string | null
+          availability: string
           brand: string | null
           category: string | null
           category_id: string | null
+          channels: number | null
           created_at: string
           currency: string
           current_price: number | null
           description: string | null
+          description_ar: string | null
+          description_en: string | null
           discount_percent: number | null
           featured: boolean
           form_factor: string | null
+          fts: unknown
+          highlights: string[]
           id: string
           image_name: string | null
           image_url: string | null
+          images: string[]
+          ir_range: number | null
           is_active: boolean
+          last_synced_at: string | null
+          lens: string | null
           metadata: Json
           model: string
           name_ar: string | null
           name_en: string | null
           old_price: number | null
+          poe_watts: number | null
+          ports: number | null
           power_type: string | null
           product_name: string | null
           product_type: string | null
+          protection_rating: string | null
           published: boolean
+          rating: number | null
+          resolution: string | null
+          review_count: number | null
           seo_description: string | null
           seo_title: string | null
           sku: string | null
           slug: string | null
+          sort_order: number
           source: string | null
           source_row: number | null
           source_sheet: string | null
           source_url: string | null
           specifications: Json
+          storage_tb: number | null
           subcategory: string | null
+          tags: string[]
           technology: string | null
+          title_ar: string | null
+          title_en: string | null
           updated_at: string
         }
         Insert: {
+          amazon_raw?: Json
+          amazon_url?: string | null
+          asin?: string | null
+          availability?: string
           brand?: string | null
           category?: string | null
           category_id?: string | null
+          channels?: number | null
           created_at?: string
           currency?: string
           current_price?: number | null
           description?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           discount_percent?: number | null
           featured?: boolean
           form_factor?: string | null
+          fts?: unknown
+          highlights?: string[]
           id?: string
           image_name?: string | null
           image_url?: string | null
+          images?: string[]
+          ir_range?: number | null
           is_active?: boolean
+          last_synced_at?: string | null
+          lens?: string | null
           metadata?: Json
           model: string
           name_ar?: string | null
           name_en?: string | null
           old_price?: number | null
+          poe_watts?: number | null
+          ports?: number | null
           power_type?: string | null
           product_name?: string | null
           product_type?: string | null
+          protection_rating?: string | null
           published?: boolean
+          rating?: number | null
+          resolution?: string | null
+          review_count?: number | null
           seo_description?: string | null
           seo_title?: string | null
           sku?: string | null
           slug?: string | null
+          sort_order?: number
           source?: string | null
           source_row?: number | null
           source_sheet?: string | null
           source_url?: string | null
           specifications?: Json
+          storage_tb?: number | null
           subcategory?: string | null
+          tags?: string[]
           technology?: string | null
+          title_ar?: string | null
+          title_en?: string | null
           updated_at?: string
         }
         Update: {
+          amazon_raw?: Json
+          amazon_url?: string | null
+          asin?: string | null
+          availability?: string
           brand?: string | null
           category?: string | null
           category_id?: string | null
+          channels?: number | null
           created_at?: string
           currency?: string
           current_price?: number | null
           description?: string | null
+          description_ar?: string | null
+          description_en?: string | null
           discount_percent?: number | null
           featured?: boolean
           form_factor?: string | null
+          fts?: unknown
+          highlights?: string[]
           id?: string
           image_name?: string | null
           image_url?: string | null
+          images?: string[]
+          ir_range?: number | null
           is_active?: boolean
+          last_synced_at?: string | null
+          lens?: string | null
           metadata?: Json
           model?: string
           name_ar?: string | null
           name_en?: string | null
           old_price?: number | null
+          poe_watts?: number | null
+          ports?: number | null
           power_type?: string | null
           product_name?: string | null
           product_type?: string | null
+          protection_rating?: string | null
           published?: boolean
+          rating?: number | null
+          resolution?: string | null
+          review_count?: number | null
           seo_description?: string | null
           seo_title?: string | null
           sku?: string | null
           slug?: string | null
+          sort_order?: number
           source?: string | null
           source_row?: number | null
           source_sheet?: string | null
           source_url?: string | null
           specifications?: Json
+          storage_tb?: number | null
           subcategory?: string | null
+          tags?: string[]
           technology?: string | null
+          title_ar?: string | null
+          title_en?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -874,6 +946,86 @@ export type Database = {
       assert_layout_ready_for_design: {
         Args: { p_layout_id: string }
         Returns: boolean
+      }
+      get_store_facets: { Args: { p_category?: string }; Returns: Json }
+      search_store_products: {
+        Args: {
+          p_brand?: string
+          p_category?: string
+          p_limit?: number
+          p_max_price?: number
+          p_min_price?: number
+          p_offset?: number
+          p_query?: string
+          p_resolution?: string
+        }
+        Returns: {
+          amazon_raw: Json
+          amazon_url: string | null
+          asin: string | null
+          availability: string
+          brand: string | null
+          category: string | null
+          category_id: string | null
+          channels: number | null
+          created_at: string
+          currency: string
+          current_price: number | null
+          description: string | null
+          description_ar: string | null
+          description_en: string | null
+          discount_percent: number | null
+          featured: boolean
+          form_factor: string | null
+          fts: unknown
+          highlights: string[]
+          id: string
+          image_name: string | null
+          image_url: string | null
+          images: string[]
+          ir_range: number | null
+          is_active: boolean
+          last_synced_at: string | null
+          lens: string | null
+          metadata: Json
+          model: string
+          name_ar: string | null
+          name_en: string | null
+          old_price: number | null
+          poe_watts: number | null
+          ports: number | null
+          power_type: string | null
+          product_name: string | null
+          product_type: string | null
+          protection_rating: string | null
+          published: boolean
+          rating: number | null
+          resolution: string | null
+          review_count: number | null
+          seo_description: string | null
+          seo_title: string | null
+          sku: string | null
+          slug: string | null
+          sort_order: number
+          source: string | null
+          source_row: number | null
+          source_sheet: string | null
+          source_url: string | null
+          specifications: Json
+          storage_tb: number | null
+          subcategory: string | null
+          tags: string[]
+          technology: string | null
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       snapshot_cctv_layout: {
         Args: { p_layout_id: string; p_reason?: string }
