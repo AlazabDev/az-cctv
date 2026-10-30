@@ -41,8 +41,8 @@ function QuotePage(){
    const validIds=new Set(validProducts.filter(p=>p.current_price!==null).map(p=>p.id));
    if(items.some(x=>!validIds.has(x.id)))throw new Error("سلتك تحتوي على منتج غير متاح للتسعير. راجع السلة أولًا.");
    if(new Set(validProducts.map(p=>p.currency)).size>1)throw new Error("لا يمكن إرسال منتجات بعملات مختلفة في نفس الطلب.");
-   const payload={p_contact:{name:name.trim(),phone:phone.trim(),email:email.trim(),company:company.trim(),notes:notes.trim()},p_items:items.map(item=>({id:item.id,quantity:item.quantity})),p_project_id:null};
-   const {data,error:submitError}=await supabase.rpc("submit_store_quotation" as never,payload as never);
+   const payload={p_contact:{name:name.trim(),phone:phone.trim(),email:email.trim(),company:company.trim(),notes:notes.trim()},p_items:items.map(item=>({id:item.id,quantity:item.quantity}))};
+   const {data,error:submitError}=await supabase.rpc("submit_store_quotation",payload);
    if(submitError)throw submitError;
    if(typeof data!=="string"||!data)throw new Error("لم يتم تأكيد تسجيل الطلب في قاعدة البيانات.");
    setQuoteId(data);trackStoreEvent("quote_request",items[0]?.id);
