@@ -1,5 +1,5 @@
 import {createClient} from "npm:@supabase/supabase-js@2";
-const endpoint=(Deno.env.get("AZURE_AGENT_ENDPOINT")||"").replace(/\/$/,"");
+const endpoint=(Deno.env.get("AZURE_AGENT_ENDPOINT")||"https://az-ai-resource.services.ai.azure.com/api/projects/az-ai-gateway").replace(/\/$/,"");
 const name=Deno.env.get("AZURE_COMMERCE_AGENT_NAME")||"az-agent-sol";
 const version=Deno.env.get("AZURE_COMMERCE_AGENT_VERSION")||"3";
 const cors={"Access-Control-Allow-Origin":Deno.env.get("AZCCTV_PUBLIC_ORIGIN")||"https://cctv.alazab.com","Access-Control-Allow-Headers":"authorization,apikey,content-type,x-client-info","Access-Control-Allow-Methods":"POST,OPTIONS","Content-Type":"application/json","Cache-Control":"no-store"};
