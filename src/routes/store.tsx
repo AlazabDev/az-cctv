@@ -5,6 +5,7 @@ import { compareStorageKey, productTitle, trackStoreEvent } from "@/lib/store/ca
 import { useStoreCart } from "@/hooks/use-store-cart";
 import { ArrowLeft, ArrowUpRight, Camera, ChevronLeft, ChevronRight, ImageOff, Layers3, Search, SlidersHorizontal, Wifi } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { CommerceAgentPanel } from "@/components/store/CommerceAgentPanel";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -124,6 +125,7 @@ function StorePage() {
       {totalPages > 1 && <nav aria-label="صفحات المنتجات" className="mt-10 flex flex-wrap items-center justify-center gap-4"><button disabled={page === 0} onClick={() => { setPage(p => Math.max(0,p-1)); window.scrollTo({top:320,behavior:"smooth"}); }} className="rounded-xl border border-slate-200 bg-white p-3 disabled:opacity-40" aria-label="الصفحة السابقة"><ChevronRight size={20}/></button><span className="text-sm font-bold text-[#030957]">صفحة {page+1} من {totalPages}</span><button disabled={page+1 >= totalPages} onClick={() => { setPage(p => p+1); window.scrollTo({top:320,behavior:"smooth"}); }} className="rounded-xl border border-slate-200 bg-white p-3 disabled:opacity-40" aria-label="الصفحة التالية"><ChevronLeft size={20}/></button></nav>}
       <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 py-7 text-sm text-slate-500"><p>AZ-CCTV · كتالوج هندسي لمنتجات أنظمة المراقبة والشبكات</p><Link to="/calculator" className="inline-flex items-center gap-2 font-bold text-[#030957]">انتقل إلى حاسبة التصميم <ArrowUpRight size={16}/></Link></div>
     </main>
+    <CommerceAgentPanel />
     <Link to="/cart" className="fixed bottom-4 right-4 z-40 rounded-2xl bg-[#FFB900] px-5 py-3 text-sm font-black text-[#030957] shadow-xl">سلة المعدات · {cart.count}</Link>
     {compareIds.length>0&&<aside className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl bg-[#030957] p-4 text-white shadow-2xl"><span className="text-sm font-bold">{compareIds.length} من 4 منتجات للمقارنة</span><Link to="/compare" className="rounded-xl bg-[#FFB900] px-4 py-2 text-sm font-black text-[#030957]">قارن الآن</Link></aside>}
   </div>;
