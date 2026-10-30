@@ -156,6 +156,12 @@ function LandingPage() {
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
+                  to="/store"
+                  className="inline-flex h-12 items-center gap-2 rounded-xl border border-[#FFB900]/60 px-6 text-sm font-black text-[#FFB900] transition hover:bg-[#FFB900]/10"
+                >
+                  تصفح متجر المعدات <ArrowUpLeft className="h-4 w-4" />
+                </Link>
+                <Link
                   to={destination}
                   className="inline-flex h-12 items-center gap-3 rounded-xl bg-[#FFB900] px-7 text-sm font-black text-[#030957] shadow-[0_12px_36px_rgba(255,185,0,.16)] transition hover:bg-[#ffd04b]"
                 >
@@ -295,10 +301,10 @@ function LandingPage() {
                 <h2 className="text-3xl font-black md:text-4xl">كل خطوة هندسية في مكان واحد</h2>
               </div>
               <Link
-                to="/catalog"
+                to="/store"
                 className="inline-flex items-center gap-2 text-sm font-bold text-[#030957] hover:underline"
               >
-                استعرض كتالوج الأجهزة <ArrowUpLeft className="h-4 w-4" />
+                استعرض متجر المنتجات <ArrowUpLeft className="h-4 w-4" />
               </Link>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -409,8 +415,8 @@ function LandingPage() {
             <Link to="/auth" className="hover:text-white">
               الحساب
             </Link>
-            <Link to="/catalog" className="hover:text-white">
-              الكتالوج
+            <Link to="/store" className="hover:text-white">
+              المتجر
             </Link>
             <Link to="/calculator" className="hover:text-white">
               الحاسبة
