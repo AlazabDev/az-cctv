@@ -64,8 +64,8 @@ create policy "store_quote_items_insert_draft_own" on public.store_quotation_ite
 create policy "store_quote_items_update_draft_own" on public.store_quotation_items for update to authenticated using(exists(select 1 from public.store_quotations q where q.id=quotation_id and q.user_id=(select auth.uid()) and q.status='draft')) with check(exists(select 1 from public.store_quotations q where q.id=quotation_id and q.user_id=(select auth.uid()) and q.status='draft'));
 create policy "store_quote_items_delete_draft_own" on public.store_quotation_items for delete to authenticated using(exists(select 1 from public.store_quotations q where q.id=quotation_id and q.user_id=(select auth.uid()) and q.status='draft'));
 -- Conversion ingestion deliberately stays server-side. Never grant INSERT to anon.
-grant select,insert,update on public.store_quotations to authenticated;
-grant select,insert,update,delete on public.store_quotation_items to authenticated;
+grant select on public.store_quotations to authenticated;
+grant select on public.store_quotation_items to authenticated;
 revoke all on public.store_conversion_events from anon,authenticated;
 grant all on public.store_conversion_events to service_role;
 -- Product specifications are shared but product identity remains unchanged.
@@ -74,7 +74,7 @@ comment on table public.store_conversion_events is 'Server-ingested, privacy-lim
 -- Submit a quotation atomically. Never trust prices or totals sent by the browser.
 create or replace function public.submit_store_quotation(
   p_contact jsonb, p_items jsonb, p_project_id uuid default null
-) returns uuid language plpgsql security invoker set search_path=public,pg_temp as $$
+) returns uuid language plpgsql security definer set search_path=public,pg_temp as $
 declare
   v_user uuid := auth.uid();
   v_quote uuid;
@@ -89,6 +89,9 @@ begin
   end if;
   if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) not between 1 and 50 then
     raise exception 'Select 1 to 50 products' using errcode='22023';
+  end if;
+  if (select count(*) from public.store_quotations where user_id=v_user and created_at > now()-interval '1 hour') >= 10 then
+    raise exception 'Hourly quote limit exceeded' using errcode='22023';
   end if;
   if p_project_id is not null and not exists(select 1 from public.cctv_projects p where p.id=p_project_id and p.user_id=v_user) then
     raise exception 'Project unavailable' using errcode='42501';
@@ -128,3 +131,7 @@ begin
 end;$$;
 revoke all on function public.submit_store_quotation(jsonb,jsonb,uuid) from public,anon;
 grant execute on function public.submit_store_quotation(jsonb,jsonb,uuid) to authenticated;
+
+-- Direct client writes are prohibited. Only the authenticated, validated RPC may write.
+revoke insert,update,delete on public.store_quotations from authenticated;
+revoke insert,update,delete on public.store_quotation_items from authenticated;
