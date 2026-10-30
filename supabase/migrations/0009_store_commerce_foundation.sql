@@ -128,7 +128,7 @@ begin
   join public.products p on p.id=r.id;
   update public.store_quotations set status='submitted',updated_at=now() where id=v_quote;
   return v_quote;
-end;$$;
+end;$store_quote_fn$;
 revoke all on function public.submit_store_quotation(jsonb,jsonb,uuid) from public,anon;
 grant execute on function public.submit_store_quotation(jsonb,jsonb,uuid) to authenticated;
 
