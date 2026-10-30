@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { readSelectedDesignProducts, STORE_DESIGN_SELECTION_KEY } from "@/hooks/use-design-from-store";
+import { trackStoreEvent } from "@/lib/store/catalog";
 import {
   ArrowLeft,
   ArrowUpLeft,
@@ -56,6 +58,8 @@ function ProjectsDashboard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [storeIds,setStoreIds]=useState<string[]>([]);
+  useEffect(()=>setStoreIds(readSelectedDesignProducts()),[]);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -116,6 +120,7 @@ function ProjectsDashboard() {
         .single();
       if (error || !data) throw error ?? new Error("تعذّر إنشاء المشروع");
       await qc.invalidateQueries({ queryKey: ["projects"] });
+      if(storeIds.length){trackStoreEvent("create_project",storeIds[0]);sessionStorage.setItem(STORE_DESIGN_SELECTION_KEY,JSON.stringify(storeIds));}
       navigate({ to: "/editor/$id", params: { id: data.id } });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذّر إنشاء المشروع");
@@ -145,6 +150,7 @@ function ProjectsDashboard() {
     <div className="min-h-screen bg-[#f5f7fb] text-[#030957]" dir="rtl">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-5 pb-20 pt-12">
+        {storeIds.length>0&&<section role="status" className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#FFB900]/40 bg-[#FFB900]/10 px-6 py-5"><div><strong className="text-base">منتجاتك المختارة من المتجر جاهزة</strong><p className="mt-1 text-sm text-slate-600">اخترت {storeIds.length} منتجًا. أنشئ مشروعًا أو افتح مشروعك الحالي لعرضها ضمن اختيارات التصميم، مع مراجعة المواصفات الهندسية قبل الاعتماد.</p></div><button type="button" onClick={()=>{sessionStorage.removeItem(STORE_DESIGN_SELECTION_KEY);setStoreIds([])}} className="rounded-lg border border-[#030957] px-4 py-2 text-sm font-bold">مسح الاختيار</button></section>}
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6 rounded-[28px] bg-[#030957] px-6 py-8 text-white shadow-[0_20px_60px_rgba(3,9,87,.14)] sm:px-9">
           <div className="flex items-center gap-5">
             {brandLogoUrl && (
