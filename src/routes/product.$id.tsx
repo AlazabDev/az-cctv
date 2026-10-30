@@ -72,7 +72,7 @@ function ProductPage(){
      <Link to="/calculator" onClick={()=>trackStoreEvent("designer_cta",product.id)} className="flex items-center justify-center gap-2 rounded-xl bg-[#FFB900] px-4 py-4 text-center text-sm font-black text-[#030957] transition hover:bg-[#ffd04c]"><Layers size={18}/> صمم نظامك الآن <ArrowUpLeft size={17}/></Link>
      <button onClick={addCompare} className="rounded-xl border-2 border-[#030957] px-4 py-4 text-sm font-extrabold text-[#030957]">{saved?"تمت الإضافة للمقارنة ✓":"أضف للمقارنة"}</button>
     </div>
-    <div className="mt-4 flex gap-3"><button onClick={()=>void share()} className="inline-flex items-center gap-2 text-sm font-semibold text-[#030957]"><Share2 size={16}/> مشاركة المنتج</button><Link to="/store/compare" className="inline-flex items-center gap-2 text-sm font-semibold text-[#030957]">قارن المنتجات <ArrowRight size={15}/></Link></div>
+    <div className="mt-4 flex gap-3"><button onClick={()=>void share()} className="inline-flex items-center gap-2 text-sm font-semibold text-[#030957]"><Share2 size={16}/> مشاركة المنتج</button><Link to="/compare" className="inline-flex items-center gap-2 text-sm font-semibold text-[#030957]">قارن المنتجات <ArrowRight size={15}/></Link></div>
     {product.sku&&<p className="mt-6 text-xs text-slate-500">SKU: <span dir="ltr" className="font-mono">{product.sku}</span></p>}
    </section>
   </div>
