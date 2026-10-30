@@ -74,7 +74,7 @@ comment on table public.store_conversion_events is 'Server-ingested, privacy-lim
 -- Submit a quotation atomically. Never trust prices or totals sent by the browser.
 create or replace function public.submit_store_quotation(
   p_contact jsonb, p_items jsonb, p_project_id uuid default null
-) returns uuid language plpgsql security definer set search_path=public,pg_temp as $
+) returns uuid language plpgsql security definer set search_path=public,pg_temp as $store_quote_fn$
 declare
   v_user uuid := auth.uid();
   v_quote uuid;
