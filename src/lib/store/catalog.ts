@@ -21,7 +21,7 @@ export function trackStoreEvent(event: string, productId?:string) {
   window.dispatchEvent(new CustomEvent("azcctv:store-event",{detail}));
   // Integrates with an existing site dataLayer when present; never stores personal identifiers.
   const target=window as Window & {dataLayer?: Array<Record<string,unknown>>};
-  target.dataLayer?.push({event:"store_"+event,...detail});
+  target.dataLayer?.push({...detail,event:"store_"+event});
  }catch{ /* analytics must never break shopping */ }
 }
 export const categoryName = (category:string) => category === "CCTV" ? "كاميرات وأنظمة مراقبة" : category === "Network" ? "معدات الشبكات" : category;
