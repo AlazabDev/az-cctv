@@ -11,7 +11,7 @@ export const Route = createFileRoute("/category/$slug")({
   const category=params.slug==="cctv"?"CCTV":params.slug==="network"?"Network":null;
   if(!category)return {category:null,products:[] as StoreProduct[],count:0,page:deps.page};
   const from=(deps.page-1)*24;
-  const {data,count,error}=await supabase.from("products").select("*",{count:"exact"}).eq("is_active",true).eq("category",category).order("brand").order("id").range(from,from+23);
+  const {data,count,error}=await supabase.from("products").select("*",{count:"exact"}).eq("is_active",true).eq("published",true).eq("category",category).order("brand").order("id").range(from,from+23);
   if(error)throw new Error("تعذر تحميل القسم");
   return {category,products:(data||[]) as StoreProduct[],count:count||0,page:deps.page};
  },
