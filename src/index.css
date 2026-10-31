@@ -1,0 +1,376 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AZ-CCTV Design System
+   Deep navy / gold / dark green on clean white — professional security-tech identity
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+
+    /* Deep navy primary */
+    --primary: 238 93% 18%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Light gray secondary */
+    --secondary: 0 0% 82%;
+    --secondary-foreground: 0 0% 8%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
+
+    /* Dark green accent */
+    --accent: 165 100% 20%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Gold */
+    --gold: 43 100% 50%;
+    --gold-foreground: 0 0% 5%;
+    --navy: 238 93% 18%;
+    --navy-light: 238 70% 30%;
+    --brand-green: 165 100% 20%;
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 238 93% 18%;
+
+    --radius: 0.25rem;
+
+    /* Legacy token aliases (mapped to brand palette) */
+    --terracotta: 43 100% 50%;
+    --terracotta-light: 43 100% 60%;
+    --warm-cream: 0 0% 100%;
+    --warm-taupe: 0 0% 60%;
+    --charcoal: 238 93% 18%;
+    --linen: 0 0% 96%;
+
+    /* Typography */
+    --font-serif: 'Cairo', system-ui, sans-serif;
+    --font-sans: 'Cairo', system-ui, sans-serif;
+
+    --sidebar-background: 238 93% 18%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 43 100% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 165 100% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 238 60% 28%;
+    --sidebar-ring: 43 100% 50%;
+  }
+
+  .dark {
+    --background: 238 93% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 238 60% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 238 93% 8%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 43 100% 50%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 238 40% 20%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 238 40% 16%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 165 90% 25%;
+    --accent-foreground: 0 0% 100%;
+
+    --gold: 43 100% 50%;
+    --gold-foreground: 0 0% 5%;
+    --navy: 238 93% 18%;
+    --navy-light: 238 70% 30%;
+    --brand-green: 165 90% 25%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 238 40% 22%;
+    --input: 238 40% 22%;
+    --ring: 43 100% 50%;
+
+    --terracotta: 43 100% 50%;
+    --terracotta-light: 43 100% 60%;
+    --warm-cream: 238 93% 8%;
+    --warm-taupe: 0 0% 55%;
+    --charcoal: 0 0% 95%;
+    --linen: 238 40% 14%;
+
+    --sidebar-background: 238 93% 8%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 43 100% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 165 90% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 238 40% 22%;
+    --sidebar-ring: 43 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-bold tracking-tight;
+  }
+
+  ::selection {
+    background: hsl(var(--gold) / 0.35);
+    color: hsl(var(--foreground));
+  }
+
+  /* Premium scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--warm-taupe) / 0.4);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--warm-taupe) / 0.6);
+  }
+}
+
+@layer components {
+  .container-narrow {
+    @apply max-w-5xl mx-auto px-6;
+  }
+
+  .container-wide {
+    @apply max-w-7xl mx-auto px-6;
+  }
+
+  .container-full {
+    @apply max-w-[1600px] mx-auto px-6 lg:px-12;
+  }
+
+  /* Editorial grid for products */
+  .editorial-grid {
+    @apply grid gap-8 md:gap-10;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  /* Elegant link underline animation */
+  .link-underline {
+    @apply relative;
+  }
+
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-px bg-current origin-left scale-x-0 transition-transform duration-500 ease-out;
+  }
+
+  [dir="rtl"] .link-underline::after {
+    @apply origin-right;
+  }
+
+  .link-underline:hover::after {
+    @apply scale-x-100;
+  }
+
+  /* Neutral texture background */
+  .bg-linen {
+    background-color: hsl(var(--linen));
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%239a9a9a' fill-opacity='0.08' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E");
+  }
+
+  /* Subtle hover lift */
+  .hover-lift {
+    @apply transition-all duration-500 ease-out;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+
+  /* Premium image reveal */
+  .image-reveal {
+    @apply overflow-hidden;
+  }
+
+  .image-reveal img {
+    @apply transition-transform duration-[1.2s] ease-out;
+  }
+
+  .image-reveal:hover img {
+    @apply scale-105;
+  }
+
+  /* Horizontal divider with style */
+  .divider-ornament {
+    @apply flex items-center gap-6;
+  }
+
+  .divider-ornament::before,
+  .divider-ornament::after {
+    content: '';
+    @apply flex-1 h-px bg-border;
+  }
+
+  /* Product card image swap */
+  .product-image-swap {
+    @apply relative overflow-hidden;
+  }
+
+  .product-image-swap .image-primary,
+  .product-image-swap .image-secondary {
+    @apply absolute inset-0 w-full h-full object-cover;
+  }
+
+  .product-image-swap .image-primary {
+    @apply transition-opacity duration-700 ease-out opacity-100;
+  }
+
+  .product-image-swap .image-secondary {
+    @apply transition-opacity duration-700 ease-out opacity-0;
+  }
+
+  .product-image-swap:hover .image-primary {
+    @apply opacity-0;
+  }
+
+  .product-image-swap:hover .image-secondary {
+    @apply opacity-100;
+  }
+
+  /* Marquee animation */
+  .marquee {
+    @apply flex overflow-hidden;
+  }
+
+  .marquee-content {
+    @apply flex shrink-0 animate-marquee;
+  }
+
+  /* Elegant button styles */
+  .btn-premium {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-premium::after {
+    content: '';
+    @apply absolute inset-0 bg-white/10 translate-y-full transition-transform duration-500 ease-out;
+  }
+
+  .btn-premium:hover::after {
+    @apply translate-y-0;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  .font-sans {
+    font-family: var(--font-sans);
+  }
+
+  /* Aspect ratios for editorial layouts */
+  .aspect-editorial {
+    aspect-ratio: 3/4;
+  }
+
+  .aspect-cinema {
+    aspect-ratio: 21/9;
+  }
+
+  .aspect-portrait {
+    aspect-ratio: 2/3;
+  }
+
+  /* Letter spacing utilities */
+  .tracking-editorial {
+    letter-spacing: 0.15em;
+  }
+}
+
+/* Keyframe animations */
+@keyframes stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ken-burns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes slow-reveal {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    clip-path: inset(0 0% 0 0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
