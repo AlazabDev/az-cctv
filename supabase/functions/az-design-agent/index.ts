@@ -195,7 +195,19 @@ const WALL_OPAQUE: Record<string, boolean> = {
   "thick-glass": false,
   fence: false,
 };
-const isOpaqueMaterial = (id: string) => WALL_OPAQUE[id] ?? true; // unknown material -> assume solid, safer default
+const isOpaqueMaterial = (id: string) => WALL_OPAQUE[id] ?? true; // unknown material -> assume solid, safer default\nasync function geometryFingerprint(plan: Record<string, unknown>): Promise<string> {
+  const source = JSON.stringify({
+    activeLayoutId: plan.activeLayoutId ?? null,
+    imageWidth: plan.imageWidth ?? null,
+    imageHeight: plan.imageHeight ?? null,
+    pxPerMeter: plan.pxPerMeter ?? null,
+    walls: plan.walls ?? [],
+    devices: plan.devices ?? [],
+  });
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 
 // ---------------------------------------------------------------------------
 // Deterministic geometry engine — mirror of src/lib/cctv/geometry.ts
@@ -397,6 +409,18 @@ function evaluatePlacement(args: PlacementArgs, ctx: SiteContext): PlacementResu
 // separate doors/openings data model, which the plan editor doesn't have yet).
 // ---------------------------------------------------------------------------
 function buildCandidates(plan: StoredPlan) {
+  // A proposal must target the exact geometry and active layout it was generated for.
+  // The multi-layout editor stores its active plan at the root for legacy readers,
+  // while keeping the authoritative per-floor record under layouts[].
+  const metadata = (proposal.metrics ?? {}) as Record<string, unknown>;
+  if (metadata.geometryFingerprint && metadata.geometryFingerprint !== await geometryFingerprint(plan)) {
+    return json({ error: "proposal_stale", detail: "المخطط تغيّر بعد توليد المقترح؛ أعد إنشاء المقترح." }, 409);
+  }
+  const multiLayout = Array.isArray(plan.layouts) && plan.layouts.length > 0;
+  const targetLayoutId = typeof metadata.activeLayoutId === "string" ? metadata.activeLayoutId : null;
+  if (multiLayout && (!targetLayoutId || plan.activeLayoutId !== targetLayoutId || !metadata.geometryFingerprint)) {
+    return json({ error: "layout_mismatch", detail: "المقترح غير مرتبط بإصدار المخطط النشط الحالي." }, 409);
+  }
   const pxPerMeter = plan.pxPerMeter || 40;
   const toM = (p: Pt) => ({ x: p.x / pxPerMeter, y: p.y / pxPerMeter });
   const points: { xM: number; yM: number; kind: string; hint?: string }[] = [];
@@ -856,6 +880,10 @@ async function handleGenerate(
       summary,
       cameras: verified,
       iterations: turn,
+      metrics: {
+        activeLayoutId: (plan as Record<string, unknown>).activeLayoutId ?? null,
+        geometryFingerprint: await geometryFingerprint(plan as unknown as Record<string, unknown>),
+      },
     })
     .select("*")
     .single();
@@ -953,7 +981,19 @@ async function handleApply(
       409,
     );
 
-  const nextData = { ...plan, devices: [...((plan as any).devices ?? []), ...newDevices] };
+  const nextDevices = [...((plan as any).devices ?? []), ...newDevices];
+  const nextData = {
+    ...plan,
+    devices: nextDevices,
+    ...(multiLayout
+      ? {
+          layouts: (plan.layouts as Array<Record<string, unknown>>).map((layout) =>
+            layout.id === targetLayoutId ? { ...layout, devices: nextDevices, planApproved: false } : layout
+          ),
+          planApproved: false,
+        }
+      : {}),
+  };
   const { error: updateErr } = await admin
     .from("cctv_projects")
     .update({ data: nextData })
