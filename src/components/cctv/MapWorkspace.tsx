@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cameraCatalog, cameraById } from "@/lib/cctv/catalog";
 import { distanceForPpm, ppmLevels } from "@/lib/cctv/geometry";
 import { sectorLatLngs, type MapCamera, type SiteMapData } from "@/lib/cctv/site-map";
+import { wirelessLinkAssessment, type GeoPoint } from "@/lib/cctv/wireless-links";
 
 const LEVEL_COLORS = ["#1e3a8a", "#3b82f6", "#22c55e", "#eab308"];
 
@@ -39,6 +40,10 @@ export function MapWorkspace({
   stateRef.current = siteMap;
   const [ready, setReady] = useState(false);
   const [placing, setPlacing] = useState(false);
+  const [placingLink, setPlacingLink] = useState(false);
+  const placingLinkRef = useRef(false);
+  placingLinkRef.current = placingLink;
+  const linkStartRef = useRef<GeoPoint | null>(null);
   const placingRef = useRef(false);
   placingRef.current = placing;
   const [specId, setSpecId] = useState(cameraCatalog[0]?.id ?? "");
@@ -99,6 +104,27 @@ export function MapWorkspace({
             ...cur,
             boundary: [...(cur.boundary ?? []), { lat: e.latlng.lat, lng: e.latlng.lng }],
           });
+          return;
+        }
+        if (placingLinkRef.current) {
+          const nextPoint = {lat:e.latlng.lat,lng:e.latlng.lng};
+          const first = linkStartRef.current;
+          if (!first) {
+            linkStartRef.current=nextPoint;
+            toast.info("اختر النقطة الثانية لإنشاء رابط PTP");
+          } else {
+            linkStartRef.current=null;
+            const link={
+              id:uid(),name:`PTP ${(cur.wirelessLinks?.length??0)+1}`,
+              from:first,to:nextPoint,frequencyGHz:5.8,heightFromM:6,heightToM:6
+            };
+            if (!wirelessLinkAssessment(link).valid) {
+              toast.error("رابط PTP غير صالح؛ تحقق من النقطتين");
+              return;
+            }
+            onChangeRef.current({...cur,wirelessLinks:[...(cur.wirelessLinks??[]),link]});
+            setPlacingLink(false);
+          }
           return;
         }
         if (!placingRef.current) return;
@@ -171,6 +197,15 @@ export function MapWorkspace({
         fillColor: "#f97316",
         fillOpacity: 1,
       }).addTo(layer);
+    }
+    for (const link of siteMap.wirelessLinks??[]) {
+      const assessment=wirelessLinkAssessment(link);
+      if(!assessment.valid)continue;
+      L.polyline([[link.from.lat,link.from.lng],[link.to.lat,link.to.lng]],{
+        color:"#0284c7",weight:3,dashArray:"8 6",interactive:false
+      }).addTo(layer);
+      L.circleMarker([link.from.lat,link.from.lng],{radius:5,color:"#0284c7",fillOpacity:1,interactive:false}).addTo(layer);
+      L.circleMarker([link.to.lat,link.to.lng],{radius:5,color:"#0284c7",fillOpacity:1,interactive:false}).addTo(layer);
     }
     for (const cam of siteMap.cameras) {
       const spec = cameraById(cam.specId);
@@ -358,6 +393,18 @@ export function MapWorkspace({
             <Camera className="h-4 w-4" />
             {placing ? "انقر على الخريطة لوضع كاميرا" : "إضافة كاميرا"}
           </Button>
+          <Button
+            size="sm"
+            variant={placingLink ? "default" : "outline"}
+            onClick={() => {
+              setPlacingLink((v) => !v);
+              linkStartRef.current = null;
+              setPlacing(false);
+              setDrawingBoundary(false);
+            }}
+          >
+            {placingLink ? "حدد نقطتي PTP" : "رابط لاسلكي PTP"}
+          </Button>
         </div>
         <div
           ref={containerRef}
@@ -432,6 +479,31 @@ export function MapWorkspace({
             <div className="text-lg font-bold">{totalCost.toLocaleString()}</div>
             <div className="text-xs text-muted-foreground">تكلفة الكاميرات</div>
           </div>
+        </div>
+
+        <div className="mt-5 space-y-3">
+          <h3 className="font-bold">روابط لاسلكية PTP</h3>
+          {(siteMap.wirelessLinks??[]).length===0 && <p className="text-xs text-muted-foreground">لا توجد روابط. اضغط PTP ثم اختر نقطتين على الخريطة.</p>}
+          {(siteMap.wirelessLinks??[]).map(link=>{
+            const assessment=wirelessLinkAssessment(link);
+            return <div key={link.id} className="rounded-lg border border-border p-3 text-xs">
+              <div className="flex items-center justify-between gap-2">
+                <strong>{link.name}</strong>
+                <Button size="sm" variant="ghost" aria-label={`حذف ${link.name}`} onClick={() => onChange({...siteMap,wirelessLinks:(siteMap.wirelessLinks??[]).filter(l=>l.id!==link.id)})}><Trash2 className="h-3 w-3"/></Button>
+              </div>
+              <p>المسافة: {assessment.valid ? assessment.distanceM.toFixed(1)+" م" : "غير صالحة"}</p>
+              <p>60% Fresnel: {assessment.minimumClearanceM?.toFixed(2)??"—"} م</p>
+              <label className="mt-2 block">التردد (GHz)
+                <Input type="number" min="0.1" step="0.1" value={link.frequencyGHz} onChange={e=>onChange({...siteMap,wirelessLinks:(siteMap.wirelessLinks??[]).map(l=>l.id===link.id?{...l,frequencyGHz:Number(e.target.value)}:l)})}/>
+              </label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {(["heightFromM","heightToM"] as const).map((field,i)=><label key={field}>ارتفاع الطرف {i+1} (م)
+                  <Input type="number" min="0.1" step="0.5" value={link[field]} onChange={e=>onChange({...siteMap,wirelessLinks:(siteMap.wirelessLinks??[]).map(l=>l.id===link.id?{...l,[field]:Number(e.target.value)}:l)})}/>
+                </label>)}
+              </div>
+              <p className="mt-2 text-amber-700">خط النظر وخلو منطقة Fresnel من العوائق غير معتمدين قبل رفع المناسيب وفحص الموقع.</p>
+            </div>;
+          })}
         </div>
 
         {selected && selSpec && (
