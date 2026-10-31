@@ -144,14 +144,14 @@ export const generateAiSiteDesign = createServerFn({method:"POST"})
       availableCameras,constraints
     };
     const endpoint=process.env["LOVABLE_AI_GATEWAY_URL"]??"https://ai.gateway.lovable.dev/v1/chat/completions";
-    const model=process.env["LOVABLE_AI_MODEL"]??"openai/gpt-6-astra";
+    const model=process.env["LOVABLE_AI_MODEL"]??"openai/gpt-5.5";
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),65_000);
     let result:Response;
     try{
       result=await fetch(endpoint,{method:"POST",
-        headers:{"Authorization":`Bearer ${key}`,"Content-Type":"application/json"},
-        body:JSON.stringify({model,temperature:0.2,response_format:{type:"json_object"},
+        headers:{"Authorization":`Bearer ${key}`,"Lovable-API-Key":key,"Content-Type":"application/json"},
+        body:JSON.stringify({model,response_format:{type:"json_object"},
           messages:[{role:"system",content:[
             "أنت مساعد تخطيط كاميرات مراقبة. EN 62676-4 / DORI إرشادات تصميم لا شهادة مطابقة.",
             "قدّم JSON فقط بمفتاحي summary و cameras. كل كاميرا: specId,xM,yM,rotationDeg,heightM,tiltDeg,targetDistanceM,rationale.",
