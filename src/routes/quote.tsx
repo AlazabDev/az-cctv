@@ -24,7 +24,7 @@ function QuotePage(){
   queryKey:["quote-products",items.map(x=>x.id).join(",")],
   queryFn:async()=>{
    if(!items.length)return [];
-   const {data,error}=await supabase.from("products").select("id,is_active,current_price,currency").eq("is_active",true).in("id",items.map(x=>x.id));
+   const {data,error}=await supabase.from("products").select("id,is_active,current_price,currency").eq("is_active",true).eq("published",true).in("id",items.map(x=>x.id));
    if(error)throw error;
    return data||[];
   },
