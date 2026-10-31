@@ -417,6 +417,8 @@ export function MapWorkspace({
               variant={drawingBoundary ? "default" : "secondary"}
               onClick={() => {
                 setPlacing(false);
+                setPlacingLink(false);
+                linkStartRef.current = null;
                 setDrawingBoundary((v) => !v);
               }}
             >
