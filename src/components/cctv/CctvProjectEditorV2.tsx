@@ -1022,7 +1022,13 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         ) : activeModule === "topology" ? (
           <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
         ) : activeModule === "map" ? (
-          <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
+          <MapWorkspace
+            siteMap={siteMap}
+            onChange={setSiteMap}
+            projectId={projectId}
+            layoutId={activeLayoutId}
+            onSave={() => persist()}
+          />
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" dir="rtl">
             <h2 className="text-lg font-semibold">CCTV agent — مساعد تصميم المشروع</h2>
