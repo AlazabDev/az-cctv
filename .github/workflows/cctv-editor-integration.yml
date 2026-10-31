@@ -26,4 +26,4 @@ jobs:
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - name: PTP and deployment deterministic tests
-        run: pnpm exec vitest run tests/wireless-ptp.engineering.test.ts tests/camera-optics.deployment.test.ts tests/plan-design.wall-editor.test.ts
+        run: npx --yes vitest@3.2.4 run tests/wireless-ptp.engineering.test.ts tests/camera-optics.deployment.test.ts tests/plan-design.wall-editor.test.ts
