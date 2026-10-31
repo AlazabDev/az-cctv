@@ -146,16 +146,24 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
 
   // Engineering-only wireless requirements; use real product IDs and verified prices
   // only after selecting matching catalogue-backed radio products.
-  for (const link of options.siteMap?.wirelessLinks??[]) {
-    const assessment=wirelessLinkAssessment(link);
-    if(!assessment.valid)continue;
+  for (const link of options.siteMap?.wirelessLinks ?? []) {
+    const assessment = wirelessLinkAssessment(link);
+    if (!assessment.valid) continue;
     lines.push({
-      label:`PTP radio endpoints — ${link.name} (${assessment.distanceM.toFixed(0)}m, ${link.frequencyGHz}GHz), model to be selected`,
-      qty:2, unit:"قطعة",unitPrice:0,total:0,source:"plan"
+      label: `PTP radio endpoints — ${link.name} (${assessment.distanceM.toFixed(0)}m, ${link.frequencyGHz}GHz), model to be selected`,
+      qty: 2,
+      unit: "قطعة",
+      unitPrice: 0,
+      total: 0,
+      source: "plan",
     });
     lines.push({
-      label:`PTP mounts — ${link.name}; LOS/clearance field survey required`,
-      qty:2,unit:"قطعة",unitPrice:0,total:0,source:"plan"
+      label: `PTP mounts — ${link.name}; LOS/clearance field survey required`,
+      qty: 2,
+      unit: "قطعة",
+      unitPrice: 0,
+      total: 0,
+      source: "plan",
     });
   }
 
