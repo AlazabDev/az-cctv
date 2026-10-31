@@ -14,7 +14,7 @@ export async function loadFeedProducts():Promise<FeedProduct[]>{
  const db=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});
  const products:FeedProduct[]=[];
  for(let offset=0;offset<100000;offset+=500){
-  const {data,error}=await db.from("products").select("id,product_name,name_en,brand,model,description,image_url,current_price,currency,metadata,category,is_active").eq("is_active",true).order("id").range(offset,offset+499);
+  const {data,error}=await db.from("products").select("id,product_name,name_en,brand,model,description,image_url,current_price,currency,metadata,category,is_active").eq("is_active",true).eq("published",true).order("id").range(offset,offset+499);
   if(error)throw new Error("Public catalog feed unavailable");
   products.push(...(data||[]));if(!data||data.length<500)break;
  }
