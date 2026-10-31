@@ -19,6 +19,7 @@ export function AiSiteDesignerPanel({projectId,layoutId,onSave,onPreview,onApply
   const [scope,setScope]=useState<Scope>("general");
   const [maxCameras,setMaxCameras]=useState(8);
   const [budget,setBudget]=useState("");
+  const [provisional,setProvisional]=useState(false);
   const [requirements,setRequirements]=useState("");
   const [feedback,setFeedback]=useState("");
   const [running,setRunning]=useState(false);
@@ -33,7 +34,7 @@ export function AiSiteDesignerPanel({projectId,layoutId,onSave,onPreview,onApply
     try{
       if(!await onSave())throw new Error("تعذّر حفظ أحدث المخطط قبل إرساله للتحليل");
       const result=await generateAiSiteDesign({data:{
-        projectId,layoutId,goal,scope,maxCameras,
+        projectId,layoutId,goal,scope,maxCameras,allowProvisionalOptics:provisional,
         ...(budget.trim()?{budget:Number(budget)}:{}),
         requirements,feedback:feedback||undefined,
       }});
@@ -73,6 +74,10 @@ export function AiSiteDesignerPanel({projectId,layoutId,onSave,onPreview,onApply
     </label>
     <label className="block text-xs font-semibold">ملاحظات إعادة التوليد
       <textarea value={feedback} maxLength={1200} rows={2} onChange={e=>setFeedback(e.target.value)} placeholder="مثال: قلل الكاميرات عند السور وركز على البوابة الشمالية" className="mt-1 w-full rounded-md border border-border bg-background p-2"/>
+    </label>
+    <label className="flex items-start gap-2 rounded-lg border border-amber-300 p-3 text-xs">
+      <input type="checkbox" checked={provisional} onChange={e=>setProvisional(e.target.checked)}/>
+      <span>السماح بتصميم أولي بكاميرات ذات مواصفات هندسية مكتملة لكن بدون إثبات مصدر البصريات من الداتا شيت. يتطلب مراجعة مهندس قبل الشراء والتنفيذ.</span>
     </label>
     <Button disabled={running||!layoutId} onClick={()=>void generate()} className="w-full bg-[#030957] text-white">
       {running?"جارٍ تحليل المخطط والتحقق من المقترحات…":proposals?"إعادة توليد وفق الملاحظات":"تحليل وتوليد تصميم"}
