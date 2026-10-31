@@ -41,6 +41,8 @@ import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
+import { FloorplanUploadDialog } from "@/components/cctv/FloorplanUploadDialog";
+import { CameraDeploymentDiagram } from "@/components/cctv/CameraDeploymentDiagram";
 import { AutoDesignPanel } from "@/components/cctv/AutoDesignPanel";
 import {
   autoCables,
@@ -200,8 +202,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [layoutDialogOpen, setLayoutDialogOpen] = useState(false);
   const [pendingLayoutName, setPendingLayoutName] = useState("");
   const [pendingCeilingHeight, setPendingCeilingHeight] = useState("3");
-  const [pendingLayoutFile, setPendingLayoutFile] = useState<File | null>(null);
-  const [uploadingLayout, setUploadingLayout] = useState(false);
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
@@ -350,7 +350,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setDialogTargetId(null);
     setPendingLayoutName(`Layout ${layouts.length + 1}`);
     setPendingCeilingHeight(String(plan.ceilingHeightM || 3));
-    setPendingLayoutFile(null);
     setLayoutDialogOpen(true);
   }
 
@@ -360,7 +359,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setDialogTargetId(id);
     setPendingLayoutName(target.layoutName || `Layout ${layouts.length}`);
     setPendingCeilingHeight(String(target.ceilingHeightM || 3));
-    setPendingLayoutFile(null);
     setLayoutDialogOpen(true);
   }
 
@@ -555,27 +553,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     toast.info("الخطوة الأولى: حدد نقطتي ضلع معلوم الطول على المخطط، ثم أدخل طوله الحقيقي بالمتر.");
     toast.success(`تم رفع المخطط «${layoutName}»`);
     return true;
-  }
-
-  async function confirmLayoutUpload() {
-    const layoutName = pendingLayoutName.trim();
-    const ceilingHeightM = Number(pendingCeilingHeight);
-    if (!layoutName) {
-      toast.error("اسم المخطط مطلوب");
-      return;
-    }
-    if (!Number.isFinite(ceilingHeightM) || ceilingHeightM <= 0) {
-      toast.error("ارتفاع السقف مطلوب ويجب أن يكون أكبر من صفر");
-      return;
-    }
-    if (!pendingLayoutFile) {
-      toast.error("اختر ملف المخطط أولاً");
-      return;
-    }
-    setUploadingLayout(true);
-    const ok = await uploadPlan(pendingLayoutFile, layoutName, ceilingHeightM);
-    setUploadingLayout(false);
-    if (ok) setLayoutDialogOpen(false);
   }
 
   function selectLayout(id: string) {
@@ -1166,95 +1143,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             </div>
           </div>
         )}
-        {layoutDialogOpen && (
-          <div
-            className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="layout-upload-title"
-          >
-            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl">
-              <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                <div>
-                  <h2 id="layout-upload-title" className="text-lg font-bold">
-                    {dialogTargetId ? "تحديث المخطط" : "إضافة مخطط جديد"}
-                  </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    حدد اسم المخطط وارتفاع السقف ثم اختر الملف. لا يبدأ الرفع قبل اكتمال البيانات.
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => !uploadingLayout && setLayoutDialogOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="space-y-4 p-5">
-                <div>
-                  <Label htmlFor="layout-name">اسم المخطط</Label>
-                  <Input
-                    id="layout-name"
-                    className="mt-1"
-                    value={pendingLayoutName}
-                    onChange={(event) => setPendingLayoutName(event.target.value)}
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ceiling-height">ارتفاع السقف</Label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <Input
-                      id="ceiling-height"
-                      type="number"
-                      min={0.1}
-                      step={0.1}
-                      value={pendingCeilingHeight}
-                      onChange={(event) => setPendingCeilingHeight(event.target.value)}
-                    />
-                    <span className="rounded-md border border-border bg-muted px-3 py-2 text-sm">
-                      m
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="layout-file">ملف المخطط</Label>
-                  <Input
-                    id="layout-file"
-                    className="mt-1"
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => setPendingLayoutFile(event.target.files?.[0] ?? null)}
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    PNG / JPG / WEBP — دعم PDF سيضاف عند ربط عارض PDF بالمحرر.
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
-                <Button
-                  variant="outline"
-                  disabled={uploadingLayout}
-                  onClick={() => setLayoutDialogOpen(false)}
-                >
-                  إلغاء
-                </Button>
-                <Button
-                  disabled={
-                    uploadingLayout ||
-                    !pendingLayoutName.trim() ||
-                    !pendingLayoutFile ||
-                    !(Number(pendingCeilingHeight) > 0)
-                  }
-                  onClick={() => void confirmLayoutUpload()}
-                >
-                  {uploadingLayout ? "جارٍ الرفع…" : "رفع المخطط"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <FloorplanUploadDialog
+          open={layoutDialogOpen}
+          onOpenChange={setLayoutDialogOpen}
+          initialName={pendingLayoutName}
+          initialHeight={pendingCeilingHeight}
+          replacing={dialogTargetId !== null}
+          onConfirm={uploadPlan}
+        />
       </div>
     </div>
   );
@@ -1723,6 +1619,7 @@ function DeviceProperties({
             ))}
             <p className="mt-2 text-muted-foreground">Scale: {plan.pxPerMeter.toFixed(2)} px/m</p>
           </div>
+          <CameraDeploymentDiagram device={device} spec={spec} />
         </>
       )}
       <Button
