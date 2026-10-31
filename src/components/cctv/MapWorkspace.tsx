@@ -68,6 +68,7 @@ export function MapWorkspace({
   const [gisSummary,setGisSummary]=useState("");
   const [gisGoal,setGisGoal]=useState<CoverageGoal>("recognize");
   const [gisMax,setGisMax]=useState(8);
+  const [gisProvisional,setGisProvisional]=useState(false);
   const [gisNotes,setGisNotes]=useState("");
   const [gisFeedback,setGisFeedback]=useState("");
   const [gisExcluded,setGisExcluded]=useState<string[]>([]);
@@ -79,6 +80,7 @@ export function MapWorkspace({
       if(!await onSave())throw new Error("تعذر حفظ خريطة الموقع قبل التحليل");
       const result=await generateAiSiteDesign({data:{
         projectId,layoutId,mode:"site",scope:"perimeter",goal:gisGoal,maxCameras:gisMax,
+        allowProvisionalOptics:gisProvisional,
         requirements:gisNotes,feedback:gisFeedback||undefined
       }});
       if("error" in result)throw new Error(String(result.error));
@@ -581,6 +583,10 @@ export function MapWorkspace({
           <label className="block text-xs">ملاحظات إعادة التصميم
             <textarea value={gisFeedback} onChange={e=>setGisFeedback(e.target.value)} maxLength={1200}
               rows={2} className="mt-1 w-full rounded border p-2" placeholder="قلل نقاط التثبيت في الجانب الغربي"/>
+          </label>
+          <label className="flex items-start gap-2 rounded-md border border-amber-300 p-2 text-xs">
+            <input type="checkbox" checked={gisProvisional} onChange={e=>setGisProvisional(e.target.checked)}/>
+            <span>السماح باستخدام مواصفات بصرية أولية غير موثّقة من الداتا شيت للمراجعة الهندسية فقط.</span>
           </label>
           <Button disabled={gisBusy} className="w-full bg-[#030957] text-white" onClick={()=>void generateGisProposal()}>
             {gisBusy?"جارٍ التحليل...":"اقتراح توزيع GIS عبر AI Gateway"}
