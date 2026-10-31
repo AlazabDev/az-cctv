@@ -12,7 +12,7 @@ export const Route = createFileRoute("/sitemap.xml")({
     const client=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
     const products:Array<{id:string;updated_at:string}>=[];
     for(let page=0;page<100;page++){
-      const {data,error}=await client.from("products").select("id,updated_at").eq("is_active",true).order("id").range(page*1000,page*1000+999);
+      const {data,error}=await client.from("products").select("id,updated_at").eq("is_active",true).eq("published",true).order("id").range(page*1000,page*1000+999);
       if(error)return new Response("Sitemap temporarily unavailable",{status:503});
       products.push(...(data||[]));
       if(!data||data.length<1000)break;
