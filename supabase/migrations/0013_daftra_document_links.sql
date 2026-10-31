@@ -1,6 +1,6 @@
 -- AZ-CCTV -> Daftra accounting document link and supplier procurement execution state.
 -- Preserve Daftra as accounting source of truth; do not clone invoice accounting.
-create table if not exists public.store_daftra_documents (
+alter table public.store_quotations add column if not exists approval_reference text;\ncreate table if not exists public.store_daftra_documents (
   id uuid primary key default gen_random_uuid(),
   quotation_id uuid not null references public.store_quotations(id) on delete restrict,
   kind text not null check(kind in ('estimate','invoice','purchase_order')),
