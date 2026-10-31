@@ -388,7 +388,7 @@ export function MapWorkspace({
           <Button
             size="sm"
             variant={placing ? "default" : "outline"}
-            onClick={() => setPlacing((v) => !v)}
+            onClick={() => { setPlacing((v) => !v); setPlacingLink(false); linkStartRef.current = null; setDrawingBoundary(false); }}
           >
             <Camera className="h-4 w-4" />
             {placing ? "انقر على الخريطة لوضع كاميرا" : "إضافة كاميرا"}
