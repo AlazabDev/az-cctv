@@ -271,8 +271,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     return { ...merged, devices: [...merged.devices, ...mapCamerasAsDevices(siteMap)] };
   }, [layouts, siteMap]);
   const boq = useMemo(
-    () => buildBoq(projectPlan, retention, { layouts, topology }),
-    [projectPlan, retention, layouts, topology],
+    () => buildBoq(projectPlan, retention, { layouts, topology, siteMap }),
+    [projectPlan, retention, layouts, topology, siteMap],
   );
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
