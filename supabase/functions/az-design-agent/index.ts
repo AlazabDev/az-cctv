@@ -195,7 +195,8 @@ const WALL_OPAQUE: Record<string, boolean> = {
   "thick-glass": false,
   fence: false,
 };
-const isOpaqueMaterial = (id: string) => WALL_OPAQUE[id] ?? true; // unknown material -> assume solid, safer default\nasync function geometryFingerprint(plan: Record<string, unknown>): Promise<string> {
+const isOpaqueMaterial = (id: string) => WALL_OPAQUE[id] ?? true; // unknown material -> assume solid, safer default
+async function geometryFingerprint(plan: Record<string, unknown>): Promise<string> {
   const source = JSON.stringify({
     activeLayoutId: plan.activeLayoutId ?? null,
     imageWidth: plan.imageWidth ?? null,
