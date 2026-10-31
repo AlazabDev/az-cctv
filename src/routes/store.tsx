@@ -52,7 +52,7 @@ function StorePage() {
       // All 1,030 records fit the lightweight facet projection; paginate to avoid Supabase's default 1,000 row cap.
       const found: Array<{ brand: string | null; category: string | null; subcategory: string | null }> = [];
       for (let offset = 0; ; offset += 1000) {
-        const { data, error } = await supabase.from("products").select("brand,category,subcategory").eq("is_active", true).range(offset, offset + 999);
+        const { data, error } = await supabase.from("products").select("brand,category,subcategory").eq("is_active", true).eq("published",true).range(offset, offset + 999);
         if (error) throw error;
         found.push(...(data || []));
         if (!data || data.length < 1000) break;
@@ -66,7 +66,7 @@ function StorePage() {
     queryFn: async () => {
       let query = supabase.from("products")
         .select("id,brand,model,sku,name_en,name_ar,product_name,description,product_type,category,subcategory,current_price,old_price,currency,image_url,is_active,source_url,metadata,specifications", { count: "exact" })
-        .eq("is_active", true);
+        .eq("is_active", true).eq("published",true);
       if (category !== "all") query = query.eq("category", category);
       if (brand !== "all") query = query.eq("brand", brand);
       if (subcat !== "all") query = query.eq("subcategory",subcat);
