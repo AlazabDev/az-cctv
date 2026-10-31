@@ -15,6 +15,8 @@ import {
   type TopologyData,
 } from "@/lib/cctv/topology";
 import type { PlanData } from "@/lib/cctv/types";
+import type { SiteMapData } from "@/lib/cctv/site-map";
+import { wirelessLinkAssessment } from "@/lib/cctv/wireless-links";
 
 export interface BoqLine {
   label: string;
@@ -31,6 +33,7 @@ export interface BoqLine {
 export interface BuildBoqOptions {
   layouts?: TopoLayout[];
   topology?: TopologyData;
+  siteMap?: SiteMapData;
 }
 
 function addCableMeters(target: Map<string, number>, typeId: string, meters: number) {
@@ -140,6 +143,29 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
       source: topology ? "topology-measured" : "plan",
     });
   });
+
+  // Engineering-only wireless requirements; use real product IDs and verified prices
+  // only after selecting matching catalogue-backed radio products.
+  for (const link of options.siteMap?.wirelessLinks ?? []) {
+    const assessment = wirelessLinkAssessment(link);
+    if (!assessment.valid) continue;
+    lines.push({
+      label: `PTP radio endpoints — ${link.name} (${assessment.distanceM.toFixed(0)}m, ${link.frequencyGHz}GHz), model to be selected`,
+      qty: 2,
+      unit: "قطعة",
+      unitPrice: 0,
+      total: 0,
+      source: "plan",
+    });
+    lines.push({
+      label: `PTP mounts — ${link.name}; LOS/clearance field survey required`,
+      qty: 2,
+      unit: "قطعة",
+      unitPrice: 0,
+      total: 0,
+      source: "plan",
+    });
+  }
 
   const totalBitrate = cameras.reduce(
     (sum, camera) => sum + (cameraById(camera.specId)?.bitrateMbps ?? 0),

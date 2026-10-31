@@ -38,9 +38,13 @@ import { CctvServiceSidebar } from "@/components/cctv/CctvServiceSidebar";
 import type { CctvService } from "@/lib/cctv/module-services";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
+import { AgentDesignReview } from "@/components/cctv/AgentDesignReview";
+import { AiSiteDesignerPanel } from "@/components/cctv/AiSiteDesignerPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
+import { FloorplanUploadDialog } from "@/components/cctv/FloorplanUploadDialog";
+import { CameraDeploymentDiagram } from "@/components/cctv/CameraDeploymentDiagram";
 import { AutoDesignPanel } from "@/components/cctv/AutoDesignPanel";
 import {
   autoCables,
@@ -200,8 +204,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [layoutDialogOpen, setLayoutDialogOpen] = useState(false);
   const [pendingLayoutName, setPendingLayoutName] = useState("");
   const [pendingCeilingHeight, setPendingCeilingHeight] = useState("3");
-  const [pendingLayoutFile, setPendingLayoutFile] = useState<File | null>(null);
-  const [uploadingLayout, setUploadingLayout] = useState(false);
 
   const { data: project, isLoading } = useQuery({
     queryKey: ["project", projectId],
@@ -271,8 +273,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     return { ...merged, devices: [...merged.devices, ...mapCamerasAsDevices(siteMap)] };
   }, [layouts, siteMap]);
   const boq = useMemo(
-    () => buildBoq(projectPlan, retention, { layouts, topology }),
-    [projectPlan, retention, layouts, topology],
+    () => buildBoq(projectPlan, retention, { layouts, topology, siteMap }),
+    [projectPlan, retention, layouts, topology, siteMap],
   );
   const suggestion = useMemo(() => suggestHardware(boq.cameras), [boq.cameras]);
 
@@ -281,7 +283,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       setLayouts((prev) =>
         prev.map((layout) =>
           layout.id === activeLayoutId
-            ? { ...layout, ...updater(layout), id: layout.id, floorplanPath: layout.floorplanPath }
+            ? { ...layout, ...updater(layout), planApproved: false, id: layout.id, floorplanPath: layout.floorplanPath }
             : layout,
         ),
       );
@@ -308,10 +310,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     if (!result.proposals.length) toast.error("لم يتم العثور على توزيع مناسب");
   }
 
-  function applyAutoDesign() {
-    if (!aiProposals?.length) return;
+  function applyAutoDesign(explicitProposals?: Proposal[]) {
+    const approved = explicitProposals ?? aiProposals;
+    if (!approved?.length) return;
     const cams = proposalsToDevices(
-      aiProposals,
+      approved,
       plan.pxPerMeter || 40,
       plan.devices.filter((d) => d.kind === "camera").length,
     );
@@ -350,7 +353,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setDialogTargetId(null);
     setPendingLayoutName(`Layout ${layouts.length + 1}`);
     setPendingCeilingHeight(String(plan.ceilingHeightM || 3));
-    setPendingLayoutFile(null);
     setLayoutDialogOpen(true);
   }
 
@@ -360,7 +362,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     setDialogTargetId(id);
     setPendingLayoutName(target.layoutName || `Layout ${layouts.length}`);
     setPendingCeilingHeight(String(target.ceilingHeightM || 3));
-    setPendingLayoutFile(null);
     setLayoutDialogOpen(true);
   }
 
@@ -530,7 +531,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const nextLayouts: ProjectLayout[] = dialogTargetId
       ? layouts.map((l) =>
           l.id === targetId
-            ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, ...size }
+            ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, planApproved: false, ...size }
             : l,
         )
       : [
@@ -555,27 +556,6 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     toast.info("الخطوة الأولى: حدد نقطتي ضلع معلوم الطول على المخطط، ثم أدخل طوله الحقيقي بالمتر.");
     toast.success(`تم رفع المخطط «${layoutName}»`);
     return true;
-  }
-
-  async function confirmLayoutUpload() {
-    const layoutName = pendingLayoutName.trim();
-    const ceilingHeightM = Number(pendingCeilingHeight);
-    if (!layoutName) {
-      toast.error("اسم المخطط مطلوب");
-      return;
-    }
-    if (!Number.isFinite(ceilingHeightM) || ceilingHeightM <= 0) {
-      toast.error("ارتفاع السقف مطلوب ويجب أن يكون أكبر من صفر");
-      return;
-    }
-    if (!pendingLayoutFile) {
-      toast.error("اختر ملف المخطط أولاً");
-      return;
-    }
-    setUploadingLayout(true);
-    const ok = await uploadPlan(pendingLayoutFile, layoutName, ceilingHeightM);
-    setUploadingLayout(false);
-    if (ok) setLayoutDialogOpen(false);
   }
 
   function selectLayout(id: string) {
@@ -657,6 +637,18 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       });
     persistQueueRef.current = queued;
     return queued;
+  }
+
+  async function approveActiveLayout(): Promise<boolean> {
+    if (!plan.imageWidth || !plan.imageHeight || !(plan.pxPerMeter > 0) || plan.walls.length === 0) {
+      toast.error("اعتماد الوكيل يتطلب مخططًا بأبعاد ومقياس حقيقي وجدران مرسومة");
+      return false;
+    }
+    const nextLayouts = layouts.map((layout) =>
+      layout.id === activeLayoutId ? { ...layout, planApproved: true } : layout,
+    );
+    setLayouts(nextLayouts);
+    return persist(nextLayouts, activeLayoutId);
   }
 
   async function save() {
@@ -920,6 +912,17 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           </div>
         </header>
 
+        {aiProposals?.length ? (
+          <div dir="rtl" className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-[#030957]/20 bg-[#030957]/5 px-4 py-2 text-xs">
+            <span>معاينة هندسية نشطة — {aiProposals.length} كاميرا مقترحة. لم تُحفظ الأجهزة بعد.</span>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("plan")}>عرض المقترحات على المخطط</Button>
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("agent")}>مراجعة أسباب الاختيار</Button>
+              <Button size="sm" onClick={() => { if(window.confirm("هل تعتمد تطبيق جميع الكاميرات الموجودة في المعاينة مع توليد مسارات الكابلات؟"))applyAutoDesign(); }}>اعتماد التوزيع</Button>
+              <Button size="sm" variant="ghost" onClick={() => setAiProposals(null)}>إلغاء المعاينة</Button>
+            </div>
+          </div>
+        ) : null}
         {activeModule === "plan" ? (
           <PlanDesignWorkspace
             layouts={layouts}
@@ -1019,13 +1022,29 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         ) : activeModule === "topology" ? (
           <TopologyWorkspace layouts={layouts} topology={topology} onChange={setTopology} />
         ) : activeModule === "map" ? (
-          <MapWorkspace siteMap={siteMap} onChange={setSiteMap} />
+          <MapWorkspace
+            siteMap={siteMap}
+            onChange={setSiteMap}
+            projectId={projectId}
+            layoutId={activeLayoutId}
+            onSave={() => persist()}
+          />
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5" dir="rtl">
             <h2 className="text-lg font-semibold">CCTV agent — مساعد تصميم المشروع</h2>
             <div className="rounded-xl border border-border bg-surface p-4">
               <AgentPanel projectId={projectId} projectName={name} />
             </div>
+            <AiSiteDesignerPanel
+              projectId={projectId}
+              layoutId={activeLayoutId}
+              proposals={aiProposals}
+              onSave={() => persist()}
+              onPreview={(next) => {setAiProposals(next);setActiveModule("plan");}}
+              onApply={(next) => applyAutoDesign(next)}
+              onReject={() => setAiProposals(null)}
+              onFocusPlan={() => setActiveModule("plan")}
+            />
             <div className="rounded-xl border border-border bg-surface p-4">
               <AutoDesignPanel
                 proposals={aiProposals}
@@ -1035,6 +1054,13 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 onApply={applyAutoDesign}
                 onReject={() => setAiProposals(null)}
                 onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+              />
+              <AgentDesignReview
+                projectId={projectId}
+                approved={Boolean((plan as PlanData & { planApproved?: boolean }).planApproved)}
+                onApprove={approveActiveLayout}
+                onBeforeGenerate={() => persist()}
+                onApplied={() => window.location.reload()}
               />
             </div>
           </div>
@@ -1166,95 +1192,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             </div>
           </div>
         )}
-        {layoutDialogOpen && (
-          <div
-            className="no-print fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="layout-upload-title"
-          >
-            <div className="w-full max-w-xl rounded-2xl border border-border bg-surface shadow-2xl">
-              <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                <div>
-                  <h2 id="layout-upload-title" className="text-lg font-bold">
-                    {dialogTargetId ? "تحديث المخطط" : "إضافة مخطط جديد"}
-                  </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    حدد اسم المخطط وارتفاع السقف ثم اختر الملف. لا يبدأ الرفع قبل اكتمال البيانات.
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => !uploadingLayout && setLayoutDialogOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="space-y-4 p-5">
-                <div>
-                  <Label htmlFor="layout-name">اسم المخطط</Label>
-                  <Input
-                    id="layout-name"
-                    className="mt-1"
-                    value={pendingLayoutName}
-                    onChange={(event) => setPendingLayoutName(event.target.value)}
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="ceiling-height">ارتفاع السقف</Label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <Input
-                      id="ceiling-height"
-                      type="number"
-                      min={0.1}
-                      step={0.1}
-                      value={pendingCeilingHeight}
-                      onChange={(event) => setPendingCeilingHeight(event.target.value)}
-                    />
-                    <span className="rounded-md border border-border bg-muted px-3 py-2 text-sm">
-                      m
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="layout-file">ملف المخطط</Label>
-                  <Input
-                    id="layout-file"
-                    className="mt-1"
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => setPendingLayoutFile(event.target.files?.[0] ?? null)}
-                  />
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    PNG / JPG / WEBP — دعم PDF سيضاف عند ربط عارض PDF بالمحرر.
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 border-t border-border px-5 py-4">
-                <Button
-                  variant="outline"
-                  disabled={uploadingLayout}
-                  onClick={() => setLayoutDialogOpen(false)}
-                >
-                  إلغاء
-                </Button>
-                <Button
-                  disabled={
-                    uploadingLayout ||
-                    !pendingLayoutName.trim() ||
-                    !pendingLayoutFile ||
-                    !(Number(pendingCeilingHeight) > 0)
-                  }
-                  onClick={() => void confirmLayoutUpload()}
-                >
-                  {uploadingLayout ? "جارٍ الرفع…" : "رفع المخطط"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        <FloorplanUploadDialog
+          open={layoutDialogOpen}
+          onOpenChange={setLayoutDialogOpen}
+          initialName={pendingLayoutName}
+          initialHeight={pendingCeilingHeight}
+          replacing={dialogTargetId !== null}
+          onConfirm={uploadPlan}
+        />
       </div>
     </div>
   );
@@ -1723,6 +1668,7 @@ function DeviceProperties({
             ))}
             <p className="mt-2 text-muted-foreground">Scale: {plan.pxPerMeter.toFixed(2)} px/m</p>
           </div>
+          <CameraDeploymentDiagram device={device} spec={spec} />
         </>
       )}
       <Button
