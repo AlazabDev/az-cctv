@@ -38,6 +38,7 @@ import { CctvServiceSidebar } from "@/components/cctv/CctvServiceSidebar";
 import type { CctvService } from "@/lib/cctv/module-services";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
+import { AgentDesignReview } from "@/components/cctv/AgentDesignReview";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
@@ -281,7 +282,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       setLayouts((prev) =>
         prev.map((layout) =>
           layout.id === activeLayoutId
-            ? { ...layout, ...updater(layout), id: layout.id, floorplanPath: layout.floorplanPath }
+            ? { ...layout, ...updater(layout), planApproved: false, id: layout.id, floorplanPath: layout.floorplanPath }
             : layout,
         ),
       );
@@ -528,7 +529,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const nextLayouts: ProjectLayout[] = dialogTargetId
       ? layouts.map((l) =>
           l.id === targetId
-            ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, ...size }
+            ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, planApproved: false, ...size }
             : l,
         )
       : [
@@ -634,6 +635,18 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       });
     persistQueueRef.current = queued;
     return queued;
+  }
+
+  async function approveActiveLayout(): Promise<boolean> {
+    if (!plan.imageWidth || !plan.imageHeight || !(plan.pxPerMeter > 0) || plan.walls.length === 0) {
+      toast.error("اعتماد الوكيل يتطلب مخططًا بأبعاد ومقياس حقيقي وجدران مرسومة");
+      return false;
+    }
+    const nextLayouts = layouts.map((layout) =>
+      layout.id === activeLayoutId ? { ...layout, planApproved: true } : layout,
+    );
+    setLayouts(nextLayouts);
+    return persist(nextLayouts, activeLayoutId);
   }
 
   async function save() {
@@ -1012,6 +1025,13 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 onApply={applyAutoDesign}
                 onReject={() => setAiProposals(null)}
                 onRemove={(id) => setAiProposals((p) => p?.filter((x) => x.id !== id) ?? null)}
+              />
+              <AgentDesignReview
+                projectId={projectId}
+                approved={Boolean((plan as PlanData & { planApproved?: boolean }).planApproved)}
+                onApprove={approveActiveLayout}
+                onBeforeGenerate={() => persist()}
+                onApplied={() => window.location.reload()}
               />
             </div>
           </div>
