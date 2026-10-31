@@ -9,7 +9,7 @@ type Props={
   projectId:string;layoutId:string;
   onSave:()=>Promise<boolean>;
   onPreview:(proposals:Proposal[])=>void;
-  onApply:()=>void;
+  onApply:(proposals:Proposal[])=>void;
   onReject:()=>void;
   onFocusPlan:()=>void;
   proposals:Proposal[]|null;
@@ -93,7 +93,7 @@ export function AiSiteDesignerPanel({projectId,layoutId,onSave,onPreview,onApply
         </div>)}
       </div>
       <div className="flex gap-2">
-        <Button disabled={!selected.length||running} onClick={()=>{if(window.confirm(`هل تعتمد إضافة ${selected.length} كاميرا إلى المشروع مع حساب الكابلات وجدول الكميات؟`)){onPreview(selected);onApply()}}}>اعتماد الكاميرات المختارة</Button>
+        <Button disabled={!selected.length||running} onClick={()=>{if(window.confirm(`هل تعتمد إضافة ${selected.length} كاميرا إلى المشروع مع حساب الكابلات وجدول الكميات؟`)){onApply(selected)}}}>اعتماد الكاميرات المختارة</Button>
         <Button variant="outline" disabled={running} onClick={()=>{onReject();setExcluded([])}}>رفض المقترح</Button>
       </div>
     </div>}
