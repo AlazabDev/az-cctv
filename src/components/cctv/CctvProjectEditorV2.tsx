@@ -912,6 +912,17 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
           </div>
         </header>
 
+        {aiProposals?.length ? (
+          <div dir="rtl" className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-[#030957]/20 bg-[#030957]/5 px-4 py-2 text-xs">
+            <span>معاينة هندسية نشطة — {aiProposals.length} كاميرا مقترحة. لم تُحفظ الأجهزة بعد.</span>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("plan")}>عرض المقترحات على المخطط</Button>
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("agent")}>مراجعة أسباب الاختيار</Button>
+              <Button size="sm" onClick={() => { if(window.confirm("هل تعتمد تطبيق جميع الكاميرات الموجودة في المعاينة مع توليد مسارات الكابلات؟"))applyAutoDesign(); }}>اعتماد التوزيع</Button>
+              <Button size="sm" variant="ghost" onClick={() => setAiProposals(null)}>إلغاء المعاينة</Button>
+            </div>
+          </div>
+        ) : null}
         {activeModule === "plan" ? (
           <PlanDesignWorkspace
             layouts={layouts}
