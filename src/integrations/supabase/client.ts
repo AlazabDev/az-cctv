@@ -31,11 +31,19 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
+  // Browser-safe public configuration for the AZ-CCTV Supabase project.
+  // Lovable preview may not inject VITE_* variables even when the project
+  // has been connected externally. Both fallback values are PUBLIC credentials.
+  // Never put a service-role or sb_secret_* key here.
+  const serverEnv = typeof process !== "undefined" ? process.env : undefined;
+  const SUPABASE_URL =
+    import.meta.env["VITE_SUPABASE_URL"] ||
+    serverEnv?.["SUPABASE_URL"] ||
+    "https://jdnbtjplzbatowzbxqis.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY =
-    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"];
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    serverEnv?.["SUPABASE_PUBLISHABLE_KEY"] ||
+    "sb_publishable_ek2XcX2ERT4T5b1gOw3AXQ_CT8dkD_A";
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
