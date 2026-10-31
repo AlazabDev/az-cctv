@@ -2,8 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { compareStorageKey, productTitle, trackStoreEvent } from "@/lib/store/catalog";
+import { useStoreCart } from "@/hooks/use-store-cart";
 import { ArrowLeft, ArrowUpRight, Camera, ChevronLeft, ChevronRight, ImageOff, Layers3, Search, SlidersHorizontal, Wifi } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { CommerceAgentPanel } from "@/components/store/CommerceAgentPanel";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -32,6 +34,7 @@ function ProductImage({ src, alt, className }: { src: string | undefined; alt: s
     <span className="flex h-full w-full items-center justify-center text-slate-400"><ImageOff className="h-9 w-9" aria-label="الصورة غير متاحة" /></span>;
 }
 function StorePage() {
+  const cart = useStoreCart();
   const [category, setCategory] = useState("all");
   const [brand, setBrand] = useState("all");
   const [subcat, setSubcat] = useState("all");
@@ -49,7 +52,7 @@ function StorePage() {
       // All 1,030 records fit the lightweight facet projection; paginate to avoid Supabase's default 1,000 row cap.
       const found: Array<{ brand: string | null; category: string | null; subcategory: string | null }> = [];
       for (let offset = 0; ; offset += 1000) {
-        const { data, error } = await supabase.from("products").select("brand,category,subcategory").eq("is_active", true).range(offset, offset + 999);
+        const { data, error } = await supabase.from("products").select("brand,category,subcategory").eq("is_active", true).eq("published",true).range(offset, offset + 999);
         if (error) throw error;
         found.push(...(data || []));
         if (!data || data.length < 1000) break;
@@ -63,7 +66,7 @@ function StorePage() {
     queryFn: async () => {
       let query = supabase.from("products")
         .select("id,brand,model,sku,name_en,name_ar,product_name,description,product_type,category,subcategory,current_price,old_price,currency,image_url,is_active,source_url,metadata,specifications", { count: "exact" })
-        .eq("is_active", true);
+        .eq("is_active", true).eq("published",true);
       if (category !== "all") query = query.eq("category", category);
       if (brand !== "all") query = query.eq("brand", brand);
       if (subcat !== "all") query = query.eq("subcategory",subcat);
@@ -116,12 +119,14 @@ function StorePage() {
            <div className="relative flex aspect-square items-center justify-center bg-white p-4"><ProductImage src={p.image_url || undefined} alt={productTitle(p)} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"/><span className={`absolute right-3 top-3 rounded-full px-2 py-1 text-[10px] font-bold ${stock === true ? "bg-emerald-50 text-emerald-700" : stock === false ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>{stock === true ? "متوفر" : stock === false ? "غير متوفر" : "التوفر غير مؤكد"}</span></div>
            <div className="border-t border-slate-100 px-3 pt-3 sm:px-4 sm:pt-4"><p className="mb-2 text-xs font-bold text-[#42639a]">{p.brand || "—"}</p><h3 className="line-clamp-2 min-h-12 text-sm font-bold leading-6">{productTitle(p)}</h3><p className="mt-1 truncate font-mono text-[11px] text-slate-400" dir="ltr">{p.model}</p><div className="mt-4 flex items-end justify-between gap-1"><strong className="text-sm font-black text-[#030957] sm:text-base">{money(p.current_price,p.currency)}</strong><span className="rounded-full bg-[#FFB900] p-2 text-[#030957]"><ArrowLeft size={15}/></span></div></div>
           </Link>
-          <div className="mt-3 flex items-center justify-between border-t border-slate-100 px-3 py-3 sm:px-4"><button type="button" onClick={()=>toggleCompare(p.id)} className={`rounded-lg px-3 py-2 text-xs font-bold ${compareIds.includes(p.id)?"bg-[#030957] text-white":"bg-slate-100 text-[#030957]"}`}>{compareIds.includes(p.id)?"✓ تمت الإضافة":"أضف للمقارنة"}</button><Link to="/product/$id" params={{id:p.id}} className="text-xs font-bold text-[#030957]">التفاصيل</Link></div>
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-3 sm:px-4"><button type="button" onClick={()=>cart.add(p.id)} className="rounded-lg bg-[#FFB900] px-3 py-2 text-xs font-black text-[#030957]">أضف للسلة</button><button type="button" onClick={()=>toggleCompare(p.id)} className={`rounded-lg px-3 py-2 text-xs font-bold ${compareIds.includes(p.id)?"bg-[#030957] text-white":"bg-slate-100 text-[#030957]"}`}>{compareIds.includes(p.id)?"✓ تمت الإضافة":"أضف للمقارنة"}</button><Link to="/product/$id" params={{id:p.id}} className="text-xs font-bold text-[#030957]">التفاصيل</Link></div>
          </article>;
       })}</div>}
       {totalPages > 1 && <nav aria-label="صفحات المنتجات" className="mt-10 flex flex-wrap items-center justify-center gap-4"><button disabled={page === 0} onClick={() => { setPage(p => Math.max(0,p-1)); window.scrollTo({top:320,behavior:"smooth"}); }} className="rounded-xl border border-slate-200 bg-white p-3 disabled:opacity-40" aria-label="الصفحة السابقة"><ChevronRight size={20}/></button><span className="text-sm font-bold text-[#030957]">صفحة {page+1} من {totalPages}</span><button disabled={page+1 >= totalPages} onClick={() => { setPage(p => p+1); window.scrollTo({top:320,behavior:"smooth"}); }} className="rounded-xl border border-slate-200 bg-white p-3 disabled:opacity-40" aria-label="الصفحة التالية"><ChevronLeft size={20}/></button></nav>}
       <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 py-7 text-sm text-slate-500"><p>AZ-CCTV · كتالوج هندسي لمنتجات أنظمة المراقبة والشبكات</p><Link to="/calculator" className="inline-flex items-center gap-2 font-bold text-[#030957]">انتقل إلى حاسبة التصميم <ArrowUpRight size={16}/></Link></div>
     </main>
+    <CommerceAgentPanel />
+    <Link to="/cart" className="fixed bottom-4 right-4 z-40 rounded-2xl bg-[#FFB900] px-5 py-3 text-sm font-black text-[#030957] shadow-xl">سلة المعدات · {cart.count}</Link>
     {compareIds.length>0&&<aside className="fixed bottom-4 left-4 right-4 z-40 mx-auto flex max-w-xl items-center justify-between gap-3 rounded-2xl bg-[#030957] p-4 text-white shadow-2xl"><span className="text-sm font-bold">{compareIds.length} من 4 منتجات للمقارنة</span><Link to="/compare" className="rounded-xl bg-[#FFB900] px-4 py-2 text-sm font-black text-[#030957]">قارن الآن</Link></aside>}
   </div>;
 }

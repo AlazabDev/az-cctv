@@ -15,6 +15,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as StoreRouteImport } from './routes/store'
+import { Route as QuoteRouteImport } from './routes/quote'
+import { Route as CartRouteImport } from './routes/cart'
+import { Route as StoreFeedsMetaCsvRouteImport } from './routes/store.feeds.meta[.]csv'
+import { Route as StoreFeedsGoogleXmlRouteImport } from './routes/store.feeds.google[.]xml'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as SitemapXmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
@@ -73,6 +77,26 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoreFeedsGoogleXmlRoute = StoreFeedsGoogleXmlRouteImport.update({
+ id: '/store/feeds/google.xml',
+ path: '/store/feeds/google.xml',
+ getParentRoute: () => rootRouteImport,
+} as any)
+const StoreFeedsMetaCsvRoute = StoreFeedsMetaCsvRouteImport.update({
+ id: '/store/feeds/meta.csv',
+ path: '/store/feeds/meta.csv',
+ getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuoteRoute = QuoteRouteImport.update({
+  id: '/quote',
+  path: '/quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -100,6 +124,10 @@ export interface FileRoutesByFullPath {
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
+  '/quote': typeof QuoteRoute
+  '/cart': typeof CartRoute
+  '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
+  '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/sitemap.xml': typeof SitemapXmlRoute
   '/product/$id': typeof ProductIdRoute
@@ -115,6 +143,10 @@ export interface FileRoutesByTo {
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
+  '/quote': typeof QuoteRoute
+  '/cart': typeof CartRoute
+  '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
+  '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/sitemap.xml': typeof SitemapXmlRoute
   '/product/$id': typeof ProductIdRoute
@@ -132,6 +164,10 @@ export interface FileRoutesById {
   '/calculator': typeof CalculatorRoute
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
+  '/quote': typeof QuoteRoute
+  '/cart': typeof CartRoute
+  '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
+  '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
   '/category/$slug': typeof CategorySlugRoute
   '/sitemap.xml': typeof SitemapXmlRoute
   '/product/$id': typeof ProductIdRoute
@@ -149,6 +185,10 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/catalog'
     | '/store'
+    | '/quote'
+    | '/cart'
+    | '/store/feeds/meta.csv'
+    | '/store/feeds/google.xml'
     | '/category/$slug'
     | '/sitemap.xml'
     | '/product/$id'
@@ -164,6 +204,10 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/catalog'
     | '/store'
+    | '/quote'
+    | '/cart'
+    | '/store/feeds/meta.csv'
+    | '/store/feeds/google.xml'
     | '/category/$slug'
     | '/sitemap.xml'
     | '/product/$id'
@@ -180,6 +224,10 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/catalog'
     | '/store'
+    | '/quote'
+    | '/cart'
+    | '/store/feeds/meta.csv'
+    | '/store/feeds/google.xml'
     | '/category/$slug'
     | '/sitemap.xml'
     | '/product/$id'
@@ -197,6 +245,10 @@ export interface RootRouteChildren {
   CalculatorRoute: typeof CalculatorRoute
   CatalogRoute: typeof CatalogRoute
   StoreRoute: typeof StoreRoute
+  QuoteRoute: typeof QuoteRoute
+  CartRoute: typeof CartRoute
+  StoreFeedsMetaCsvRoute: typeof StoreFeedsMetaCsvRoute
+  StoreFeedsGoogleXmlRoute: typeof StoreFeedsGoogleXmlRoute
   CategorySlugRoute: typeof CategorySlugRoute
   SitemapXmlRoute: typeof SitemapXmlRoute
   ProductIdRoute: typeof ProductIdRoute
@@ -276,6 +328,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/store/feeds/google.xml': {
+      id: '/store/feeds/google.xml'
+      path: '/store/feeds/google.xml'
+      fullPath: '/store/feeds/google.xml'
+      preLoaderRoute: typeof StoreFeedsGoogleXmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store/feeds/meta.csv': {
+      id: '/store/feeds/meta.csv'
+      path: '/store/feeds/meta.csv'
+      fullPath: '/store/feeds/meta.csv'
+      preLoaderRoute: typeof StoreFeedsMetaCsvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quote': {
+      id: '/quote'
+      path: '/quote'
+      fullPath: '/quote'
+      preLoaderRoute: typeof QuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -329,6 +409,10 @@ const rootRouteChildren: RootRouteChildren = {
   CalculatorRoute: CalculatorRoute,
   CatalogRoute: CatalogRoute,
   StoreRoute: StoreRoute,
+  QuoteRoute: QuoteRoute,
+  CartRoute: CartRoute,
+  StoreFeedsMetaCsvRoute: StoreFeedsMetaCsvRoute,
+  StoreFeedsGoogleXmlRoute: StoreFeedsGoogleXmlRoute,
   CategorySlugRoute: CategorySlugRoute,
   SitemapXmlRoute: SitemapXmlRoute,
   ProductIdRoute: ProductIdRoute,

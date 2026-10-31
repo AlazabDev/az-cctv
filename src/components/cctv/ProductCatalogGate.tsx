@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { StoreDesignSelection } from "@/components/store/StoreDesignSelection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { CctvProjectEditorV2 } from "@/components/cctv/CctvProjectEditorV2";
@@ -53,6 +54,7 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
 
   return (
     <>
+      <StoreDesignSelection />
       {(!hasCamera || !hasNvrOrSwitch) && (
         <div
           role="alert"
