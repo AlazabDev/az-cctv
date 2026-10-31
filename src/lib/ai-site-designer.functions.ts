@@ -11,6 +11,7 @@ const schema = z.object({
   projectId: z.string().uuid(),
   layoutId: z.string().min(1).max(120),
   mode: z.enum(["floorplan","site"]).default("floorplan"),
+  allowProvisionalOptics: z.boolean().default(false),
   goal: z.enum(["detect", "observe", "recognize", "identify"]),
   scope: z.enum(["entrances", "corridors", "perimeter", "general"]),
   maxCameras: z.number().int().min(1).max(32),
@@ -67,7 +68,7 @@ function verifySite(p:P,spec:CameraSpec,poly:Point[],ppm:number) {
   const target={x:a.x+p.targetDistanceM*Math.cos(rot*Math.PI/180),
     y:a.y+p.targetDistanceM*Math.sin(rot*Math.PI/180)};
   if(!pointInPolygon(a,poly)||!pointInPolygon(target,poly)||p.heightM>15)return null;
-  if(!spec.engineeringReady||!spec.opticsVerified||p.targetDistanceM>distanceForPpm(spec,ppm))return null;
+  if(!spec.engineeringReady||p.targetDistanceM>distanceForPpm(spec,ppm))return null;
   const optical=cameraDeployment({heightM:p.heightM,tilt:p.tiltDeg},spec);
   if(optical.near>p.targetDistanceM||!Number.isFinite(optical.near))return null;
   return {id:crypto.randomUUID(),specId:spec.id,pos:a,rotation:rot,heightM:p.heightM,
@@ -109,14 +110,14 @@ export const generateAiSiteDesign = createServerFn({method:"POST"})
       .eq("is_active",true).eq("published",true).limit(1500);
     if(catalogError||!rows)return {error:"Product catalogue unavailable"};
     const catalog=buildProductCatalog(rows);
-    const specs=catalog.cameras.filter(s=>s.engineeringReady&&s.opticsVerified&&s.productId);
-    if(!specs.length)return {error:"No manufacturer-verified camera optics available"};
+    const specs=catalog.cameras.filter(s=>s.engineeringReady&&s.productId&&(s.opticsVerified||data.allowProvisionalOptics));
+    if(!specs.length)return {error:"No verified camera optics found. Enable provisional datasheet-pending profiles explicitly to test available engineering geometry."};
     const allowed=specs.slice(0,80);
     const ppm=GOAL_PPM[data.goal];
     const availableCameras=allowed.map(spec=>({
       specId:spec.id,model:spec.model,hres:spec.hres,vres:spec.vres,
       focalMm:spec.focal,hfovDeg:spec.hfov,vfovDeg:spec.vfov,
-      price:spec.price,irRangeM:spec.irRange
+      price:spec.price,irRangeM:spec.irRange,opticsVerified:spec.opticsVerified===true
     }));
     const constraints={goal:data.goal,minimumPPM:ppm,scope:data.scope,maxCameras:data.maxCameras,
       budget:data.budget,requirements:data.requirements,feedback:data.feedback};
@@ -192,7 +193,7 @@ export const generateAiSiteDesign = createServerFn({method:"POST"})
       }
       if(!siteProposals.length)return {error:"No GIS candidates passed boundary and optical validation"};
       return {summary:parsed.summary,proposals:[],siteProposals,checked:parsed.cameras.length,
-        warnings:["GIS line of sight, elevation and Fresnel clearance remain unverified."]};
+        warnings:["GIS line of sight, elevation and Fresnel clearance remain unverified.",...(data.allowProvisionalOptics?["Manufacturer optics provenance is unverified; preliminary design only."]:[])]};
     }
     const seen=new Set<string>(),proposals=[];
     for(const candidate of parsed.cameras.slice(0,data.maxCameras)){
@@ -210,5 +211,5 @@ export const generateAiSiteDesign = createServerFn({method:"POST"})
     }
     if(!proposals.length)return {error:"No camera candidates passed engineering verification"};
     return {summary:parsed.summary,proposals,siteProposals:[],checked:parsed.cameras.length,
-      warnings:["Indicative coverage only; verify installation heights, occlusions and optical datasheets on site."]};
+      warnings:["Indicative coverage only; verify installation heights, occlusions and optical datasheets on site.",...(data.allowProvisionalOptics?["Manufacturer optics provenance is unverified; preliminary design only."]:[])]};
   });
