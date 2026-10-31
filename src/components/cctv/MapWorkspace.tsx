@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { cameraCatalog, cameraById } from "@/lib/cctv/catalog";
 import { distanceForPpm, ppmLevels } from "@/lib/cctv/geometry";
 import { sectorLatLngs, type MapCamera, type SiteMapData } from "@/lib/cctv/site-map";
+import { generateAiSiteDesign } from "@/lib/ai-site-designer.functions";
 import { wirelessLinkAssessment, type GeoPoint } from "@/lib/cctv/wireless-links";
 
 const LEVEL_COLORS = ["#1e3a8a", "#3b82f6", "#22c55e", "#eab308"];
@@ -25,12 +26,16 @@ function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+type GisProposal={id:string;specId:string;lat:number;lng:number;bearing:number;heightM:number;
+  tilt:number;targetDistanceM:number;blindSpotM:number;ppmAtTarget:number;reason:string};
 export function MapWorkspace({
-  siteMap,
-  onChange,
+  siteMap, onChange, projectId, layoutId, onSave,
 }: {
   siteMap: SiteMapData;
   onChange: (next: SiteMapData) => void;
+  projectId:string;
+  layoutId:string;
+  onSave:()=>Promise<boolean>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
@@ -57,6 +62,44 @@ export function MapWorkspace({
     (Proposal & { lat: number; lng: number; bearing: number })[] | null
   >(null);
   const [aiCoverage, setAiCoverage] = useState(0);
+  const [gisProposals,setGisProposals]=useState<GisProposal[]|null>(null);
+  const [gisBusy,setGisBusy]=useState(false);
+  const [gisError,setGisError]=useState("");
+  const [gisSummary,setGisSummary]=useState("");
+  const [gisGoal,setGisGoal]=useState<CoverageGoal>("recognize");
+  const [gisMax,setGisMax]=useState(8);
+  const [gisNotes,setGisNotes]=useState("");
+  const [gisFeedback,setGisFeedback]=useState("");
+  const [gisExcluded,setGisExcluded]=useState<string[]>([]);
+  async function generateGisProposal(){
+    if(gisBusy)return;
+    if((siteMap.boundary??[]).length<3){setGisError("ارسم حدود الموقع أولًا");return}
+    setGisBusy(true);setGisError("");setGisProposals(null);setGisExcluded([]);
+    try{
+      if(!await onSave())throw new Error("تعذر حفظ خريطة الموقع قبل التحليل");
+      const result=await generateAiSiteDesign({data:{
+        projectId,layoutId,mode:"site",scope:"perimeter",goal:gisGoal,maxCameras:gisMax,
+        requirements:gisNotes,feedback:gisFeedback||undefined
+      }});
+      if("error" in result)throw new Error(String(result.error));
+      if(!result.siteProposals?.length)throw new Error("لم يُعتمد أي اقتراح لخريطة الموقع");
+      setGisProposals(result.siteProposals);
+      setGisSummary(result.summary);
+    }catch(err){setGisError(err instanceof Error?err.message:"تعذر التحليل")}
+    finally{setGisBusy(false)}
+  }
+  function applyGisProposal(){
+    const selected=(gisProposals??[]).filter(p=>!gisExcluded.includes(p.id));
+    if(!selected.length||!window.confirm(`اعتماد ${selected.length} كاميرا على خريطة الموقع وإضافتها إلى جدول الكميات؟`))return;
+    const newCameras:MapCamera[]=selected.map((p,i)=>({
+      id:p.id,specId:p.specId,name:`AI GIS Camera ${siteMap.cameras.length+i+1}`,
+      lat:p.lat,lng:p.lng,rotation:p.bearing,heightM:p.heightM
+    }));
+    onChange({...siteMap,cameras:[...siteMap.cameras,...newCameras]});
+    setGisProposals(null);setGisExcluded([]);
+    toast.success(`تمت إضافة ${newCameras.length} كاميرا؛ راجع الشبكة والتوصيلات المطلوبة`);
+  }
+
   const [query, setQuery] = useState(siteMap.address);
   const [latInput, setLatInput] = useState(siteMap.center?.lat.toFixed(6) ?? "");
   const [lngInput, setLngInput] = useState(siteMap.center?.lng.toFixed(6) ?? "");
@@ -207,6 +250,15 @@ export function MapWorkspace({
       L.circleMarker([link.from.lat,link.from.lng],{radius:5,color:"#0284c7",fillOpacity:1,interactive:false}).addTo(layer);
       L.circleMarker([link.to.lat,link.to.lng],{radius:5,color:"#0284c7",fillOpacity:1,interactive:false}).addTo(layer);
     }
+    for(const p of gisProposals??[]){
+      const spec=cameraById(p.specId);
+      if(!spec)continue;
+      L.polygon(sectorLatLngs(p.lat,p.lng,p.bearing,spec.hfov,p.targetDistanceM),{
+        color:"#FFB900",weight:2,fillOpacity:0.15,interactive:false,dashArray:"3 4",
+      }).addTo(layer);
+      L.circleMarker([p.lat,p.lng],{radius:9,color:"#030957",fillColor:"#FFB900",
+        fillOpacity:1,interactive:false,weight:2}).addTo(layer);
+    }
     for (const cam of siteMap.cameras) {
       const spec = cameraById(cam.specId);
       if (spec) {
@@ -241,7 +293,7 @@ export function MapWorkspace({
         });
       });
     }
-  }, [ready, siteMap, selectedId, proposals]);
+  }, [ready, siteMap, selectedId, proposals, gisProposals]);
 
   function generate(goal: CoverageGoal, maxCameras: number) {
     const boundary = siteMap.boundary ?? [];
@@ -508,6 +560,48 @@ export function MapWorkspace({
           })}
         </div>
 
+        <section className="mt-5 space-y-3 rounded-lg border border-[#030957]/20 p-3" dir="rtl">
+          <h3 className="font-bold text-[#030957]">AI Site Designer — مخطط GIS</h3>
+          <p className="text-xs text-muted-foreground">حلل حدود الموقع مع الكتالوج المعتمد ثم راجع مواقع الكاميرات قبل إضافتها.</p>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="text-xs">مستوى التغطية
+              <select value={gisGoal} onChange={e=>setGisGoal(e.target.value as CoverageGoal)} className="mt-1 w-full rounded border p-2">
+                <option value="detect">كشف 25 PPM</option><option value="observe">ملاحظة 63 PPM</option>
+                <option value="recognize">تعرف 125 PPM</option><option value="identify">تمييز 250 PPM</option>
+              </select>
+            </label>
+            <label className="text-xs">الحد الأقصى
+              <Input type="number" min={1} max={32} value={gisMax} onChange={e=>setGisMax(Math.max(1,Math.min(32,Number(e.target.value)||1)))}/>
+            </label>
+          </div>
+          <label className="block text-xs">أولويات المنطقة
+            <textarea value={gisNotes} onChange={e=>setGisNotes(e.target.value)} maxLength={1600}
+              rows={2} className="mt-1 w-full rounded border p-2" placeholder="بوابة، سور، مناطق حساسة، اتجاهات الحركة"/>
+          </label>
+          <label className="block text-xs">ملاحظات إعادة التصميم
+            <textarea value={gisFeedback} onChange={e=>setGisFeedback(e.target.value)} maxLength={1200}
+              rows={2} className="mt-1 w-full rounded border p-2" placeholder="قلل نقاط التثبيت في الجانب الغربي"/>
+          </label>
+          <Button disabled={gisBusy} className="w-full bg-[#030957] text-white" onClick={()=>void generateGisProposal()}>
+            {gisBusy?"جارٍ التحليل...":"اقتراح توزيع GIS عبر AI Gateway"}
+          </Button>
+          {gisError&&<p role="alert" className="rounded bg-red-50 p-2 text-xs text-red-700">{gisError}</p>}
+          {gisProposals&&<div className="space-y-2">
+            {gisSummary&&<p className="text-xs">{gisSummary}</p>}
+            {gisProposals.map(p=><label key={p.id} className="block rounded border p-2 text-xs">
+              <span className="flex gap-2"><input type="checkbox" checked={!gisExcluded.includes(p.id)}
+                onChange={e=>setGisExcluded(v=>e.target.checked?v.filter(id=>id!==p.id):[...v,p.id])}/>
+                <strong>{cameraById(p.specId)?.model??p.specId}</strong></span>
+              <span className="block">الاتجاه {p.bearing.toFixed(0)}° · {p.ppmAtTarget} PPM · ارتفاع {p.heightM}م</span>
+              <span className="block text-muted-foreground">{p.reason}</span>
+            </label>)}
+            <div className="flex gap-2">
+              <Button disabled={gisBusy||gisProposals.every(p=>gisExcluded.includes(p.id))} onClick={applyGisProposal}>اعتماد المختار</Button>
+              <Button variant="outline" onClick={()=>setGisProposals(null)}>رفض</Button>
+            </div>
+          </div>}
+          <p className="text-xs text-amber-800">المعاينة لا تثبت خط النظر أو الارتفاعات والتضاريس؛ راجعها ميدانيًا.</p>
+        </section>
         {selected && selSpec && (
           <div className="mt-4 space-y-2 rounded-lg border border-primary/40 p-3">
             <Input
