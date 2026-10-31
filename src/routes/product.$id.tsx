@@ -9,7 +9,7 @@ import { compareStorageKey, productImages, productPrice, productTitle, isAvailab
 
 export const Route = createFileRoute("/product/$id")({
  loader: async ({ params }) => {
-  const {data,error}=await supabase.from("products").select("*").eq("id",params.id).eq("is_active",true).maybeSingle();
+  const {data,error}=await supabase.from("products").select("*").eq("id",params.id).eq("is_active",true).eq("published",true).maybeSingle();
   if(error) throw new Error("تعذر جلب بيانات المنتج");
   return data;
  },
