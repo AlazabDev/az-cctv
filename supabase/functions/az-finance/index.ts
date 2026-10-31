@@ -75,7 +75,7 @@ Deno.serve(async(req)=>{
       const {data:estimate}=await db.from("store_daftra_documents").select("id").eq("quotation_id",quote.id).eq("kind","estimate").eq("status","confirmed").maybeSingle();
       if(!estimate)return respond({error:"A confirmed Daftra estimate is required before acceptance"},409);
       if(env("DAFTRA_FINANCE_WRITES_ENABLED")!=="true")return respond({error:"Finance writes are disabled"},503);
-      const {error}=await db.from("store_quotations").update({status:"accepted",notes:`Approval reference: ${input.approval_reference.trim()}\n${quote.customer_name||""}`}).eq("id",quote.id).neq("status","accepted");
+      const {error}=await db.from("store_quotations").update({status:"accepted",approval_reference:input.approval_reference.trim()}).eq("id",quote.id).neq("status","accepted");
       return error?respond({error:"Could not record approval"},500):respond({status:"accepted"});
     }
     if(input.action!=="create_document")return respond({error:"Unsupported action"},400);
