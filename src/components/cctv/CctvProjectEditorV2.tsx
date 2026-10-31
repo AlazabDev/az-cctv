@@ -39,6 +39,7 @@ import type { CctvService } from "@/lib/cctv/module-services";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { AgentDesignReview } from "@/components/cctv/AgentDesignReview";
+import { AiSiteDesignerPanel } from "@/components/cctv/AiSiteDesignerPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
@@ -309,10 +310,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     if (!result.proposals.length) toast.error("لم يتم العثور على توزيع مناسب");
   }
 
-  function applyAutoDesign() {
-    if (!aiProposals?.length) return;
+  function applyAutoDesign(explicitProposals?: Proposal[]) {
+    const approved = explicitProposals ?? aiProposals;
+    if (!approved?.length) return;
     const cams = proposalsToDevices(
-      aiProposals,
+      approved,
       plan.pxPerMeter || 40,
       plan.devices.filter((d) => d.kind === "camera").length,
     );
@@ -1016,6 +1018,16 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             <div className="rounded-xl border border-border bg-surface p-4">
               <AgentPanel projectId={projectId} projectName={name} />
             </div>
+            <AiSiteDesignerPanel
+              projectId={projectId}
+              layoutId={activeLayoutId}
+              proposals={aiProposals}
+              onSave={() => persist()}
+              onPreview={(next) => {setAiProposals(next);setActiveModule("plan");}}
+              onApply={(next) => applyAutoDesign(next)}
+              onReject={() => setAiProposals(null)}
+              onFocusPlan={() => setActiveModule("plan")}
+            />
             <div className="rounded-xl border border-border bg-surface p-4">
               <AutoDesignPanel
                 proposals={aiProposals}
