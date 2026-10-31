@@ -8,7 +8,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.0";
 type DocKind = "estimate"|"invoice"|"purchase_order";
 type Supplier = "none"|"kimo"|"amazon";
 type Input = {
-  action?: "create_document"|"documents"|"approve_quotation";
+  action?: "create_document"|"documents"|"approve_quotation"|"list_quotations"|"quotation";
   quotation_id?: string; kind?: DocKind; supplier?: Supplier;
   client_id?: number; supplier_id?: number;
   send?: "draft"|"direct"; approval_reference?: string;
@@ -62,9 +62,21 @@ Deno.serve(async(req)=>{
     if(roles.role!=="admin"&&roles.role!=="super_admin"&&roles.is_admin!==true)return respond({error:"Finance admin permission required"},403);
     const db=createClient(url,secret,{auth:{persistSession:false}});
     const input=await req.json() as Input;
+    if(input.action==="list_quotations"){
+      const {data,error}=await db.from("store_quotations").select("id,status,customer_name,company,currency,total,created_at,approval_reference").order("created_at",{ascending:false}).limit(50);
+      return error?respond({error:"Unable to list quotations"},500):respond({quotations:data});
+    }
     if(!input.quotation_id||!uuid.test(input.quotation_id))return respond({error:"Invalid quotation_id"},400);
     const {data:quote,error:qerr}=await db.from("store_quotations").select("id,status,user_id,currency,customer_name").eq("id",input.quotation_id).single();
     if(qerr||!quote)return respond({error:"Quotation not found"},404);
+    if(input.action==="quotation"){
+      const [{data:items,error:itemsError},{data:docs,error:docsError}]=await Promise.all([
+        db.from("store_quotation_items").select("id,product_id,product_name,quantity,unit_price,currency").eq("quotation_id",quote.id),
+        db.from("store_daftra_documents").select("id,kind,supplier_source,daftra_id,daftra_number,status,created_at,last_error").eq("quotation_id",quote.id).order("created_at")
+      ]);
+      if(itemsError||docsError)return respond({error:"Unable to read finance details"},500);
+      return respond({quotation:quote,items,documents:docs});
+    }
     if(input.action==="documents"){
       const {data,error}=await db.from("store_daftra_documents").select("id,kind,supplier_source,daftra_id,daftra_number,status,created_at,updated_at,last_error").eq("quotation_id",quote.id).order("created_at");
       return error?respond({error:"Cannot load documents"},500):respond({documents:data});
