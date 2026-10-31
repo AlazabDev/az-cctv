@@ -17,7 +17,7 @@ function CartPage(){
   queryKey:["store-cart-products",ids.join(",")],
   queryFn:async()=>{
    if(!ids.length)return [] as StoreProduct[];
-   const {data,error}=await supabase.from("products").select("*").eq("is_active",true).in("id",ids);
+   const {data,error}=await supabase.from("products").select("*").eq("is_active",true).eq("published",true).in("id",ids);
    if(error)throw error;
    return data as StoreProduct[];
   },
