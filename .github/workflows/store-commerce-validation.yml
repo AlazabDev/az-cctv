@@ -9,6 +9,11 @@ on:
       - "src/routes/quote.tsx"
       - "src/lib/store/checkout.ts"
       - "tests/store-checkout.engineering.test.ts"
+      - "tests/store-stock-freshness.test.ts"
+      - "src/components/store/KimoSyncPanel.tsx"
+      - "src/lib/store/catalog.ts"
+      - "src/routes/store.tsx"
+      - "src/routes/_authenticated/finance.tsx"
       - ".github/workflows/store-commerce-validation.yml"
 permissions:
   contents: read
@@ -26,8 +31,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - name: Cart and RFQ unit tests
-        run: npx --yes vitest@3.2.4 run tests/store-checkout.engineering.test.ts
+        run: npx --yes vitest@3.2.4 run tests/store-checkout.engineering.test.ts tests/store-stock-freshness.test.ts
       - name: Check customer storefront format
-        run: pnpm exec prettier --check src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx
+        run: pnpm exec prettier --check src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
       - name: Lint customer storefront changes
         run: pnpm exec eslint src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts
