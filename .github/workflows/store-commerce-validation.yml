@@ -35,4 +35,4 @@ jobs:
       - name: Check customer storefront format
         run: pnpm exec prettier --check src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
       - name: Lint customer storefront changes
-        run: pnpm exec eslint src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts
+        run: pnpm exec eslint src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
