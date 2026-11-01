@@ -57,6 +57,11 @@ export function SiteHeader() {
             الحاسبة
           </Link>
           {signedIn && (
+            <Link to="/my-quotes" className={navClass}>
+              طلباتي
+            </Link>
+          )}
+          {signedIn && (
             <Link to="/projects" className={navClass}>
               لوحة التحكم
             </Link>
@@ -109,7 +114,7 @@ export function SiteHeader() {
               title: signedIn ? "لوحة التحكم" : "تسجيل الدخول",
               to: signedIn ? "/projects" : "/auth",
             },
-            ...(signedIn ? [{ title: "حسابي", to: "/account" }] : []),
+            ...(signedIn ? [{ title: "طلباتي", to: "/my-quotes" }, { title: "حسابي", to: "/account" }] : []),
           ].map((link) => (
             <Link
               key={link.to}
