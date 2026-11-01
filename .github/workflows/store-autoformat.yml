@@ -14,6 +14,7 @@ on:
       - "src/lib/store/catalog.ts"
       - "package.json"
       - "src/hooks/use-toast.ts"
+      - ".github/workflows/store-autoformat.yml"
 permissions:
   contents: write
 jobs:
@@ -33,7 +34,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - name: Format only store-modified files
-        run: pnpm exec prettier --write src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
+        run: pnpm exec prettier --write src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts src/components/cctv/CctvProjectEditorV2.tsx
       - name: Commit formatter result to development branch
         run: |
           git config user.name "github-actions[bot]"
