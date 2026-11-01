@@ -1,0 +1,31 @@
+name: Store commerce validation
+on:
+  push:
+    branches: [feat/store-production-commerce]
+  pull_request:
+    paths:
+      - "src/routes/my-quotes.tsx"
+      - "src/routes/cart.tsx"
+      - "src/routes/quote.tsx"
+      - "src/lib/store/checkout.ts"
+      - "tests/store-checkout.engineering.test.ts"
+      - ".github/workflows/store-commerce-validation.yml"
+permissions:
+  contents: read
+jobs:
+  storefront:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.12.4"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - name: Cart and RFQ unit tests
+        run: npx --yes vitest@3.2.4 run tests/store-checkout.engineering.test.ts
+      - name: Lint customer storefront changes
+        run: pnpm exec eslint src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts
