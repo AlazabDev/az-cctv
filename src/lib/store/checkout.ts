@@ -8,15 +8,23 @@ export type CheckoutAssessment = {
   currencies: string[];
   subtotal: number;
 };
-export function assessStoreCheckout(items: readonly SelectedSku[], products: readonly QuotedSku[]): CheckoutAssessment {
-  const published = new Map(products.map(p => [p.id, p]));
+export function assessStoreCheckout(
+  items: readonly SelectedSku[],
+  products: readonly QuotedSku[],
+): CheckoutAssessment {
+  const published = new Map(products.map((p) => [p.id, p]));
   const missingProductIds: string[] = [];
   const missingPriceIds: string[] = [];
   const currencies = new Set<string>();
   let subtotal = 0;
   const seen = new Set<string>();
   for (const item of items) {
-    if (seen.has(item.id) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 100) {
+    if (
+      seen.has(item.id) ||
+      !Number.isInteger(item.quantity) ||
+      item.quantity < 1 ||
+      item.quantity > 100
+    ) {
       missingProductIds.push(item.id);
       continue;
     }
@@ -26,7 +34,11 @@ export function assessStoreCheckout(items: readonly SelectedSku[], products: rea
       missingProductIds.push(item.id);
       continue;
     }
-    if (product.current_price == null || !Number.isFinite(product.current_price) || product.current_price < 0) {
+    if (
+      product.current_price == null ||
+      !Number.isFinite(product.current_price) ||
+      product.current_price < 0
+    ) {
       missingPriceIds.push(item.id);
       continue;
     }
@@ -34,8 +46,12 @@ export function assessStoreCheckout(items: readonly SelectedSku[], products: rea
     subtotal += item.quantity * product.current_price;
   }
   return {
-    eligible: items.length > 0 && items.length <= 50 && missingProductIds.length === 0 &&
-      missingPriceIds.length === 0 && currencies.size === 1,
+    eligible:
+      items.length > 0 &&
+      items.length <= 50 &&
+      missingProductIds.length === 0 &&
+      missingPriceIds.length === 0 &&
+      currencies.size === 1,
     missingProductIds,
     missingPriceIds,
     currencies: [...currencies],
