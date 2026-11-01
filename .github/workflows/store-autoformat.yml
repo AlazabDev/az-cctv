@@ -8,6 +8,10 @@ on:
       - "src/routes/quote.tsx"
       - "src/lib/store/checkout.ts"
       - "src/components/SiteHeader.tsx"
+      - "src/components/store/KimoSyncPanel.tsx"
+      - "src/routes/_authenticated/finance.tsx"
+      - "src/routes/store.tsx"
+      - "src/lib/store/catalog.ts"
 permissions:
   contents: write
 jobs:
@@ -27,12 +31,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - name: Format only store-modified files
-        run: pnpm exec prettier --write src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx
+        run: pnpm exec prettier --write src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
       - name: Commit formatter result to development branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx
+          git add src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "style(store): format customer commerce flow"
           git push origin HEAD:feat/store-production-commerce
