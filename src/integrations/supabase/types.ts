@@ -930,7 +930,6 @@ export type Database = {
           id: string
           image_height: number | null
           image_width: number | null
-          in_stock: boolean | null
           is_active: boolean
           name: string
           project_id: string
@@ -994,7 +993,6 @@ export type Database = {
           image_url: string | null
           images: string[]
           ir_range: number | null
-          in_stock: boolean | null
           is_active: boolean
           last_synced_at: string | null
           lens: string | null
@@ -1003,7 +1001,6 @@ export type Database = {
           name_ar: string | null
           name_en: string | null
           old_price: number | null
-          price_checked_at: string | null
           poe_watts: number | null
           ports: number | null
           power_type: string | null
@@ -1024,7 +1021,6 @@ export type Database = {
           source_sheet: string | null
           source_url: string | null
           specifications: Json
-          stock_checked_at: string | null
           storage_tb: number | null
           subcategory: string | null
           tags: string[]
