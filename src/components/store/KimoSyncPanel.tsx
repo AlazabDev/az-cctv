@@ -29,7 +29,7 @@ export function KimoSyncPanel(){
       <h2 className="flex items-center gap-2 text-lg font-black text-[#030957]"><PackageCheck size={21}/> مراجعة أسعار ومخزون KimoStore</h2>
       <span className="text-xs text-slate-500">تطابق مباشر لرابط المورد مع المنتج المسجل</span>
     </div>
-    <p className="mt-3 text-sm leading-6 text-slate-600">المعاينة لا تعدل الأسعار. التنفيذ يحفظ سجل تغيرات المورد ويحدث تواريخ الفحص. أي منتج له متغيرات بأسعار أو حالة توفر مختلفة يحتاج مطابقة مستقلة ولا يُعدّل تلقائيًا.</p>
+    <p className="mt-3 text-sm leading-6 text-slate-600">المعاينة لا تعدل الأسعار. التنفيذ اليدوي يعالج دفعة محدودة ويحتفظ بسجل التغييرات وتواريخ الفحص؛ لا توجد جدولة تلقائية مفعلة بعد. أي منتج له متغيرات بأسعار أو حالة توفر مختلفة يحتاج مطابقة مستقلة ولا يُعدّل تلقائيًا.</p>
     <div className="mt-5 flex flex-wrap items-end gap-3">
       <label className="text-sm font-bold">حجم الدفعة
         <select value={limit} onChange={e=>setLimit(Number(e.target.value))} className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-3">
