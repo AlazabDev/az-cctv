@@ -16,6 +16,7 @@ import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CatalogRouteImport } from './routes/catalog'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as QuoteRouteImport } from './routes/quote'
+import { Route as MyQuotesRouteImport } from './routes/my-quotes'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as StoreFeedsMetaCsvRouteImport } from './routes/store.feeds.meta[.]csv'
 import { Route as StoreFeedsGoogleXmlRouteImport } from './routes/store.feeds.google[.]xml'
@@ -93,6 +94,11 @@ const CartRoute = CartRouteImport.update({
   path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyQuotesRoute = MyQuotesRouteImport.update({
+  id: '/my-quotes',
+  path: '/my-quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuoteRoute = QuoteRouteImport.update({
   id: '/quote',
   path: '/quote',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
   '/quote': typeof QuoteRoute
+  '/my-quotes': typeof MyQuotesRoute
   '/cart': typeof CartRoute
   '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
   '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
@@ -151,6 +158,7 @@ export interface FileRoutesByTo {
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
   '/quote': typeof QuoteRoute
+  '/my-quotes': typeof MyQuotesRoute
   '/cart': typeof CartRoute
   '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
   '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/catalog': typeof CatalogRoute
   '/store': typeof StoreRoute
   '/quote': typeof QuoteRoute
+  '/my-quotes': typeof MyQuotesRoute
   '/cart': typeof CartRoute
   '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
   '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/store'
     | '/quote'
+    | '/my-quotes'
     | '/cart'
     | '/store/feeds/meta.csv'
     | '/store/feeds/google.xml'
@@ -215,6 +225,7 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/store'
     | '/quote'
+    | '/my-quotes'
     | '/cart'
     | '/store/feeds/meta.csv'
     | '/store/feeds/google.xml'
@@ -236,6 +247,7 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/store'
     | '/quote'
+    | '/my-quotes'
     | '/cart'
     | '/store/feeds/meta.csv'
     | '/store/feeds/google.xml'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   CatalogRoute: typeof CatalogRoute
   StoreRoute: typeof StoreRoute
   QuoteRoute: typeof QuoteRoute
+  MyQuotesRoute: typeof MyQuotesRoute
   CartRoute: typeof CartRoute
   StoreFeedsMetaCsvRoute: typeof StoreFeedsMetaCsvRoute
   StoreFeedsGoogleXmlRoute: typeof StoreFeedsGoogleXmlRoute
@@ -361,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-quotes': {
+      id: '/my-quotes'
+      path: '/my-quotes'
+      fullPath: '/my-quotes'
+      preLoaderRoute: typeof MyQuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quote': {
       id: '/quote'
       path: '/quote'
@@ -431,6 +451,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogRoute: CatalogRoute,
   StoreRoute: StoreRoute,
   QuoteRoute: QuoteRoute,
+  MyQuotesRoute: MyQuotesRoute,
   CartRoute: CartRoute,
   StoreFeedsMetaCsvRoute: StoreFeedsMetaCsvRoute,
   StoreFeedsGoogleXmlRoute: StoreFeedsGoogleXmlRoute,
