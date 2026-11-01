@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useStoreCart } from "@/hooks/use-store-cart";
 import { supabase } from "@/integrations/supabase/client";
 import { productTitle,productPrice,type StoreProduct } from "@/lib/store/catalog";
+import { assessStoreCheckout } from "@/lib/store/checkout";
 
 export const Route = createFileRoute("/cart")({
  head:()=>({meta:[{title:"سلة المعدات وطلب عرض سعر | AZ-CCTV"},{name:"robots",content:"noindex,follow"}]}),
@@ -24,12 +25,13 @@ function CartPage(){
   enabled:ids.length>0,
  });
  const valid=items.flatMap(item=>{const p=products.find(p=>p.id===item.id);return p?[{...item,product:p}]:[]});
- const unavailable=items.length-valid.length;
- const subtotal=valid.reduce((sum,row)=>sum+(row.product.current_price??0)*row.quantity,0);
- const currency=valid[0]?.product.currency||"EGP";
- const multipleCurrencies=new Set(valid.map(row=>row.product.currency||"EGP")).size>1;
- const missingPrices=valid.some(row=>row.product.current_price===null);
- const readyToQuote=!isLoading&&!error&&items.length>0&&unavailable===0&&!multipleCurrencies&&!missingPrices;
+ const assessment=assessStoreCheckout(items,products);
+ const unavailable=assessment.missingProductIds.length;
+ const subtotal=assessment.subtotal;
+ const currency=assessment.currencies[0]||"EGP";
+ const multipleCurrencies=assessment.currencies.length>1;
+ const missingPrices=assessment.missingPriceIds.length>0;
+ const readyToQuote=!isLoading&&!error&&assessment.eligible;
  return <div dir="rtl" className="min-h-screen bg-[#f5f7fb] text-slate-900"><SiteHeader/><main className="mx-auto max-w-6xl px-5 py-10">
  <Link to="/store" className="inline-flex items-center gap-2 text-sm font-bold text-[#030957]"><ArrowRight size={17}/> متابعة التصفح</Link>
  <div className="mt-8 flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold tracking-widest text-[#6b7c99]">EQUIPMENT SELECTION</p><h1 className="mt-2 text-3xl font-black text-[#030957]">سلة المعدات</h1><p className="mt-2 text-sm text-slate-500">اختيار أجهزة لمشروعك أو لطلب عرض سعر من فريق AZ-CCTV</p></div><div className="rounded-xl bg-[#030957] px-5 py-3 font-extrabold text-white">{count.toLocaleString("ar-EG")} قطعة</div></div>
@@ -39,7 +41,7 @@ function CartPage(){
    <Link to="/product/$id" params={{id:row.id}} className="flex h-28 w-28 shrink-0 items-center justify-center rounded-xl bg-slate-50 p-2">{row.product.image_url?<img src={row.product.image_url} alt={productTitle(row.product)} className="max-h-full max-w-full object-contain" loading="lazy" onError={e=>e.currentTarget.style.visibility="hidden"}/>:<ImageOff className="text-slate-300"/>}</Link>
    <div className="min-w-0 flex-1"><p className="text-xs font-bold text-slate-500">{row.product.brand||"—"}</p><Link to="/product/$id" params={{id:row.id}} className="mt-2 block font-bold leading-7 text-[#030957] hover:underline">{productTitle(row.product)}</Link><p dir="ltr" className="mt-1 text-right font-mono text-xs text-slate-400">{row.product.model}</p><strong className="mt-2 block text-[#030957]">{productPrice(row.product)}</strong></div>
    <div className="flex items-center gap-3"><div className="flex items-center rounded-xl border border-slate-200"><button aria-label="تقليل الكمية" disabled={row.quantity<=1} onClick={()=>update(row.id,row.quantity-1)} className="p-2 disabled:opacity-30"><Minus size={15}/></button><span className="w-9 text-center font-bold">{row.quantity}</span><button aria-label="زيادة الكمية" disabled={row.quantity>=100} onClick={()=>update(row.id,row.quantity+1)} className="p-2 disabled:opacity-30"><Plus size={15}/></button></div><button aria-label="حذف المنتج" onClick={()=>remove(row.id)} className="rounded-lg p-2 text-red-600 hover:bg-red-50"><Trash2 size={17}/></button></div>
-  </article>)}{unavailable>0&&<div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p>{unavailable} من المنتجات المختارة أصبح غير متاح ضمن الكتالوج المنشور. احذفه قبل تقديم الطلب.</p><button type="button" className="mt-2 font-bold underline" onClick={()=>items.filter(item=>!products.some(product=>product.id===item.id)).forEach(item=>remove(item.id))}>حذف العناصر غير المتاحة</button></div>}</div>
+  </article>)}{unavailable>0&&<div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"><p>{unavailable} من المنتجات المختارة أصبح غير متاح ضمن الكتالوج المنشور. احذفه قبل تقديم الطلب.</p><button type="button" className="mt-2 font-bold underline" onClick={()=>assessment.missingProductIds.forEach(id=>remove(id))}>حذف العناصر غير المتاحة</button></div>}</div>
   <aside className="h-fit rounded-2xl bg-white p-6 shadow-sm"><h2 className="text-lg font-black text-[#030957]">ملخص الطلب</h2><div className="my-6 flex justify-between border-y border-slate-100 py-5 text-sm"><span>القيمة الاسترشادية</span><strong>{new Intl.NumberFormat("ar-EG",{style:"currency",currency}).format(subtotal)}</strong></div><p className="mb-5 text-xs leading-6 text-slate-500">الأسعار والتوفر قابلة للمراجعة. هذا ليس تأكيد شراء أو حجز مخزون، ولا يتضمن تكلفة التركيب والشحن.</p>{multipleCurrencies&&<p role="alert" className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">تحتوي السلة على أكثر من عملة. افصل المنتجات في طلبات مستقلة.</p>}{missingPrices&&<p role="alert" className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">بعض المنتجات دون سعر معتمد. لا يمكن إرسال الطلب قبل استكمال بيانات الأسعار.</p>}{readyToQuote?<Link to="/quote" className="flex justify-center rounded-xl bg-[#FFB900] px-5 py-4 text-sm font-black text-[#030957]">طلب عرض سعر بالمعدات المختارة</Link>:<p className="rounded-xl bg-slate-100 px-5 py-4 text-center text-sm font-bold text-slate-500">صحّح السلة لتفعيل إرسال طلب عرض السعر</p>}<Link to="/store" className="mt-4 block text-center text-sm font-bold text-[#030957]">إضافة معدات أخرى</Link></aside>
  </div>}
  </main></div>;
