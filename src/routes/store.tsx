@@ -89,7 +89,9 @@ function StorePage() {
     setCompareIds(next);
     try {
       localStorage.setItem(compareStorageKey, JSON.stringify(next));
-    } catch {}
+    } catch {
+      // Comparison state remains usable when browser storage is unavailable.
+    }
     trackStoreEvent("compare_toggle", id);
   }
   useEffect(() => {
