@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { KimoSyncPanel } from "@/components/store/KimoSyncPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/finance")({
@@ -101,5 +102,6 @@ function FinancePage(){
         </>}
       </section>
     </div>}
+    {admin===true&&<KimoSyncPanel/>}
   </main></div>
 }
