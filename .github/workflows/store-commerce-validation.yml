@@ -30,6 +30,10 @@ jobs:
           node-version: "22"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Validate complete app TypeScript
+        run: pnpm exec tsc --noEmit
+      - name: Build production storefront and editor
+        run: pnpm build
       - name: Cart and RFQ unit tests
         run: pnpm test:store
       - name: Check customer storefront format
