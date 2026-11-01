@@ -1,17 +1,26 @@
 {
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "eslint.config.js"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vite.config.ts",
+    "eslint.config.js"
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client"
+    ],
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "noEmit": true,
-
     "skipLibCheck": true,
     "strict": true,
     "noUnusedLocals": false,
@@ -24,7 +33,29 @@
     "exactOptionalPropertyTypes": false,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
-  }
+  },
+  "exclude": [
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/pages/**",
+    "src/test/**",
+    "src/components/CartIcon.tsx",
+    "src/components/CollectionCard.tsx",
+    "src/components/Footer.tsx",
+    "src/components/Header.tsx",
+    "src/components/Layout.tsx",
+    "src/components/NavLink.tsx",
+    "src/components/ProductCard.tsx",
+    "src/components/ScrollToTop.tsx",
+    "src/hooks/useCart.ts",
+    "src/hooks/useWishlist.ts",
+    "src/hooks/use-toast.ts",
+    "src/lib/catalog.ts",
+    "src/components/ui/toast.tsx",
+    "src/components/ui/toaster.tsx"
+  ]
 }

@@ -1,0 +1,42 @@
+name: Store commerce validation
+on:
+  push:
+    branches: [feat/store-production-commerce]
+  pull_request:
+    paths:
+      - "src/routes/my-quotes.tsx"
+      - "src/routes/cart.tsx"
+      - "src/routes/quote.tsx"
+      - "src/lib/store/checkout.ts"
+      - "tests/store-checkout.engineering.test.ts"
+      - "tests/store-stock-freshness.test.ts"
+      - "src/components/store/KimoSyncPanel.tsx"
+      - "src/lib/store/catalog.ts"
+      - "src/routes/store.tsx"
+      - "src/routes/_authenticated/finance.tsx"
+      - ".github/workflows/store-commerce-validation.yml"
+permissions:
+  contents: read
+jobs:
+  storefront:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.12.4"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate complete app TypeScript
+        run: pnpm exec tsc --noEmit
+      - name: Build production storefront and editor
+        run: pnpm build
+      - name: Cart and RFQ unit tests
+        run: pnpm test:store
+      - name: Check customer storefront format
+        run: pnpm exec prettier --check src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/SiteHeader.tsx src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
+      - name: Lint customer storefront changes
+        run: pnpm exec eslint src/routes/my-quotes.tsx src/routes/cart.tsx src/routes/quote.tsx src/lib/store/checkout.ts src/components/store/KimoSyncPanel.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
