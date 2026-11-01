@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useStoreCart } from "@/hooks/use-store-cart";
 import { supabase } from "@/integrations/supabase/client";
 import { trackStoreEvent } from "@/lib/store/catalog";
+import { assessStoreCheckout } from "@/lib/store/checkout";
 
 export const Route=createFileRoute("/quote")({head:()=>({meta:[{title:"طلب عرض سعر معدات المراقبة | AZ-CCTV"},{name:"robots",content:"noindex,nofollow"}]}),component:QuotePage});
 function QuotePage(){
@@ -38,9 +39,10 @@ function QuotePage(){
    if(authError||!user){setSignedIn(false);throw new Error("يجب تسجيل الدخول لإرسال الطلب.");}
    if(name.trim().length<2||name.length>150)throw new Error("يرجى إدخال اسم صحيح.");
    if(!phone.trim()&&!email.trim())throw new Error("أدخل رقم هاتف أو بريدًا إلكترونيًا للتواصل.");
-   const validIds=new Set(validProducts.filter(p=>p.current_price!==null).map(p=>p.id));
-   if(items.some(x=>!validIds.has(x.id)))throw new Error("سلتك تحتوي على منتج غير متاح للتسعير. راجع السلة أولًا.");
-   if(new Set(validProducts.map(p=>p.currency)).size>1)throw new Error("لا يمكن إرسال منتجات بعملات مختلفة في نفس الطلب.");
+   const assessment=assessStoreCheckout(items,validProducts);
+   if(assessment.missingProductIds.length||assessment.missingPriceIds.length)throw new Error("سلتك تحتوي على منتج غير متاح للتسعير. راجع السلة أولًا.");
+   if(assessment.currencies.length>1)throw new Error("لا يمكن إرسال منتجات بعملات مختلفة في نفس الطلب.");
+   if(!assessment.eligible)throw new Error("تحقق من المنتجات والكميات قبل الإرسال.");
    const payload={p_contact:{name:name.trim(),phone:phone.trim(),email:email.trim(),company:company.trim(),notes:notes.trim()},p_items:items.map(item=>({id:item.id,quantity:item.quantity}))};
    const {data,error:submitError}=await supabase.rpc("submit_store_quotation",payload);
    if(submitError)throw submitError;
