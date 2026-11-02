@@ -11,7 +11,9 @@ export const Route=createFileRoute("/invoice/$token")({
 });
 const money=(v:number)=>new Intl.NumberFormat("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
 function InvoicePage(){
- const {token}=Route.useParams();
+ const {token:rawToken}=Route.useParams();
+ // Compatibility for the already-approved Meta URL which contains an encoded literal {{1}} prefix.
+ const token=rawToken.replace(/^(?:\{\{1\}\}|%7B%7B1%7D%7D)/i,"");
  const query=useQuery({queryKey:["az-invoice",token],retry:false,queryFn:async()=>{
   const {data,error}=await supabase.functions.invoke<Api>("az-invoice-public",{body:{token}});
   if(error||!data?.invoice)throw new Error(data?.error||"الفاتورة غير متاحة");
