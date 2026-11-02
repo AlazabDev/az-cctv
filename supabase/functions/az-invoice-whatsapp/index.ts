@@ -30,7 +30,8 @@ Deno.serve(async(req)=>{
  const components=Array.isArray(selected.components)?selected.components as Array<Record<string,unknown>>:[];
  const buttons=components.find(c=>c.type==="BUTTONS")?.buttons as Array<Record<string,unknown>>|undefined;
  const expected="https://cctv.alazab.com/invoice/{{1}}";
- if(!buttons?.some(b=>b.type==="URL"&&b.url===expected)){
+ const approvedLegacy="https://cctv.alazab.com/invoice/%7B%7B1%7D%7D{{1}}";
+ if(!buttons?.some(b=>b.type==="URL"&&(b.url===expected||b.url===approvedLegacy))){
   await db.from("store_checkout_payments").update({whatsapp_status:"template_url_invalid",delivery_error:"Correct Meta payment_successful URL first"}).eq("id",o.id).neq("whatsapp_status","accepted");
   return reply({error:"Approved WhatsApp template URL is incorrect; delivery blocked"},409);
  }
