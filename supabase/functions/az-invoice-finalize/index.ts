@@ -21,14 +21,18 @@ async function reserve(db:ReturnType<typeof createClient>,checkout_id:string,kin
 }
 async function notify(orderId:string){
  if(env("STORE_INVOICE_DELIVERY_ENABLED")!=="true")return {delivery:"disabled"};
- try{
-  const r=await fetch(env("SUPABASE_URL")+"/functions/v1/az-invoice-whatsapp",{
-   method:"POST",
-   headers:{"Authorization":"Bearer "+env("SUPABASE_SERVICE_ROLE_KEY"),"Content-Type":"application/json"},
-   body:JSON.stringify({order_id:orderId}),signal:AbortSignal.timeout(20000)
-  });
-  return {delivery:r.ok?"accepted":"requires_attention"};
- }catch{return {delivery:"requires_attention"}}
+ const tasks=["az-invoice-whatsapp","az-invoice-email"];
+ const results=await Promise.all(tasks.map(async name=>{
+  try{
+   const r=await fetch(env("SUPABASE_URL")+"/functions/v1/"+name,{
+    method:"POST",
+    headers:{"Authorization":"Bearer "+env("SUPABASE_SERVICE_ROLE_KEY"),"Content-Type":"application/json"},
+    body:JSON.stringify({order_id:orderId}),signal:AbortSignal.timeout(20000)
+   });
+   return {channel:name,status:r.ok?"accepted_or_skipped":"requires_attention"};
+  }catch{return {channel:name,status:"requires_attention"}}
+ }));
+ return {delivery:results};
 }
 Deno.serve(async req=>{
  if(req.method!=="POST")return ok({error:"Method not allowed"},405);
