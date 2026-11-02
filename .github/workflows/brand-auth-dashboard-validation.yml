@@ -31,9 +31,9 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Generate routes and production build
+        run: pnpm run build
       - name: TypeScript
         run: pnpm exec tsc --noEmit
       - name: Tests
         run: pnpm test
-      - name: Production build
-        run: pnpm run build
