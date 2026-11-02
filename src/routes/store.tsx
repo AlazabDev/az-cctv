@@ -47,7 +47,7 @@ const money = (value: number | null, currency: string) =>
 const names = (p: Product) =>
   p.product_name || p.name_ar || p.name_en || [p.brand, p.model].filter(Boolean).join(" ");
 function ProductImage({
-  src,
+  sources,
   alt,
   className,
 }: {
