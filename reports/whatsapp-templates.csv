@@ -1,0 +1,114 @@
+﻿id,name,language,status,category,header,body,footer,buttons
+954405567504252,delivery_code,en_US,APPROVED,AUTHENTICATION,,Your order is arriving soon. *{{1}}* is your verification code. Please show this to the delivery associate.,Expires in 5 minutes.,"[{""type"": ""URL"", ""text"": ""Copy code"", ""url"": ""https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code_expiration_minutes=5&code=otp{{1}}"", ""example"": [""https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code_expiration_minutes=5&code=otp123456""]}]"
+1004423828765774,uberfix_request_paid,ar,APPROVED,UTILITY,تم استلام الدفع,"مرحبًا {{1}}،
+تم استلام دفعة قيمتها {{2}} ج.م لفاتورة طلب الصيانة رقم {{3}} 💳
+شكرًا لتعاملك مع UberFix.",UberFix,"[{""type"": ""URL"", ""text"": ""عرض الفاتورة"", ""url"": ""https://uberfix.shop/track/{{1}}"", ""example"": [""https://uberfix.shop/track/abc123""]}]"
+1474221431012426,uberfix_request_completed,ar,APPROVED,UTILITY,اكتملت أعمال الصيانة,"مرحبًا {{1}}،
+تم الانتهاء من أعمال الصيانة لطلبك رقم {{2}} بنجاح ✅
+يرجى مراجعة الأعمال واعتماد إغلاق الطلب.",UberFix - شكرًا لثقتك,"[{""type"": ""URL"", ""text"": ""اعتماد الإغلاق"", ""url"": ""https://uberfix.shop/track/{{1}}"", ""example"": [""https://uberfix.shop/track/abc123""]}]"
+1274422488128957,uberfix_work_started,ar,APPROVED,UTILITY,بدأ تنفيذ الصيانة,"مرحبًا {{1}}،
+بدأ الفني تنفيذ أعمال الصيانة لطلبك رقم {{2}} 🛠️
+سنبلغك فور الانتهاء.",UberFix,"[{""type"": ""URL"", ""text"": ""متابعة مباشرة"", ""url"": ""https://uberfix.shop/track/{{1}}"", ""example"": [""https://uberfix.shop/track/abc123""]}]"
+981478144320222,uberfix_request_assigned,ar,APPROVED,UTILITY,تم تعيين فني لطلبك,"مرحبًا {{1}}،
+تم تعيين الفني {{2}} للعمل على طلب الصيانة رقم {{3}} 👨‍🔧
+سيتواصل معك لتأكيد موعد الزيارة.",UberFix,"[{""type"": ""URL"", ""text"": ""تتبع الطلب"", ""url"": ""https://uberfix.shop/track/{{1}}"", ""example"": [""https://uberfix.shop/track/abc123""]}]"
+2114402875769864,uberfix_request_received,ar,APPROVED,UTILITY,تم استلام طلب الصيانة,"مرحبًا {{1}}،
+تم استلام طلب الصيانة الخاص بك بنجاح ✅
+رقم الطلب: {{2}}
+سنتواصل معك قريبًا لتحديد موعد الزيارة.",UberFix - خدمات الصيانة الاحترافية,"[{""type"": ""URL"", ""text"": ""تتبع الطلب"", ""url"": ""https://uberfix.shop/track/{{1}}"", ""example"": [""https://uberfix.shop/track/abc123""]}]"
+1660318395155199,otp_verification,ar,APPROVED,AUTHENTICATION,,كلمة المرور المؤقتة الخاصة بك هي {{1}}. يرجى تسجيل الدخول وتحديثه في أقرب وقت ممكن. لأسباب تتعلق بأمانك، يرجى عدم مشاركة هذا الرمز.,,"[{""type"": ""URL"", ""text"": ""نسخ الرمز"", ""url"": ""https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code=otp{{1}}"", ""example"": [""https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code=otp123456""]}]"
+1361626022352015,uberfix_hello_world,en,APPROVED,UTILITY,,Hello! Welcome to UberFix. We're here to help you with all your maintenance needs. Thank you for choosing us!,UberFix - Professional Maintenance Services,"[{""type"": ""URL"", ""text"": ""Visit website"", ""url"": ""https://uberfix.shop/""}]"
+914092141622255,feedback_form,ar,APPROVED,UTILITY,,"إننا في {{1}}، نولي اهتمامًا كبيرًا لملاحظات العملاء ونستفيد منها في تحسين {{2}} باستمرار. 
+
+نرجو منك إكمال {{3}} قصير (الرابط موضح أدناه) لتخبرنا بالمزيد عن {{4}} التي أجريتها مؤخرًا معنا. 
+
+نشكرك مقدمًا.",,"[{""type"": ""FLOW"", ""text"": ""المشاركة في الاستبيان"", ""flow_id"": 1595214401700896, ""flow_action"": ""NAVIGATE"", ""navigate_screen"": ""SURVEY""}]"
+1609476400328218,shifting_journey,ar,APPROVED,UTILITY,,مرحبًا {{1}}، يتم الآن معالجة طلب تحويل اتصال النطاق العريض الخاص بك! سنبقيك على اطلاع بالمستجدات بشأن الحالة.,,"[{""type"": ""URL"", ""text"": ""تتبع الحالة"", ""url"": ""https://uberfix.shop/""}]"
+900359469727385,pass_temp,ar,APPROVED,AUTHENTICATION,,"رمز التحقق لمرة واحدة (OTP): {{1}}. هذا هو رمز التحقق الخاص بك لـ {{2}}. الرمز صالح لمدة {{3}}. اتصل على الرقم {{4}} إذا لم تقم بهذا الطلب. لأسباب تتعلق بأمانك، يرجى عدم مشاركة هذا الرمز.
+
+إذا كانت لديك أي أسئلة أو استفسارات، يُرجى التواصل معنا على ‏{{5}}.‏",تنتهي صلاحيتها خلال ‏١٠‏ دقائق.,"[{""type"": ""URL"", ""text"": ""نسخ الرمز"", ""url"": ""https://www.whatsapp.com/otp/code/?otp_type=ONE_TAP&cta_display_name=%D9%85%D9%84%D8%A1+%D8%AA%D9%84%D9%82%D8%A7%D8%A6%D9%8A&package_name=com.alazab.app&signature_hash=F5D6F4B8E5E&code=otp{{1}}"", ""example"": [""https://www.whatsapp.com/otp/code/?otp_type=ONE_TAP&cta_display_name=%D9%85%D9%84%D8%A1+%D8%AA%D9%84%D9%82%D8%A7%D8%A6%D9%8A&package_name=com.alazab.app&signature_hash=F5D6F4B8E5E&code=otp123456""]}]"
+831755329214907,otp_verify,ar,APPROVED,AUTHENTICATION,,"رمز التحقق لمرة واحدة (OTP): {{1}}. هذا هو رمز التحقق الخاص بك لـ {{2}}. الرمز صالح لمدة {{3}}. اتصل على الرقم {{4}} إذا لم تقم بهذا الطلب. لأسباب تتعلق بأمانك، يرجى عدم مشاركة هذا الرمز.
+
+إذا كانت لديك أي أسئلة أو استفسارات، يُرجى التواصل معنا على ‏{{5}}.‏",تنتهي صلاحيتها خلال ‏١٠‏ دقائق.,"[{""type"": ""URL"", ""text"": ""نسخ الرمز"", ""url"": ""https://www.whatsapp.com/otp/code/?otp_type=ONE_TAP&cta_display_name=%D9%85%D9%84%D8%A1+%D8%AA%D9%84%D9%82%D8%A7%D8%A6%D9%8A&package_name=com.alazab.app&signature_hash=F5D6F4B8E5E&code=otp{{1}}"", ""example"": [""https://www.whatsapp.com/otp/code/?otp_type=ONE_TAP&cta_display_name=%D9%85%D9%84%D8%A1+%D8%AA%D9%84%D9%82%D8%A7%D8%A6%D9%8A&package_name=com.alazab.app&signature_hash=F5D6F4B8E5E&code=otp123456""]}]"
+1302705165017135,feedback_survey_form,en_US,APPROVED,UTILITY,Rate your experience,"Your feedback is important to us. 
+
+Please take a quick survey about your recent {{1}} experience.",,"[{""type"": ""FLOW"", ""text"": ""Take survey"", ""flow_id"": 1214837130762411, ""flow_action"": ""NAVIGATE"", ""navigate_screen"": ""SURVEY""}]"
+1267718818594610,permission_request,en_US,APPROVED,UTILITY,,Would you like to receive a call from one of our representatives?,,[]
+847495374990380,survey_form,en_US,APPROVED,UTILITY,Rate your experience,"Your feedback is important to us. 
+
+Please take a quick survey about your recent {{1}} experience.",,"[{""type"": ""FLOW"", ""text"": ""Take survey"", ""flow_id"": 1221154473531367, ""flow_action"": ""NAVIGATE"", ""navigate_screen"": ""SURVEY""}]"
+4282775242010041,group_invite_link_concise,en_US,APPROVED,UTILITY,,"Your {{1}} request with {{2}} is confirmed. Please join the WhatsApp group to start:
+{{3}} Thank you!",,[]
+2178649532542954,group_invite_link,en_US,APPROVED,UTILITY,,"Hi {{1}}, your request for {{2}} service from {{3}} was successfully received!
+
+You can start the service by clicking and joining the group below.
+{{4}}
+
+Thank you!",,[]
+1331187732388421,appointment_cancellation,en_US,APPROVED,UTILITY,Your appointment was canceled,"Hello {{1}},
+
+Your upcoming appointment with {{2}} on {{3}} at {{4}} has been canceled.
+
+Let us know if you have any questions or need to reschedule.
+
+",,"[{""type"": ""URL"", ""text"": ""View details"", ""url"": ""https://uberfix.shop/""}]"
+2167682460644292,call_permission_request,en_US,APPROVED,UTILITY,,Would you like to receive a call from one of our representatives?,,[]
+872505905758421,hello_worldd,en_US,APPROVED,MARKETING,,Hello,,[]
+648503888315834,invoice_available,ar,APPROVED,MARKETING,,"مرحباً {{1}}،
+
+نود إعلامك بأن فاتورتك رقم {{2}} أصبحت متاحة الآن.
+
+يمكنك مشاهدة الفاتوره عبر الانترنت, تحميله على جهازك أو طبعه مباشرة بجانب خيارات أخرى عبر الرابط التالى.{{3}}🙏",شركة العزب للمقاولات والخدمات,"[{""type"": ""URL"", ""text"": ""Visit website"", ""url"": ""https://alazab-co.daftra.com/""}]"
+1951684145783893,technician_arrival,ar,APPROVED,UTILITY,,مرحبًا {{1}}، سيصل الفني لدينا إلى موقعك خلال {{2}}. اضغط لتتبع الموقع الفعلي.,,"[{""type"": ""URL"", ""text"": ""تتبع الموقع"", ""url"": ""https://uberfix.shop/""}]"
+25769912275991897,appointment_scheduling,ar,APPROVED,UTILITY,زيارة فني,مرحبًا {{1}}، نحن نحدد موعدًا لزيارة فني إلى {{2}} في {{3}} بين {{4}} و {{5}}. يرجى تأكيد ما إذا كانت هذه الفترة مناسبة لك.,,"[{""type"": ""QUICK_REPLY"", ""text"": ""أكد""}, {""type"": ""QUICK_REPLY"", ""text"": ""إعادة الجدولة""}]"
+1384532093267343,azab_welcome_en,en,APPROVED,MARKETING,,Hello,,[]
+1470422588422874,statement_available,ar,APPROVED,UTILITY,البيان متاح,"هذا لإعلامك بأن أحدث بيان لك لحسابك {{1}} متاح الآن.
+
+يرجى تسجيل الدخول إلى حسابك للاطلاع على بيانك.",,"[{""type"": ""URL"", ""text"": ""عرض البيان"", ""url"": ""https://uberfix.shop/statements""}]"
+800576509669806,account_creation_confirmation_3,en_US,APPROVED,UTILITY,Finalize account set-up,"Hi {{1}},
+
+Your new account has been created successfully. 
+
+Please verify {{2}} to complete your profile.",,"[{""type"": ""URL"", ""text"": ""Verify account"", ""url"": ""https://uberfix.shop/""}]"
+863462623322806,hello_world_1,en_US,APPROVED,MARKETING,,Hello World,,[]
+1933677487498842,appointment_reschedule_1,ar,APPROVED,UTILITY,تمت إعادة جدولة موعدك,"مرحبا {{1}}،
+
+تم إعادة جدولة موعدك القادم مع {{2}} إلى {{3}} الساعة {{4}}.
+
+نحن نتطلع إلى رؤيتك!
+",,"[{""type"": ""URL"", ""text"": ""عرض التفاصيل"", ""url"": ""https://uberfix.shop/""}]"
+1923192101606072,appointment_scheduling_address,ar,APPROVED,UTILITY,زيارة فني,مرحبًا {{1}}، نحن نحدد موعدًا لزيارة فني إلى {{2}} في {{3}} بين {{4}} و {{5}}. يرجى تأكيد ما إذا كانت هذه الفترة مناسبة لك.,,"[{""type"": ""QUICK_REPLY"", ""text"": ""أكد""}, {""type"": ""QUICK_REPLY"", ""text"": ""إعادة الجدولة""}]"
+1739116526756503,requstes_2,en_US,APPROVED,UTILITY,Your appointment is booked,"Hello {{1}},
+
+Thank you for booking with {{2}}.
+
+Your appointment for {{3}} on {{4}} at {{5}} is confirmed.
+",,"[{""type"": ""URL"", ""text"": ""View details"", ""url"": ""https://uberfix.shop/requstes""}]"
+1975483113026197,feedback_survey_form,ar,APPROVED,UTILITY,,"إننا في {{1}}، نولي اهتمامًا كبيرًا لملاحظات العملاء ونستفيد منها في تحسين {{2}} باستمرار. 
+
+نرجو منك إكمال {{3}} قصير (الرابط موضح أدناه) لتخبرنا بالمزيد عن {{4}} التي أجريتها مؤخرًا معنا. 
+
+نشكرك مقدمًا.",,"[{""type"": ""FLOW"", ""text"": ""المشاركة في الاستبيان"", ""flow_id"": 1845463846087272, ""flow_action"": ""NAVIGATE"", ""navigate_screen"": ""SURVEY""}]"
+2260300477780345,helloworld,en,APPROVED,MARKETING,,Hello,,[]
+2338743973222405,order_canceled,ar,APPROVED,UTILITY,,"مرحبًا، نؤكد لك أننا ألغينا بنجاح طلبك رقم {{1}} الذي قدمته مؤخرًا. 
+
+شكرًا لك.",,"[{""type"": ""URL"", ""text"": ""عرض تفاصيل الطلب"", ""url"": ""https://uberfix.shop/requests""}]"
+1270627708452231,requests,ar,APPROVED,UTILITY,,"مرحبًا {{1}}، تم تسليم طلبك {{2}} بنجاح.
+
+يمكنك إدارة طلبك أدناه.
+",,"[{""type"": ""URL"", ""text"": ""إدارة الطلب"", ""url"": ""https://uberfix.shop/requests""}]"
+1534558084483861,support,ar,APPROVED,UTILITY,,هل ترغب في تلقي مكالمة من أحد ممثلينا؟,,[]
+2174113113394070,technician_visit,ar,APPROVED,UTILITY,زيارة فني,مرحبًا {{1}}، نحن نحدد موعدًا لزيارة فني لـ {{2}} في {{3}} بين {{4}} و {{5}}. يرجى تأكيد ما إذا كانت هذه الفترة مناسبة لك.,,"[{""type"": ""QUICK_REPLY"", ""text"": ""أكد""}, {""type"": ""QUICK_REPLY"", ""text"": ""إعادة الجدولة""}]"
+2769024126782546,uberfix,ar,APPROVED,MARKETING,مرحبا عملاء اوبرفيكس,كيف يمكننا مساعدتك,© 2025 Alazab Construction - Privacy Policy,[]
+1385963419888210,hello,en,APPROVED,MARKETING,Alazab,hello_world,© 2025 Al-Azab Construction Company — Privacy Policy,[]
+1295311389013343,azfed,ar,APPROVED,UTILITY,,"إننا في {{1}}، نولي اهتمامًا كبيرًا لملاحظات العملاء ونستفيد منها في تحسين {{2}} باستمرار. 
+
+نرجو منك إكمال {{3}} قصير (الرابط موضح أدناه) لتخبرنا بالمزيد عن {{4}} التي أجريتها مؤخرًا معنا. 
+
+نشكرك مقدمًا.",,"[{""type"": ""FLOW"", ""text"": ""المشاركة في الاستبيان"", ""flow_id"": 882351327691153, ""flow_action"": ""NAVIGATE"", ""navigate_screen"": ""SURVEY""}]"
+1329123054806670,mohamed_azab,en,APPROVED,MARKETING,,AtoZ Several Architectural by Alazab Team,Eng:Mohamed Azab,"[{""type"": ""FLOW"", ""text"": ""View Alazab"", ""flow_id"": 1585408262620528, ""flow_action"": ""NAVIGATE"", ""navigate_screen"": ""WELCOME_SCREEN""}]"
+1660063644862746,azord,ar,APPROVED,UTILITY,تم توصيل الطلب,"لدينا أخبار رائعة لك يا {{1}}! 
+
+تم توصيل طلبك رقم {{2}}.
+
+هل تحتاج إلى إرجاع عنصر أو استبداله؟ انقر هنا لإدارة طلبك.",,"[{""type"": ""URL"", ""text"": ""إدارة الطلب"", ""url"": ""https://www.example.com/{{1}}"", ""example"": [""https://al-azab.co/""]}]"
