@@ -1,14 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ArrowUpLeft, LogOut, Menu, X } from "lucide-react";
+import { ArrowUpLeft, LogOut, Menu, ShoppingCart, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useStoreCart } from "@/hooks/use-store-cart";
 import { BrandLogo } from "@/components/BrandLogo";
 
 const navClass = "text-sm font-bold text-slate-300 transition hover:text-[#FFB900]";
 
 export function SiteHeader() {
   const navigate = useNavigate();
+  const { count } = useStoreCart();
   const qc = useQueryClient();
   const [signedIn, setSignedIn] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,7 +69,13 @@ export function SiteHeader() {
             </Link>
           )}
         </nav>
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="flex items-center gap-2 md:gap-3">
+          <Link to="/cart" aria-label={`السلة تحتوي على ${count} قطعة`} className="relative inline-flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2.5 font-bold text-white transition hover:border-[#FFB900] focus-visible:outline-2 focus-visible:outline-[#FFB900]">
+            <ShoppingCart className="h-5 w-5" />
+            <span className="hidden text-xs sm:inline">السلة</span>
+            <span aria-live="polite" className="inline-flex min-w-6 items-center justify-center rounded-full bg-[#FFB900] px-1.5 py-0.5 text-xs font-black text-[#030957]">{count}</span>
+          </Link>
+          <div className="hidden items-center gap-3 md:flex">
           {signedIn ? (
             <>
               <Link to="/account" className="text-sm font-bold text-slate-300 hover:text-[#FFB900]">
@@ -89,6 +97,7 @@ export function SiteHeader() {
               دخول / تسجيل <ArrowUpLeft className="h-4 w-4" />
             </Link>
           )}
+        </div>
         </div>
         <button
           type="button"

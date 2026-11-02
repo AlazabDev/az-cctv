@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { compareStorageKey, productTitle, trackStoreEvent, isAvailable } from "@/lib/store/catalog";
+import { compareStorageKey, productImages, productTitle, trackStoreEvent, isAvailable } from "@/lib/store/catalog";
 import { useStoreCart } from "@/hooks/use-store-cart";
 import {
   ArrowLeft,
@@ -51,14 +51,16 @@ function ProductImage({
   alt,
   className,
 }: {
-  src: string | undefined;
+  sources: string[];
   alt: string;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
-  return src && !failed ? (
-    <img src={src} alt={alt} className={className} loading="lazy" onError={() => setFailed(true)} />
+  const [index, setIndex] = useState(0);
+  const signature = sources.join("|");
+  useEffect(() => setIndex(0), [signature]);
+  const src = sources[index];
+  return src ? (
+    <img src={src} alt={alt} className={className} loading="lazy" onError={() => setIndex((previous) => previous + 1)} />
   ) : (
     <span className="flex h-full w-full items-center justify-center text-slate-400">
       <ImageOff className="h-9 w-9" aria-label="الصورة غير متاحة" />
@@ -401,7 +403,7 @@ function StorePage() {
                   >
                     <div className="relative flex aspect-square items-center justify-center bg-white p-4">
                       <ProductImage
-                        src={p.image_url || undefined}
+                        sources={productImages(p)}
                         alt={productTitle(p)}
                         className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                       />
