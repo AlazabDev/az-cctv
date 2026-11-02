@@ -3,7 +3,7 @@ import {useQuery} from "@tanstack/react-query";
 import {SiteHeader} from "@/components/SiteHeader";
 import {supabase} from "@/integrations/supabase/client";
 type Item={id:string;name:string;quantity:number;unit_price:number;model?:string;sku?:string;image_url?:string};
-type Invoice={number:string;order_id:string;date:string;customer_name:string;customer_phone:string;items:Item[];total:number;currency:string;payment_method:string;tax_id:string};
+type Invoice={number:string;order_id:string;date:string;customer_name:string;customer_phone:string;items:Item[];total:number;currency:string;payment_method:string;tax_id:string;qr_data_url?:string};
 type Api={invoice?:Invoice;error?:string};
 export const Route=createFileRoute("/invoice/$token")({
  head:()=>({meta:[{title:"فاتورة الشراء | AZ-CCTV"},{name:"robots",content:"noindex,nofollow"},{name:"referrer",content:"no-referrer"}]}),
@@ -28,7 +28,7 @@ function InvoicePage(){
  {query.isPending?<p className="p-12 text-center">جارٍ تحميل الفاتورة…</p>:query.isError?<p role="alert" className="p-12 text-center text-red-700">تعذر عرض الفاتورة: {query.error.message}</p>:invoice&&
  <article className="az-invoice mx-auto max-w-[210mm] bg-white shadow-lg">
  <header className="invoice-top flex items-start justify-between gap-5 px-10 pt-9 pb-7" dir="ltr">
- <div><strong className="text-4xl font-black tracking-tight">al-azab.co</strong><p className="mt-1 text-xs text-slate-500">AZ-CCTV / Alazab Construction</p></div>
+ <div className="relative pt-6"><svg viewBox="0 0 200 48" aria-hidden="true" className="absolute -top-3 left-2 h-12 w-40" fill="none"><path d="M5 38 L61 2 L122 39 M29 23 L88 5 L163 40" stroke="#E5A51A" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/><path d="M33 35V15L61 3L92 17V35" stroke="#E5A51A" strokeWidth="2"/><rect x="57" y="19" width="5" height="5" fill="#111"/><rect x="65" y="19" width="5" height="5" fill="#111"/></svg><strong className="text-4xl font-black tracking-tight">al-azab.co</strong><p className="mt-1 text-xs text-slate-500">AZ-CCTV / Alazab Construction</p></div>
  <div className="text-right"><h1 className="text-[55px] font-black leading-none">INVOICE</h1><p className="mt-2 font-bold tracking-[2px] text-slate-700">TAX: {invoice.tax_id}</p></div>
  </header>
  <div className="invoice-info grid grid-cols-2 gap-6 border-b-[6px] border-[#FFB900] bg-[#f3f3f3] px-10 py-5 text-sm" dir="ltr">
@@ -52,6 +52,10 @@ function InvoicePage(){
  </tbody></table>
  <div className="border border-black bg-[#f3f3f3] p-3 text-xs leading-6"><strong className="text-sm">Rules and Instructions</strong>
  <p>The original invoice is retained in Daftra. Applicable warranty and return conditions are determined by the purchased product and current terms.</p></div></div>
+ <div className="invoice-payment my-5 flex items-end justify-between gap-8" dir="ltr">
+  <div className="space-y-1 text-sm"><p><b>Payment:</b> Settled via PayTabs</p><p><b>Payment reference:</b> {invoice.order_id}</p><p><b>Invoice currency:</b> {invoice.currency}</p></div>
+  {invoice.qr_data_url&&<img src={invoice.qr_data_url} alt="QR لعرض الفاتورة" className="h-[125px] w-[125px] object-contain" />}
+ </div>
  <div className="invoice-contact mt-9 border-t-2 border-[#030957] pt-4 text-center text-sm font-bold tracking-wider" dir="ltr">A8/500 St Maadi Cairo　 |　 sales@alazab.com　 |　 +201004006620</div>
  </div><div className="invoice-stripe flex h-6"><div className="w-1/2 bg-[#FFB900]"/><div className="w-1/2 bg-[#030957]"/></div>
  </article>}
@@ -67,7 +71,7 @@ function InvoicePage(){
   body{background:white!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .no-print{display:none!important}
   .az-invoice{width:210mm;max-width:none;box-shadow:none!important;margin:0!important}
-  .invoice-info,.invoice-top,.invoice-summary,.invoice-contact,.invoice-stripe{break-inside:avoid;page-break-inside:avoid}
+  .invoice-info,.invoice-top,.invoice-summary,.invoice-payment,.invoice-contact,.invoice-stripe{break-inside:avoid;page-break-inside:avoid}
   .invoice-table{break-inside:auto}
  }
  `}</style></div>
