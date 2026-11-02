@@ -19,6 +19,17 @@ async function reserve(db:ReturnType<typeof createClient>,checkout_id:string,kin
  if(previous.error||!previous.data)throw Error("Cannot reserve job");
  return {job:previous.data,fresh:false};
 }
+async function notify(orderId:string){
+ if(env("STORE_INVOICE_DELIVERY_ENABLED")!=="true")return {delivery:"disabled"};
+ try{
+  const r=await fetch(env("SUPABASE_URL")+"/functions/v1/az-invoice-whatsapp",{
+   method:"POST",
+   headers:{"Authorization":"Bearer "+env("SUPABASE_SERVICE_ROLE_KEY"),"Content-Type":"application/json"},
+   body:JSON.stringify({order_id:orderId}),signal:AbortSignal.timeout(20000)
+  });
+  return {delivery:r.ok?"accepted":"requires_attention"};
+ }catch{return {delivery:"requires_attention"}}
+}
 Deno.serve(async req=>{
  if(req.method!=="POST")return ok({error:"Method not allowed"},405);
  const token=req.headers.get("authorization")?.replace(/^Bearer\s+/i,"")||"";
@@ -30,7 +41,7 @@ Deno.serve(async req=>{
  const {data:order,error}=await db.from("store_checkout_payments").select("id,status,invoice_status,customer_name,customer_phone,customer_email,amount,currency,items_snapshot,daftra_client_id,daftra_invoice_id,daftra_invoice_number").eq("id",input.order_id).maybeSingle();
  if(error||!order)return ok({error:"Order not found"},404);
  if(order.status!=="paid")return ok({error:"Payment not confirmed"},409);
- if(order.invoice_status==="confirmed"&&order.daftra_invoice_id)return ok({invoice_id:order.daftra_invoice_id,existing:true});
+ if(order.invoice_status==="confirmed"&&order.daftra_invoice_id)return ok({invoice_id:order.daftra_invoice_id,existing:true,...await notify(order.id)});
  if(order.currency!=="EGP"||!Array.isArray(order.items_snapshot)||!order.items_snapshot.length)return ok({error:"Invalid order snapshot"},409);
  let clientId=order.daftra_client_id||"";
  if(!clientId){
@@ -82,5 +93,5 @@ Deno.serve(async req=>{
  if(!invoiceNumber)return ok({error:"Invoice number unavailable; reconciliation required"},503);
  const {error:finalError}=await db.from("store_checkout_payments").update({daftra_invoice_id:invoiceId,daftra_invoice_number:invoiceNumber,invoice_status:"confirmed",invoice_issued_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",order.id).eq("status","paid");
  if(finalError)return ok({error:"Invoice reconciliation required"},503);
- return ok({invoice_id:invoiceId,invoice_number:invoiceNumber,confirmed:true});
+ return ok({invoice_id:invoiceId,invoice_number:invoiceNumber,confirmed:true,...await notify(order.id)});
 });
