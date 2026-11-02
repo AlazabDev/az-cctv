@@ -202,6 +202,11 @@ function CartPage() {
                   بعض المنتجات دون سعر معتمد. لا يمكن إرسال الطلب قبل استكمال بيانات الأسعار.
                 </p>
               )}
+              {readyToQuote && (
+                <Link to="/checkout" className="mb-3 flex justify-center rounded-xl bg-[#030957] px-5 py-4 text-sm font-black text-white">
+                  متابعة الشراء والدفع الإلكتروني
+                </Link>
+              )}
               {readyToQuote ? (
                 <Link
                   to="/quote"
