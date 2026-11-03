@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "test": "npx --yes vitest@3.2.4 run",
     "test:topology": "npx --yes vitest@3.2.4 run tests/topology.engineering.test.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:store": "npx --yes vitest@3.2.4 run tests/store-checkout.engineering.test.ts tests/store-stock-freshness.test.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -42,6 +43,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toast": "^1.2.15",
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
@@ -78,7 +80,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.25.3",
+    "@lovable.dev/vite-tanstack-config": "2.26.5",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
