@@ -533,133 +533,6 @@ export type Database = {
           },
         ]
       }
-      product_source_monitor: {
-        Row: {
-          enabled: boolean
-          handle: string
-          id: number
-          last_changed_at: string | null
-          last_checked_at: string | null
-          last_error: string | null
-          product_id: string
-          source: string
-          source_url: string
-        }
-        Insert: {
-          enabled?: boolean
-          handle: string
-          id?: never
-          last_changed_at?: string | null
-          last_checked_at?: string | null
-          last_error?: string | null
-          product_id: string
-          source?: string
-          source_url: string
-        }
-        Update: {
-          enabled?: boolean
-          handle?: string
-          id?: never
-          last_changed_at?: string | null
-          last_checked_at?: string | null
-          last_error?: string | null
-          product_id?: string
-          source?: string
-          source_url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_source_monitor_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_source_price_stock_history: {
-        Row: {
-          changed_at: string
-          id: number
-          new_in_stock: boolean | null
-          new_price: number | null
-          old_in_stock: boolean | null
-          old_price: number | null
-          product_id: string
-          source: string
-        }
-        Insert: {
-          changed_at?: string
-          id?: never
-          new_in_stock?: boolean | null
-          new_price?: number | null
-          old_in_stock?: boolean | null
-          old_price?: number | null
-          product_id: string
-          source: string
-        }
-        Update: {
-          changed_at?: string
-          id?: never
-          new_in_stock?: boolean | null
-          new_price?: number | null
-          old_in_stock?: boolean | null
-          old_price?: number | null
-          product_id?: string
-          source?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_source_price_stock_history_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_source_sync_runs: {
-        Row: {
-          changed: number
-          checked: number
-          details: Json
-          dry_run: boolean
-          failed: number
-          finished_at: string | null
-          id: string
-          requested_by: string | null
-          started_at: string
-          status: string
-          total: number
-        }
-        Insert: {
-          changed?: number
-          checked?: number
-          details?: Json
-          dry_run?: boolean
-          failed?: number
-          finished_at?: string | null
-          id?: string
-          requested_by?: string | null
-          started_at?: string
-          status?: string
-          total?: number
-        }
-        Update: {
-          changed?: number
-          checked?: number
-          details?: Json
-          dry_run?: boolean
-          failed?: number
-          finished_at?: string | null
-          id?: string
-          requested_by?: string | null
-          started_at?: string
-          status?: string
-          total?: number
-        }
-        Relationships: []
-      }
       products: {
         Row: {
           amazon_raw: Json
@@ -685,7 +558,6 @@ export type Database = {
           image_name: string | null
           image_url: string | null
           images: string[]
-          in_stock: boolean | null
           ir_range: number | null
           is_active: boolean
           last_synced_at: string | null
@@ -698,7 +570,6 @@ export type Database = {
           poe_watts: number | null
           ports: number | null
           power_type: string | null
-          price_checked_at: string | null
           product_name: string | null
           product_type: string | null
           protection_rating: string | null
@@ -716,7 +587,6 @@ export type Database = {
           source_sheet: string | null
           source_url: string | null
           specifications: Json
-          stock_checked_at: string | null
           storage_tb: number | null
           subcategory: string | null
           tags: string[]
@@ -749,7 +619,6 @@ export type Database = {
           image_name?: string | null
           image_url?: string | null
           images?: string[]
-          in_stock?: boolean | null
           ir_range?: number | null
           is_active?: boolean
           last_synced_at?: string | null
@@ -762,7 +631,6 @@ export type Database = {
           poe_watts?: number | null
           ports?: number | null
           power_type?: string | null
-          price_checked_at?: string | null
           product_name?: string | null
           product_type?: string | null
           protection_rating?: string | null
@@ -780,7 +648,6 @@ export type Database = {
           source_sheet?: string | null
           source_url?: string | null
           specifications?: Json
-          stock_checked_at?: string | null
           storage_tb?: number | null
           subcategory?: string | null
           tags?: string[]
@@ -813,7 +680,6 @@ export type Database = {
           image_name?: string | null
           image_url?: string | null
           images?: string[]
-          in_stock?: boolean | null
           ir_range?: number | null
           is_active?: boolean
           last_synced_at?: string | null
@@ -826,7 +692,6 @@ export type Database = {
           poe_watts?: number | null
           ports?: number | null
           power_type?: string | null
-          price_checked_at?: string | null
           product_name?: string | null
           product_type?: string | null
           protection_rating?: string | null
@@ -844,7 +709,6 @@ export type Database = {
           source_sheet?: string | null
           source_url?: string | null
           specifications?: Json
-          stock_checked_at?: string | null
           storage_tb?: number | null
           subcategory?: string | null
           tags?: string[]
@@ -873,123 +737,6 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
-        }
-        Relationships: []
-      }
-      store_amazon_api_logs: {
-        Row: {
-          created_at: string
-          endpoint: string
-          execution_time_ms: number | null
-          id: number
-          method: string
-          request_summary: Json
-          status_code: number | null
-        }
-        Insert: {
-          created_at?: string
-          endpoint: string
-          execution_time_ms?: number | null
-          id?: never
-          method: string
-          request_summary?: Json
-          status_code?: number | null
-        }
-        Update: {
-          created_at?: string
-          endpoint?: string
-          execution_time_ms?: number | null
-          id?: never
-          method?: string
-          request_summary?: Json
-          status_code?: number | null
-        }
-        Relationships: []
-      }
-      store_checkout_payments: {
-        Row: {
-          amount: number
-          cart: Json
-          created_at: string
-          currency: string
-          customer_email: string | null
-          customer_name: string
-          customer_phone: string
-          daftra_client_id: string | null
-          daftra_invoice_id: string | null
-          daftra_invoice_number: string | null
-          delivery_error: string | null
-          email_status: string
-          id: string
-          invoice_access_token: string
-          invoice_delivery_started_at: string | null
-          invoice_issued_at: string | null
-          invoice_reservation_id: string | null
-          invoice_status: string
-          items_snapshot: Json
-          last_error: string | null
-          paid_at: string | null
-          paytabs_payload: Json | null
-          status: string
-          tran_ref: string | null
-          updated_at: string
-          whatsapp_status: string
-        }
-        Insert: {
-          amount: number
-          cart: Json
-          created_at?: string
-          currency?: string
-          customer_email?: string | null
-          customer_name: string
-          customer_phone: string
-          daftra_client_id?: string | null
-          daftra_invoice_id?: string | null
-          daftra_invoice_number?: string | null
-          delivery_error?: string | null
-          email_status?: string
-          id?: string
-          invoice_access_token?: string
-          invoice_delivery_started_at?: string | null
-          invoice_issued_at?: string | null
-          invoice_reservation_id?: string | null
-          invoice_status?: string
-          items_snapshot: Json
-          last_error?: string | null
-          paid_at?: string | null
-          paytabs_payload?: Json | null
-          status?: string
-          tran_ref?: string | null
-          updated_at?: string
-          whatsapp_status?: string
-        }
-        Update: {
-          amount?: number
-          cart?: Json
-          created_at?: string
-          currency?: string
-          customer_email?: string | null
-          customer_name?: string
-          customer_phone?: string
-          daftra_client_id?: string | null
-          daftra_invoice_id?: string | null
-          daftra_invoice_number?: string | null
-          delivery_error?: string | null
-          email_status?: string
-          id?: string
-          invoice_access_token?: string
-          invoice_delivery_started_at?: string | null
-          invoice_issued_at?: string | null
-          invoice_reservation_id?: string | null
-          invoice_status?: string
-          items_snapshot?: Json
-          last_error?: string | null
-          paid_at?: string | null
-          paytabs_payload?: Json | null
-          status?: string
-          tran_ref?: string | null
-          updated_at?: string
-          whatsapp_status?: string
         }
         Relationships: []
       }
@@ -1050,162 +797,6 @@ export type Database = {
           },
         ]
       }
-      store_daftra_documents: {
-        Row: {
-          created_at: string
-          daftra_id: string | null
-          daftra_number: string | null
-          id: string
-          kind: string
-          last_error: string | null
-          payload_hash: string
-          quotation_id: string
-          request_key: string
-          requested_by: string
-          response_meta: Json
-          status: string
-          supplier_source: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          daftra_id?: string | null
-          daftra_number?: string | null
-          id?: string
-          kind: string
-          last_error?: string | null
-          payload_hash: string
-          quotation_id: string
-          request_key: string
-          requested_by: string
-          response_meta?: Json
-          status?: string
-          supplier_source?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          daftra_id?: string | null
-          daftra_number?: string | null
-          id?: string
-          kind?: string
-          last_error?: string | null
-          payload_hash?: string
-          quotation_id?: string
-          request_key?: string
-          requested_by?: string
-          response_meta?: Json
-          status?: string
-          supplier_source?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "store_daftra_documents_quotation_id_fkey"
-            columns: ["quotation_id"]
-            isOneToOne: false
-            referencedRelation: "store_quotations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      store_invoice_jobs: {
-        Row: {
-          checkout_id: string
-          created_at: string
-          error: string | null
-          external_id: string | null
-          id: string
-          kind: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          checkout_id: string
-          created_at?: string
-          error?: string | null
-          external_id?: string | null
-          id?: string
-          kind: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          checkout_id?: string
-          created_at?: string
-          error?: string | null
-          external_id?: string | null
-          id?: string
-          kind?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "store_invoice_jobs_checkout_id_fkey"
-            columns: ["checkout_id"]
-            isOneToOne: false
-            referencedRelation: "store_checkout_payments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      store_orders: {
-        Row: {
-          amazon_order_id: string | null
-          amazon_response: Json | null
-          amount: number | null
-          created_at: string
-          currency: string
-          fulfillment_order_id: string | null
-          id: string
-          last_error: string | null
-          quotation_id: string
-          shipping_address: Json | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amazon_order_id?: string | null
-          amazon_response?: Json | null
-          amount?: number | null
-          created_at?: string
-          currency?: string
-          fulfillment_order_id?: string | null
-          id?: string
-          last_error?: string | null
-          quotation_id: string
-          shipping_address?: Json | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amazon_order_id?: string | null
-          amazon_response?: Json | null
-          amount?: number | null
-          created_at?: string
-          currency?: string
-          fulfillment_order_id?: string | null
-          id?: string
-          last_error?: string | null
-          quotation_id?: string
-          shipping_address?: Json | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "store_orders_quotation_id_fkey"
-            columns: ["quotation_id"]
-            isOneToOne: true
-            referencedRelation: "store_quotations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       store_quotation_items: {
         Row: {
           currency: string
@@ -1256,7 +847,6 @@ export type Database = {
       }
       store_quotations: {
         Row: {
-          approval_reference: string | null
           company: string | null
           created_at: string
           currency: string
@@ -1273,7 +863,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          approval_reference?: string | null
           company?: string | null
           created_at?: string
           currency?: string
@@ -1290,7 +879,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          approval_reference?: string | null
           company?: string | null
           created_at?: string
           currency?: string
@@ -1395,7 +983,6 @@ export type Database = {
           image_name: string | null
           image_url: string | null
           images: string[]
-          in_stock: boolean | null
           ir_range: number | null
           is_active: boolean
           last_synced_at: string | null
@@ -1408,7 +995,6 @@ export type Database = {
           poe_watts: number | null
           ports: number | null
           power_type: string | null
-          price_checked_at: string | null
           product_name: string | null
           product_type: string | null
           protection_rating: string | null
@@ -1426,7 +1012,6 @@ export type Database = {
           source_sheet: string | null
           source_url: string | null
           specifications: Json
-          stock_checked_at: string | null
           storage_tb: number | null
           subcategory: string | null
           tags: string[]

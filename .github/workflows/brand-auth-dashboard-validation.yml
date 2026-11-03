@@ -7,7 +7,6 @@ on:
       - 'src/components/SiteHeader.tsx'
       - 'src/lib/brand-assets.ts'
       - 'src/routes/**'
-      - 'vite.config.ts'
       - '.github/workflows/brand-auth-dashboard-validation.yml'
   pull_request:
     paths:
@@ -15,7 +14,6 @@ on:
       - 'src/components/SiteHeader.tsx'
       - 'src/lib/brand-assets.ts'
       - 'src/routes/**'
-      - 'vite.config.ts'
       - '.github/workflows/brand-auth-dashboard-validation.yml'
 permissions:
   contents: read
@@ -33,9 +31,9 @@ jobs:
           node-version: '22'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Generate routes and production build
-        run: pnpm run build
       - name: TypeScript
         run: pnpm exec tsc --noEmit
       - name: Tests
         run: pnpm test
+      - name: Production build
+        run: pnpm run build
