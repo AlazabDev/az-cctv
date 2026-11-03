@@ -13,22 +13,26 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalculatorRouteImport } from './routes/calculator'
-import { Route as CatalogRouteImport } from './routes/catalog'
-import { Route as StoreRouteImport } from './routes/store'
-import { Route as QuoteRouteImport } from './routes/quote'
-import { Route as MyQuotesRouteImport } from './routes/my-quotes'
 import { Route as CartRouteImport } from './routes/cart'
-import { Route as StoreFeedsMetaCsvRouteImport } from './routes/store.feeds.meta[.]csv'
-import { Route as StoreFeedsGoogleXmlRouteImport } from './routes/store.feeds.google[.]xml'
-import { Route as CategorySlugRouteImport } from './routes/category.$slug'
-import { Route as SitemapXmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as CatalogRouteImport } from './routes/catalog'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as MyQuotesRouteImport } from './routes/my-quotes'
+import { Route as Order_managementRouteImport } from './routes/order_management'
+import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StoreRouteImport } from './routes/store'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
-import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
+import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
+import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as CheckoutResultRouteImport } from './routes/checkout/result'
+import { Route as InvoiceTokenRouteImport } from './routes/invoice.$token'
+import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as AuthenticatedEditorIdRouteImport } from './routes/_authenticated/editor.$id'
+import { Route as StoreFeedsGoogleDotxmlRouteImport } from './routes/store.feeds.google[.]xml'
+import { Route as StoreFeedsMetaDotcsvRouteImport } from './routes/store.feeds.meta[.]csv'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -49,14 +53,19 @@ const CalculatorRoute = CalculatorRouteImport.update({
   path: '/calculator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CatalogRoute = CatalogRouteImport.update({
   id: '/catalog',
   path: '/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StoreRoute = StoreRouteImport.update({
-  id: '/store',
-  path: '/store',
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -64,39 +73,14 @@ const CompareRoute = CompareRouteImport.update({
   path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProductIdRoute = ProductIdRouteImport.update({
-  id: '/product/$id',
-  path: '/product/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapXmlRoute = SitemapXmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CategorySlugRoute = CategorySlugRouteImport.update({
-  id: '/category/$slug',
-  path: '/category/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StoreFeedsGoogleXmlRoute = StoreFeedsGoogleXmlRouteImport.update({
- id: '/store/feeds/google.xml',
- path: '/store/feeds/google.xml',
- getParentRoute: () => rootRouteImport,
-} as any)
-const StoreFeedsMetaCsvRoute = StoreFeedsMetaCsvRouteImport.update({
- id: '/store/feeds/meta.csv',
- path: '/store/feeds/meta.csv',
- getParentRoute: () => rootRouteImport,
-} as any)
-const CartRoute = CartRouteImport.update({
-  id: '/cart',
-  path: '/cart',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MyQuotesRoute = MyQuotesRouteImport.update({
   id: '/my-quotes',
   path: '/my-quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Order_managementRoute = Order_managementRouteImport.update({
+  id: '/order_management',
+  path: '/order_management',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuoteRoute = QuoteRouteImport.update({
@@ -109,13 +93,23 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreRoute = StoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFinanceRoute = AuthenticatedFinanceRouteImport.update({
-  id: '/_authenticated/finance',
+  id: '/finance',
   path: '/finance',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
@@ -124,53 +118,91 @@ const AuthenticatedProjectsRoute = AuthenticatedProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CategorySlugRoute = CategorySlugRouteImport.update({
+  id: '/category/$slug',
+  path: '/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutResultRoute = CheckoutResultRouteImport.update({
+  id: '/result',
+  path: '/result',
+  getParentRoute: () => CheckoutRoute,
+} as any)
+const InvoiceTokenRoute = InvoiceTokenRouteImport.update({
+  id: '/invoice/$token',
+  path: '/invoice/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductIdRoute = ProductIdRouteImport.update({
+  id: '/product/$id',
+  path: '/product/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEditorIdRoute = AuthenticatedEditorIdRouteImport.update({
   id: '/editor/$id',
   path: '/editor/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const StoreFeedsGoogleDotxmlRoute = StoreFeedsGoogleDotxmlRouteImport.update({
+  id: '/feeds/google.xml',
+  path: '/feeds/google.xml',
+  getParentRoute: () => StoreRoute,
+} as any)
+const StoreFeedsMetaDotcsvRoute = StoreFeedsMetaDotcsvRouteImport.update({
+  id: '/feeds/meta.csv',
+  path: '/feeds/meta.csv',
+  getParentRoute: () => StoreRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/calculator': typeof CalculatorRoute
-  '/catalog': typeof CatalogRoute
-  '/store': typeof StoreRoute
-  '/quote': typeof QuoteRoute
-  '/my-quotes': typeof MyQuotesRoute
   '/cart': typeof CartRoute
-  '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
-  '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
-  '/category/$slug': typeof CategorySlugRoute
-  '/sitemap.xml': typeof SitemapXmlRoute
-  '/product/$id': typeof ProductIdRoute
+  '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/compare': typeof CompareRoute
+  '/my-quotes': typeof MyQuotesRoute
+  '/order_management': typeof Order_managementRoute
+  '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/store': typeof StoreRouteWithChildren
   '/account': typeof AuthenticatedAccountRoute
-  '/projects': typeof AuthenticatedProjectsRoute
   '/finance': typeof AuthenticatedFinanceRoute
+  '/projects': typeof AuthenticatedProjectsRoute
+  '/category/$slug': typeof CategorySlugRoute
+  '/checkout/result': typeof CheckoutResultRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
+  '/product/$id': typeof ProductIdRoute
   '/editor/$id': typeof AuthenticatedEditorIdRoute
+  '/store/feeds/google.xml': typeof StoreFeedsGoogleDotxmlRoute
+  '/store/feeds/meta.csv': typeof StoreFeedsMetaDotcsvRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/calculator': typeof CalculatorRoute
-  '/catalog': typeof CatalogRoute
-  '/store': typeof StoreRoute
-  '/quote': typeof QuoteRoute
-  '/my-quotes': typeof MyQuotesRoute
   '/cart': typeof CartRoute
-  '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
-  '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
-  '/category/$slug': typeof CategorySlugRoute
-  '/sitemap.xml': typeof SitemapXmlRoute
-  '/product/$id': typeof ProductIdRoute
+  '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/compare': typeof CompareRoute
+  '/my-quotes': typeof MyQuotesRoute
+  '/order_management': typeof Order_managementRoute
+  '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/store': typeof StoreRouteWithChildren
   '/account': typeof AuthenticatedAccountRoute
-  '/projects': typeof AuthenticatedProjectsRoute
   '/finance': typeof AuthenticatedFinanceRoute
+  '/projects': typeof AuthenticatedProjectsRoute
+  '/category/$slug': typeof CategorySlugRoute
+  '/checkout/result': typeof CheckoutResultRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
+  '/product/$id': typeof ProductIdRoute
   '/editor/$id': typeof AuthenticatedEditorIdRoute
+  '/store/feeds/google.xml': typeof StoreFeedsGoogleDotxmlRoute
+  '/store/feeds/meta.csv': typeof StoreFeedsMetaDotcsvRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -178,22 +210,26 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/calculator': typeof CalculatorRoute
-  '/catalog': typeof CatalogRoute
-  '/store': typeof StoreRoute
-  '/quote': typeof QuoteRoute
-  '/my-quotes': typeof MyQuotesRoute
   '/cart': typeof CartRoute
-  '/store/feeds/meta.csv': typeof StoreFeedsMetaCsvRoute
-  '/store/feeds/google.xml': typeof StoreFeedsGoogleXmlRoute
-  '/category/$slug': typeof CategorySlugRoute
-  '/sitemap.xml': typeof SitemapXmlRoute
-  '/product/$id': typeof ProductIdRoute
+  '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/compare': typeof CompareRoute
+  '/my-quotes': typeof MyQuotesRoute
+  '/order_management': typeof Order_managementRoute
+  '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/store': typeof StoreRouteWithChildren
   '/_authenticated/account': typeof AuthenticatedAccountRoute
-  '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
+  '/_authenticated/projects': typeof AuthenticatedProjectsRoute
+  '/category/$slug': typeof CategorySlugRoute
+  '/checkout/result': typeof CheckoutResultRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
+  '/product/$id': typeof ProductIdRoute
   '/_authenticated/editor/$id': typeof AuthenticatedEditorIdRoute
+  '/store/feeds/google.xml': typeof StoreFeedsGoogleDotxmlRoute
+  '/store/feeds/meta.csv': typeof StoreFeedsMetaDotcsvRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -201,65 +237,77 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/calculator'
-    | '/catalog'
-    | '/store'
-    | '/quote'
-    | '/my-quotes'
     | '/cart'
-    | '/store/feeds/meta.csv'
-    | '/store/feeds/google.xml'
-    | '/category/$slug'
-    | '/sitemap.xml'
-    | '/product/$id'
+    | '/catalog'
+    | '/checkout'
     | '/compare'
+    | '/my-quotes'
+    | '/order_management'
+    | '/quote'
     | '/reset-password'
+    | '/sitemap.xml'
+    | '/store'
     | '/account'
-    | '/projects'
     | '/finance'
+    | '/projects'
+    | '/category/$slug'
+    | '/checkout/result'
+    | '/invoice/$token'
+    | '/product/$id'
     | '/editor/$id'
+    | '/store/feeds/google.xml'
+    | '/store/feeds/meta.csv'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/calculator'
-    | '/catalog'
-    | '/store'
-    | '/quote'
-    | '/my-quotes'
     | '/cart'
-    | '/store/feeds/meta.csv'
-    | '/store/feeds/google.xml'
-    | '/category/$slug'
-    | '/sitemap.xml'
-    | '/product/$id'
+    | '/catalog'
+    | '/checkout'
     | '/compare'
+    | '/my-quotes'
+    | '/order_management'
+    | '/quote'
     | '/reset-password'
+    | '/sitemap.xml'
+    | '/store'
     | '/account'
-    | '/projects'
     | '/finance'
+    | '/projects'
+    | '/category/$slug'
+    | '/checkout/result'
+    | '/invoice/$token'
+    | '/product/$id'
     | '/editor/$id'
+    | '/store/feeds/google.xml'
+    | '/store/feeds/meta.csv'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/calculator'
-    | '/catalog'
-    | '/store'
-    | '/quote'
-    | '/my-quotes'
     | '/cart'
-    | '/store/feeds/meta.csv'
-    | '/store/feeds/google.xml'
-    | '/category/$slug'
-    | '/sitemap.xml'
-    | '/product/$id'
+    | '/catalog'
+    | '/checkout'
     | '/compare'
+    | '/my-quotes'
+    | '/order_management'
+    | '/quote'
     | '/reset-password'
+    | '/sitemap.xml'
+    | '/store'
     | '/_authenticated/account'
-    | '/_authenticated/projects'
     | '/_authenticated/finance'
+    | '/_authenticated/projects'
+    | '/category/$slug'
+    | '/checkout/result'
+    | '/invoice/$token'
+    | '/product/$id'
     | '/_authenticated/editor/$id'
+    | '/store/feeds/google.xml'
+    | '/store/feeds/meta.csv'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -267,18 +315,19 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CalculatorRoute: typeof CalculatorRoute
-  CatalogRoute: typeof CatalogRoute
-  StoreRoute: typeof StoreRoute
-  QuoteRoute: typeof QuoteRoute
-  MyQuotesRoute: typeof MyQuotesRoute
   CartRoute: typeof CartRoute
-  StoreFeedsMetaCsvRoute: typeof StoreFeedsMetaCsvRoute
-  StoreFeedsGoogleXmlRoute: typeof StoreFeedsGoogleXmlRoute
-  CategorySlugRoute: typeof CategorySlugRoute
-  SitemapXmlRoute: typeof SitemapXmlRoute
-  ProductIdRoute: typeof ProductIdRoute
+  CatalogRoute: typeof CatalogRoute
+  CheckoutRoute: typeof CheckoutRouteWithChildren
   CompareRoute: typeof CompareRoute
+  MyQuotesRoute: typeof MyQuotesRoute
+  Order_managementRoute: typeof Order_managementRoute
+  QuoteRoute: typeof QuoteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StoreRoute: typeof StoreRouteWithChildren
+  CategorySlugRoute: typeof CategorySlugRoute
+  InvoiceTokenRoute: typeof InvoiceTokenRoute
+  ProductIdRoute: typeof ProductIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -311,6 +360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalculatorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/catalog': {
       id: '/catalog'
       path: '/catalog'
@@ -318,11 +374,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/store': {
-      id: '/store'
-      path: '/store'
-      fullPath: '/store'
-      preLoaderRoute: typeof StoreRouteImport
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -332,53 +388,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/product/$id': {
-      id: '/product/$id'
-      path: '/product/$id'
-      fullPath: '/product/$id'
-      preLoaderRoute: typeof ProductIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapXmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/category/$slug': {
-      id: '/category/$slug'
-      path: '/category/$slug'
-      fullPath: '/category/$slug'
-      preLoaderRoute: typeof CategorySlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/store/feeds/google.xml': {
-      id: '/store/feeds/google.xml'
-      path: '/store/feeds/google.xml'
-      fullPath: '/store/feeds/google.xml'
-      preLoaderRoute: typeof StoreFeedsGoogleXmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/store/feeds/meta.csv': {
-      id: '/store/feeds/meta.csv'
-      path: '/store/feeds/meta.csv'
-      fullPath: '/store/feeds/meta.csv'
-      preLoaderRoute: typeof StoreFeedsMetaCsvRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cart': {
-      id: '/cart'
-      path: '/cart'
-      fullPath: '/cart'
-      preLoaderRoute: typeof CartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/my-quotes': {
       id: '/my-quotes'
       path: '/my-quotes'
       fullPath: '/my-quotes'
       preLoaderRoute: typeof MyQuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order_management': {
+      id: '/order_management'
+      path: '/order_management'
+      fullPath: '/order_management'
+      preLoaderRoute: typeof Order_managementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quote': {
@@ -393,6 +414,20 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/account': {
@@ -416,6 +451,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/category/$slug': {
+      id: '/category/$slug'
+      path: '/category/$slug'
+      fullPath: '/category/$slug'
+      preLoaderRoute: typeof CategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/result': {
+      id: '/checkout/result'
+      path: '/result'
+      fullPath: '/checkout/result'
+      preLoaderRoute: typeof CheckoutResultRouteImport
+      parentRoute: typeof CheckoutRoute
+    }
+    '/invoice/$token': {
+      id: '/invoice/$token'
+      path: '/invoice/$token'
+      fullPath: '/invoice/$token'
+      preLoaderRoute: typeof InvoiceTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product/$id': {
+      id: '/product/$id'
+      path: '/product/$id'
+      fullPath: '/product/$id'
+      preLoaderRoute: typeof ProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/editor/$id': {
       id: '/_authenticated/editor/$id'
       path: '/editor/$id'
@@ -423,43 +486,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEditorIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/store/feeds/google.xml': {
+      id: '/store/feeds/google.xml'
+      path: '/feeds/google.xml'
+      fullPath: '/store/feeds/google.xml'
+      preLoaderRoute: typeof StoreFeedsGoogleDotxmlRouteImport
+      parentRoute: typeof StoreRoute
+    }
+    '/store/feeds/meta.csv': {
+      id: '/store/feeds/meta.csv'
+      path: '/feeds/meta.csv'
+      fullPath: '/store/feeds/meta.csv'
+      preLoaderRoute: typeof StoreFeedsMetaDotcsvRouteImport
+      parentRoute: typeof StoreRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
-  AuthenticatedProjectsRoute: typeof AuthenticatedProjectsRoute
   AuthenticatedFinanceRoute: typeof AuthenticatedFinanceRoute
+  AuthenticatedProjectsRoute: typeof AuthenticatedProjectsRoute
   AuthenticatedEditorIdRoute: typeof AuthenticatedEditorIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
-  AuthenticatedProjectsRoute: AuthenticatedProjectsRoute,
   AuthenticatedFinanceRoute: AuthenticatedFinanceRoute,
+  AuthenticatedProjectsRoute: AuthenticatedProjectsRoute,
   AuthenticatedEditorIdRoute: AuthenticatedEditorIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CheckoutRouteChildren {
+  CheckoutResultRoute: typeof CheckoutResultRoute
+}
+
+const CheckoutRouteChildren: CheckoutRouteChildren = {
+  CheckoutResultRoute: CheckoutResultRoute,
+}
+
+const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
+  CheckoutRouteChildren,
+)
+
+interface StoreRouteChildren {
+  StoreFeedsGoogleDotxmlRoute: typeof StoreFeedsGoogleDotxmlRoute
+  StoreFeedsMetaDotcsvRoute: typeof StoreFeedsMetaDotcsvRoute
+}
+
+const StoreRouteChildren: StoreRouteChildren = {
+  StoreFeedsGoogleDotxmlRoute: StoreFeedsGoogleDotxmlRoute,
+  StoreFeedsMetaDotcsvRoute: StoreFeedsMetaDotcsvRoute,
+}
+
+const StoreRouteWithChildren = StoreRoute._addFileChildren(StoreRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CalculatorRoute: CalculatorRoute,
-  CatalogRoute: CatalogRoute,
-  StoreRoute: StoreRoute,
-  QuoteRoute: QuoteRoute,
-  MyQuotesRoute: MyQuotesRoute,
   CartRoute: CartRoute,
-  StoreFeedsMetaCsvRoute: StoreFeedsMetaCsvRoute,
-  StoreFeedsGoogleXmlRoute: StoreFeedsGoogleXmlRoute,
-  CategorySlugRoute: CategorySlugRoute,
-  SitemapXmlRoute: SitemapXmlRoute,
-  ProductIdRoute: ProductIdRoute,
+  CatalogRoute: CatalogRoute,
+  CheckoutRoute: CheckoutRouteWithChildren,
   CompareRoute: CompareRoute,
+  MyQuotesRoute: MyQuotesRoute,
+  Order_managementRoute: Order_managementRoute,
+  QuoteRoute: QuoteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StoreRoute: StoreRouteWithChildren,
+  CategorySlugRoute: CategorySlugRoute,
+  InvoiceTokenRoute: InvoiceTokenRoute,
+  ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
