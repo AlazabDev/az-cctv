@@ -906,6 +906,93 @@ export type Database = {
         }
         Relationships: []
       }
+      store_checkout_payments: {
+        Row: {
+          amount: number
+          cart: Json
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          daftra_client_id: string | null
+          daftra_invoice_id: string | null
+          daftra_invoice_number: string | null
+          delivery_error: string | null
+          email_status: string
+          id: string
+          invoice_access_token: string
+          invoice_delivery_started_at: string | null
+          invoice_issued_at: string | null
+          invoice_reservation_id: string | null
+          invoice_status: string
+          items_snapshot: Json
+          last_error: string | null
+          paid_at: string | null
+          paytabs_payload: Json | null
+          status: string
+          tran_ref: string | null
+          updated_at: string
+          whatsapp_status: string
+        }
+        Insert: {
+          amount: number
+          cart: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          daftra_client_id?: string | null
+          daftra_invoice_id?: string | null
+          daftra_invoice_number?: string | null
+          delivery_error?: string | null
+          email_status?: string
+          id?: string
+          invoice_access_token?: string
+          invoice_delivery_started_at?: string | null
+          invoice_issued_at?: string | null
+          invoice_reservation_id?: string | null
+          invoice_status?: string
+          items_snapshot: Json
+          last_error?: string | null
+          paid_at?: string | null
+          paytabs_payload?: Json | null
+          status?: string
+          tran_ref?: string | null
+          updated_at?: string
+          whatsapp_status?: string
+        }
+        Update: {
+          amount?: number
+          cart?: Json
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          daftra_client_id?: string | null
+          daftra_invoice_id?: string | null
+          daftra_invoice_number?: string | null
+          delivery_error?: string | null
+          email_status?: string
+          id?: string
+          invoice_access_token?: string
+          invoice_delivery_started_at?: string | null
+          invoice_issued_at?: string | null
+          invoice_reservation_id?: string | null
+          invoice_status?: string
+          items_snapshot?: Json
+          last_error?: string | null
+          paid_at?: string | null
+          paytabs_payload?: Json | null
+          status?: string
+          tran_ref?: string | null
+          updated_at?: string
+          whatsapp_status?: string
+        }
+        Relationships: []
+      }
       store_conversion_events: {
         Row: {
           created_at: string
@@ -1018,6 +1105,47 @@ export type Database = {
             columns: ["quotation_id"]
             isOneToOne: false
             referencedRelation: "store_quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_invoice_jobs: {
+        Row: {
+          checkout_id: string
+          created_at: string
+          error: string | null
+          external_id: string | null
+          id: string
+          kind: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          checkout_id: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          kind: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          checkout_id?: string
+          created_at?: string
+          error?: string | null
+          external_id?: string | null
+          id?: string
+          kind?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_invoice_jobs_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "store_checkout_payments"
             referencedColumns: ["id"]
           },
         ]
