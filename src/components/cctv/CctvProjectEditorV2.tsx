@@ -551,6 +551,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 ceilingHeightM,
                 floorplanPath: path,
                 planApproved: false,
+                scaleCalibration: undefined,
                 ...size,
               }
             : l,
