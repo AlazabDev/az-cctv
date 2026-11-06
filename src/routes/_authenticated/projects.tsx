@@ -306,7 +306,7 @@ function ProjectsDashboard() {
                 {search ? "جرّب كلمة بحث مختلفة." : "أنشئ مشروعًا وارفع مخططًا لتبدأ التصميم."}
               </p>
               {!search && (
-                <Button onClick={createProject} className="bg-[#030957] text-white">
+                <Button onClick={() => void createProject()} className="bg-[#030957] text-white">
                   إنشاء مشروع
                 </Button>
               )}
