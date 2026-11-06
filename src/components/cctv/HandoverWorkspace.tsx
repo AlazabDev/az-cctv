@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { handoverReportHtml } from "@/lib/cctv/handover-report";
-import type { PlacedDevice } from "@/lib/cctv/types";
+import type { PlacedDevice, ScaleCalibration } from "@/lib/cctv/types";
 import type { TopologyData } from "@/lib/cctv/topology";
 import {
   evaluateHandover, handoverCsv, type HandoverData, type CameraHandoverRecord,
   type Verification,
 } from "@/lib/cctv/handover";
 
-type Layout = { id: string; layoutName: string; floorplanPath?: string | null; planApproved?: boolean; devices: PlacedDevice[] };
+type Layout = { id: string; layoutName: string; floorplanPath?: string | null; planApproved?: boolean; pxPerMeter: number; scaleCalibration?: ScaleCalibration; devices: PlacedDevice[] };
 interface Props {
   data: HandoverData;
   projectName: string;
