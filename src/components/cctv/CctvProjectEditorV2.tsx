@@ -75,6 +75,7 @@ import {
 import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
 import {
   emptyPlan,
+  isScaleCalibrated,
   type PlanData,
   type PlacedDevice,
   type RoomLabel,
@@ -664,10 +665,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     if (
       !plan.imageWidth ||
       !plan.imageHeight ||
-      !(plan.pxPerMeter > 0) ||
+      !isScaleCalibrated(plan) ||
       plan.walls.length === 0
     ) {
-      toast.error("اعتماد الوكيل يتطلب مخططًا بأبعاد ومقياس حقيقي وجدران مرسومة");
+      toast.error("لا يمكن اعتماد المخطط قبل رفعه ومعايرة مقياسه من ضلع بطول معلوم ورسم الجدران.");
       return false;
     }
     const nextLayouts = layouts.map((layout) =>
@@ -1170,7 +1171,15 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 event.preventDefault();
                 const meters = Number(calibrationMeters);
                 if (!(meters > 0) || !Number.isFinite(meters)) return;
-                update((prev) => ({ ...prev, pxPerMeter: calibrationPixels / meters }));
+                update((prev) => ({
+                  ...prev,
+                  pxPerMeter: calibrationPixels / meters,
+                  scaleCalibration: {
+                    pixelDistance: calibrationPixels,
+                    realDistanceM: meters,
+                    calibratedAt: new Date().toISOString(),
+                  },
+                }));
                 setCalibrationPixels(null);
                 setScaleDraft([]);
                 setMode("select");
@@ -1433,7 +1442,7 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
         </div>
         <div className="mt-3 rounded-lg border border-border p-3">
           <div className="flex items-center justify-between text-xs">
-            <span>Scale Calibration</span>
+            <span>Scale Calibration — {isScaleCalibrated(props.plan) ? "معاير من قياس موثق" : "غير معاير؛ المقياس المعروض افتراضي"}</span>
             <Ruler className="h-4 w-4 text-muted-foreground" />
           </div>
           <Button
@@ -1448,7 +1457,7 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
             type="number"
             value={Number(props.plan.pxPerMeter.toFixed(2))}
             onChange={(event) =>
-              props.onUpdate((prev) => ({ ...prev, pxPerMeter: Number(event.target.value) || 1 }))
+              props.onUpdate((prev) => ({ ...prev, pxPerMeter: Number(event.target.value) || 1, scaleCalibration: undefined }))
             }
             className="mt-2 h-8"
           />
