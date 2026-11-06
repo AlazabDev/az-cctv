@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { compareStorageKey, productImages, productTitle, trackStoreEvent } from "@/lib/store/catalog";
+import { compareStorageKey, productImages, productTitle, trackStoreEvent, isAvailable } from "@/lib/store/catalog";
 import { useStoreCart } from "@/hooks/use-store-cart";
 import { ArrowLeft, ArrowUpRight, Camera, ChevronLeft, ChevronRight, ImageOff, Layers3, Search, SlidersHorizontal, Wifi } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -23,10 +23,6 @@ const PAGE_SIZE = 24;
 const money = (value: number | null, currency: string) =>
   value == null ? "السعر غير متاح" : new Intl.NumberFormat("ar-EG", { style: "currency", currency: currency || "EGP", maximumFractionDigits: 2 }).format(value);
 const names = (p: Product) => p.product_name || p.name_ar || p.name_en || [p.brand, p.model].filter(Boolean).join(" ");
-function availability(p: Product): boolean | undefined {
-  const m = p.metadata && typeof p.metadata === "object" && !Array.isArray(p.metadata) ? p.metadata : {};
-  return "available" in m && typeof m.available === "boolean" ? m.available : undefined;
-}
 function ProductImage({ sources, alt, className }: { sources: string[]; alt: string; className?: string }) {
   const [index, setIndex] = useState(0);
   const signature = sources.join("|");
@@ -72,7 +68,7 @@ function StorePage() {
     queryKey: ["store-products", { category, subcat, brand, search, sort, page }],
     queryFn: async () => {
       let query = supabase.from("products")
-        .select("id,brand,model,sku,name_en,name_ar,product_name,description,product_type,category,subcategory,current_price,old_price,currency,image_url,is_active,source_url,metadata,specifications", { count: "exact" })
+        .select("id,brand,model,sku,name_en,name_ar,product_name,description,product_type,category,subcategory,current_price,old_price,currency,image_url,is_active,source_url,metadata,specifications,in_stock,stock_checked_at", { count: "exact" })
         .eq("is_active", true).eq("published",true);
       if (category !== "all") query = query.eq("category", category);
       if (brand !== "all") query = query.eq("brand", brand);
@@ -120,7 +116,7 @@ function StorePage() {
       isLoading ? <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">{Array.from({length:12},(_,i)=><div key={i} className="h-80 animate-pulse rounded-2xl bg-white"/>)}</div> :
       !data?.products.length ? <div className="rounded-2xl bg-white py-20 text-center"><Wifi className="mx-auto mb-3 text-slate-400"/><h3 className="font-bold">لا توجد منتجات مطابقة</h3><button onClick={reset} className="mt-4 text-[#030957] underline">عرض جميع المنتجات</button></div> :
       <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">{data.products.map(p => {
-        const stock = availability(p);
+        const stock = isAvailable(p);
         return <article key={p.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white text-right shadow-sm transition hover:-translate-y-1 hover:border-[#FFB900] hover:shadow-xl">
           <Link to="/product/$id" params={{id:p.id}} onClick={()=>trackStoreEvent("product_open",p.id)} className="block focus-visible:outline-2 focus-visible:outline-[#030957]">
            <div className="relative flex aspect-square items-center justify-center bg-white p-4"><ProductImage sources={productImages(p)} alt={productTitle(p)} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"/><span className={`absolute right-3 top-3 rounded-full px-2 py-1 text-[10px] font-bold ${stock === true ? "bg-emerald-50 text-emerald-700" : stock === false ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>{stock === true ? "متوفر" : stock === false ? "غير متوفر" : "التوفر غير مؤكد"}</span></div>
