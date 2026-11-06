@@ -1,4 +1,4 @@
-import type { PlacedDevice } from "./types";
+import { isScaleCalibrated, type PlacedDevice, type ScaleCalibration } from "./types";
 import type { TopologyData } from "./topology";
 
 /** Physical commissioning evidence, separate from a commercial product specification. */
@@ -104,7 +104,7 @@ const validInspectionDate = (day: string) => {
 };
 export function evaluateHandover(
   input: HandoverData,
-  layouts: Array<{ floorplanPath?: string | null; planApproved?: boolean; devices: PlacedDevice[] }>,
+  layouts: Array<{ floorplanPath?: string | null; planApproved?: boolean; pxPerMeter: number; scaleCalibration?: ScaleCalibration; devices: PlacedDevice[] }>,
   topology: Pick<TopologyData, "parents">,
 ): HandoverReview {
   const cameras = layouts.flatMap((layout) => layout.devices.filter((d) => d.kind === "camera"));
@@ -122,8 +122,8 @@ export function evaluateHandover(
   const findings: HandoverFinding[] = [
     {
       id: "floorplans", label: "مخططات معتمدة", complete: layouts.length > 0 &&
-        layouts.every((layout) => Boolean(layout.floorplanPath) && layout.planApproved === true),
-      detail: "يجب رفع مخطط فعلي واعتماد المعايرة لكل منطقة/دور.",
+        layouts.every((layout) => Boolean(layout.floorplanPath) && layout.planApproved === true && isScaleCalibrated(layout)),
+      detail: "يجب رفع مخطط فعلي ومعايرته بقياس مسافة معلومة واعتماده لكل منطقة/دور.",
     },
     {
       id: "cameras", label: "تطابق عدد الكاميرات",
