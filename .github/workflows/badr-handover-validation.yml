@@ -28,9 +28,9 @@ jobs:
       # Install with manifest reconciliation for this branch until the lockfile is regenerated.
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-      - name: TypeScript
+      - name: Generate route tree and production build
+        run: pnpm build
+      - name: TypeScript after generated routes
         run: pnpm exec tsc --noEmit
       - name: Engineering tests
         run: pnpm test
-      - name: Production build
-        run: pnpm build
