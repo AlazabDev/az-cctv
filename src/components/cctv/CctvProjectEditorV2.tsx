@@ -939,6 +939,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         {showHandover && (clientName === "حضانة بدر" || name.includes("حضانة بدر")) ? (
           <HandoverWorkspace
             data={handover}
+            projectName={name}
+            clientName={clientName}
             layouts={layouts}
             topology={topology}
             onChange={setHandover}
