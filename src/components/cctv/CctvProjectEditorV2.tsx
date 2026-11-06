@@ -1443,7 +1443,12 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
         </div>
         <div className="mt-3 rounded-lg border border-border p-3">
           <div className="flex items-center justify-between text-xs">
-            <span>Scale Calibration — {isScaleCalibrated(props.plan) ? "معاير من قياس موثق" : "غير معاير؛ المقياس المعروض افتراضي"}</span>
+            <span>
+              Scale Calibration —{" "}
+              {isScaleCalibrated(props.plan)
+                ? "معاير من قياس موثق"
+                : "غير معاير؛ المقياس المعروض افتراضي"}
+            </span>
             <Ruler className="h-4 w-4 text-muted-foreground" />
           </div>
           <Button
@@ -1458,7 +1463,11 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
             type="number"
             value={Number(props.plan.pxPerMeter.toFixed(2))}
             onChange={(event) =>
-              props.onUpdate((prev) => ({ ...prev, pxPerMeter: Number(event.target.value) || 1, scaleCalibration: undefined }))
+              props.onUpdate((prev) => ({
+                ...prev,
+                pxPerMeter: Number(event.target.value) || 1,
+                scaleCalibration: undefined,
+              }))
             }
             className="mt-2 h-8"
           />

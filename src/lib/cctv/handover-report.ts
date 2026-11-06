@@ -1,8 +1,12 @@
 import type { HandoverData, HandoverReview } from "./handover";
-const escapeHtml = (value: string | number) => String(value).replace(/[&<>"']/g, (c) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c);
+const escapeHtml = (value: string | number) =>
+  String(value).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
+  );
 const safe = (value: string) => escapeHtml(value.trim() || "غير موثق");
-const test = (result: string) => result === "pass" ? "ناجح" : result === "fail" ? "فاشل" : "لم يختبر";
+const test = (result: string) =>
+  result === "pass" ? "ناجح" : result === "fail" ? "فاشل" : "لم يختبر";
 
 /** Printable audit record. Never represents a draft as a signed acceptance certificate. */
 export function handoverReportHtml(
@@ -14,10 +18,18 @@ export function handoverReportHtml(
   const status = review.ready
     ? "مستوفٍ حسب البيانات المدخلة — يلزم مطابقة أصل محضر الاستلام"
     : "مسودة غير معتمدة — يمنع تقديمها كمحضر استلام نهائي";
-  const checklist = review.findings.map((finding) =>
-    `<tr><td>${escapeHtml(finding.label)}</td><td class="${finding.complete ? "passed" : "pending"}">${finding.complete ? "مستوفى" : "غير مستوفى"}</td><td>${escapeHtml(finding.detail)}</td></tr>`).join("");
-  const cameras = data.cameras.map((camera) =>
-    `<tr><td>${safe(camera.cameraId)}</td><td>${safe(camera.area)}</td><td>${safe(camera.model)}</td><td dir="ltr">${safe(camera.serialNumber)}</td><td dir="ltr">${safe(camera.macAddress)}</td><td dir="ltr">${safe(camera.ipAddress)}</td><td>${safe(camera.switchName)} / ${safe(camera.switchPort)}</td><td>${test(camera.video)}</td><td>${test(camera.audio)}</td><td>${test(camera.poe)}</td><td>${safe(camera.verifiedBy)}</td><td>${safe(camera.verifiedAt)}</td></tr>`).join("");
+  const checklist = review.findings
+    .map(
+      (finding) =>
+        `<tr><td>${escapeHtml(finding.label)}</td><td class="${finding.complete ? "passed" : "pending"}">${finding.complete ? "مستوفى" : "غير مستوفى"}</td><td>${escapeHtml(finding.detail)}</td></tr>`,
+    )
+    .join("");
+  const cameras = data.cameras
+    .map(
+      (camera) =>
+        `<tr><td>${safe(camera.cameraId)}</td><td>${safe(camera.area)}</td><td>${safe(camera.model)}</td><td dir="ltr">${safe(camera.serialNumber)}</td><td dir="ltr">${safe(camera.macAddress)}</td><td dir="ltr">${safe(camera.ipAddress)}</td><td>${safe(camera.switchName)} / ${safe(camera.switchPort)}</td><td>${test(camera.video)}</td><td>${test(camera.audio)}</td><td>${test(camera.poe)}</td><td>${safe(camera.verifiedBy)}</td><td>${safe(camera.verifiedAt)}</td></tr>`,
+    )
+    .join("");
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/>
 <title>سجل فحص وتسليم - ${escapeHtml(projectName)}</title>
 <style>

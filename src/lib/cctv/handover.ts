@@ -47,15 +47,28 @@ export interface HandoverReview {
 const idOf = (index: number) => `CAM-${String(index + 1).padStart(2, "0")}`;
 export function emptyCameraHandover(index: number): CameraHandoverRecord {
   return {
-    cameraId: idOf(index), placedDeviceId: "", area: "", model: "", serialNumber: "",
-    macAddress: "", ipAddress: "", switchName: "", switchPort: "",
-    verifiedBy: "", verifiedAt: "",
-    video: "pending", audio: "pending", poe: "pending", notes: "",
+    cameraId: idOf(index),
+    placedDeviceId: "",
+    area: "",
+    model: "",
+    serialNumber: "",
+    macAddress: "",
+    ipAddress: "",
+    switchName: "",
+    switchPort: "",
+    verifiedBy: "",
+    verifiedAt: "",
+    video: "pending",
+    audio: "pending",
+    poe: "pending",
+    notes: "",
   };
 }
 export function normalizeHandover(input: unknown, expectedCount = 22): HandoverData {
-  const source = input && typeof input === "object" && !Array.isArray(input)
-    ? input as Partial<HandoverData> : {};
+  const source =
+    input && typeof input === "object" && !Array.isArray(input)
+      ? (input as Partial<HandoverData>)
+      : {};
   const count = Math.min(256, Math.max(1, Math.trunc(expectedCount)));
   const raw = Array.isArray(source.cameras) ? source.cameras : [];
   const cameras = Array.from({ length: count }, (_, i) => {
@@ -63,8 +76,19 @@ export function normalizeHandover(input: unknown, expectedCount = 22): HandoverD
     const base = emptyCameraHandover(i);
     if (!item) return base;
     const output = { ...base };
-    for (const key of ["placedDeviceId", "area", "model", "serialNumber", "macAddress",
-      "ipAddress", "switchName", "switchPort", "verifiedBy", "verifiedAt", "notes"] as const) {
+    for (const key of [
+      "placedDeviceId",
+      "area",
+      "model",
+      "serialNumber",
+      "macAddress",
+      "ipAddress",
+      "switchName",
+      "switchPort",
+      "verifiedBy",
+      "verifiedAt",
+      "notes",
+    ] as const) {
       output[key] = typeof item[key] === "string" ? item[key] : "";
     }
     for (const key of ["video", "audio", "poe"] as const) {
@@ -73,106 +97,170 @@ export function normalizeHandover(input: unknown, expectedCount = 22): HandoverD
     return output;
   });
   return {
-    targetCameraCount: count, cameras,
+    targetCameraCount: count,
+    cameras,
     networkVerified: source.networkVerified === true,
     cableTestsVerified: source.cableTestsVerified === true,
     recordingStatusDocumented: source.recordingStatusDocumented === true,
     clientTrainingCompleted: source.clientTrainingCompleted === true,
     asBuiltReviewed: source.asBuiltReviewed === true,
     clientAcceptanceSigned: source.clientAcceptanceSigned === true,
-    acceptanceReference: typeof source.acceptanceReference === "string" ? source.acceptanceReference : "",
+    acceptanceReference:
+      typeof source.acceptanceReference === "string" ? source.acceptanceReference : "",
   };
 }
 const hasText = (text: string) => text.trim().length > 0;
 const macValid = (mac: string) => /^(?:[\da-f]{2}[:-]){5}[\da-f]{2}$/i.test(mac.trim());
 const ipv4Valid = (ip: string) => {
   const segments = ip.trim().split(".");
-  return segments.length === 4 && segments.every((part) =>
-    /^\d{1,3}$/.test(part) && Number(part) >= 0 && Number(part) <= 255 &&
-    String(Number(part)) === part);
+  return (
+    segments.length === 4 &&
+    segments.every(
+      (part) =>
+        /^\d{1,3}$/.test(part) &&
+        Number(part) >= 0 &&
+        Number(part) <= 255 &&
+        String(Number(part)) === part,
+    )
+  );
 };
 const uniqueNonempty = (values: string[]) =>
   values.length === new Set(values.map((value) => value.trim().toLowerCase())).size;
-const cairoToday = () => new Intl.DateTimeFormat("sv-SE", {
-  timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit",
-}).format(new Date());
+const cairoToday = () =>
+  new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 const validInspectionDate = (day: string) => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
   const date = new Date(day + "T00:00:00Z");
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === day &&
-    day <= cairoToday();
+  return (
+    Number.isFinite(date.getTime()) &&
+    date.toISOString().slice(0, 10) === day &&
+    day <= cairoToday()
+  );
 };
 export function evaluateHandover(
   input: HandoverData,
-  layouts: Array<{ floorplanPath?: string | null; planApproved?: boolean; pxPerMeter: number; scaleCalibration?: ScaleCalibration; devices: PlacedDevice[] }>,
+  layouts: Array<{
+    floorplanPath?: string | null;
+    planApproved?: boolean;
+    pxPerMeter: number;
+    scaleCalibration?: ScaleCalibration;
+    devices: PlacedDevice[];
+  }>,
   topology: Pick<TopologyData, "parents">,
 ): HandoverReview {
   const cameras = layouts.flatMap((layout) => layout.devices.filter((d) => d.kind === "camera"));
   const ids = new Set(cameras.map((camera) => camera.id));
   const records = input.cameras;
   const linked = records.map((record) => record.placedDeviceId).filter(hasText);
-  const fullIdentifiers = records.every((r) =>
-    [r.area, r.model, r.serialNumber, r.macAddress, r.ipAddress, r.switchName, r.switchPort]
-      .every(hasText) && macValid(r.macAddress) && ipv4Valid(r.ipAddress));
-  const identityUnique = uniqueNonempty(records.map((r) => r.serialNumber)) &&
+  const fullIdentifiers = records.every(
+    (r) =>
+      [
+        r.area,
+        r.model,
+        r.serialNumber,
+        r.macAddress,
+        r.ipAddress,
+        r.switchName,
+        r.switchPort,
+      ].every(hasText) &&
+      macValid(r.macAddress) &&
+      ipv4Valid(r.ipAddress),
+  );
+  const identityUnique =
+    uniqueNonempty(records.map((r) => r.serialNumber)) &&
     uniqueNonempty(records.map((r) => r.macAddress)) &&
     uniqueNonempty(records.map((r) => r.ipAddress));
-  const linkedExactlyOnce = linked.length === input.targetCameraCount &&
-    linked.every((id) => ids.has(id)) && uniqueNonempty(linked);
+  const linkedExactlyOnce =
+    linked.length === input.targetCameraCount &&
+    linked.every((id) => ids.has(id)) &&
+    uniqueNonempty(linked);
   const findings: HandoverFinding[] = [
     {
-      id: "floorplans", label: "مخططات معتمدة", complete: layouts.length > 0 &&
-        layouts.every((layout) => Boolean(layout.floorplanPath) && layout.planApproved === true && isScaleCalibrated(layout)),
+      id: "floorplans",
+      label: "مخططات معتمدة",
+      complete:
+        layouts.length > 0 &&
+        layouts.every(
+          (layout) =>
+            Boolean(layout.floorplanPath) &&
+            layout.planApproved === true &&
+            isScaleCalibrated(layout),
+        ),
       detail: "يجب رفع مخطط فعلي ومعايرته بقياس مسافة معلومة واعتماده لكل منطقة/دور.",
     },
     {
-      id: "cameras", label: "تطابق عدد الكاميرات",
-      complete: cameras.length === input.targetCameraCount && records.length === input.targetCameraCount,
+      id: "cameras",
+      label: "تطابق عدد الكاميرات",
+      complete:
+        cameras.length === input.targetCameraCount && records.length === input.targetCameraCount,
       detail: `عدد الكاميرات المرسومة ${cameras.length} من ${input.targetCameraCount} المطلوبة.`,
     },
     {
-      id: "mapping", label: "ربط سجل الأجهزة بالمخطط",
+      id: "mapping",
+      label: "ربط سجل الأجهزة بالمخطط",
       complete: linkedExactlyOnce,
       detail: "يجب ربط كل رقم CAM بكاميرا منفذة واحدة مميزة على المخطط.",
     },
     {
-      id: "identity", label: "بيانات الأجهزة الفعلية",
+      id: "identity",
+      label: "بيانات الأجهزة الفعلية",
       complete: fullIdentifiers && identityUnique,
       detail: "Model وSerial وMAC وIPv4 والموقع والسويتش والمنفذ لكل كاميرا، دون تكرار.",
     },
     {
-      id: "tests", label: "اختبار الصوت والصورة والطاقة",
-      complete: records.every((r) => r.video === "pass" && r.audio === "pass" && r.poe === "pass" &&
-        hasText(r.verifiedBy) && validInspectionDate(r.verifiedAt)),
+      id: "tests",
+      label: "اختبار الصوت والصورة والطاقة",
+      complete: records.every(
+        (r) =>
+          r.video === "pass" &&
+          r.audio === "pass" &&
+          r.poe === "pass" &&
+          hasText(r.verifiedBy) &&
+          validInspectionDate(r.verifiedAt),
+      ),
       detail: "تحتاج كل كاميرا إلى PASS للفيديو والصوت وPoE مع اسم الفاحص وتاريخ الفحص.",
     },
     {
-      id: "links", label: "الربط الفعلي بالشبكة",
-      complete: linkedExactlyOnce && linked.every((id) => hasText(topology.parents[id] ?? "")) &&
+      id: "links",
+      label: "الربط الفعلي بالشبكة",
+      complete:
+        linkedExactlyOnce &&
+        linked.every((id) => hasText(topology.parents[id] ?? "")) &&
         input.networkVerified,
       detail: "توثيق مسارات الربط في CCTV Network وإقرار اختبارها ميدانيًا.",
     },
     {
-      id: "cables", label: "اختبارات الكابلات",
-      complete: input.cableTestsVerified, detail: "توثيق الفحص لكل مسار كابل.",
+      id: "cables",
+      label: "اختبارات الكابلات",
+      complete: input.cableTestsVerified,
+      detail: "توثيق الفحص لكل مسار كابل.",
     },
     {
-      id: "recording", label: "حالة التسجيل موثقة",
+      id: "recording",
+      label: "حالة التسجيل موثقة",
       complete: input.recordingStatusDocumented,
       detail: "توثيق هل يوجد NVR أو وسيلة تسجيل فعلية، ولا يكفي افتراض وجود مسجل.",
     },
     {
-      id: "asbuilt", label: "مراجعة المخطط As-built",
+      id: "asbuilt",
+      label: "مراجعة المخطط As-built",
       complete: input.asBuiltReviewed,
       detail: "مطابقة المخططات والكميات النهائية مع التنفيذ الفعلي.",
     },
     {
-      id: "training", label: "تدريب العميل",
+      id: "training",
+      label: "تدريب العميل",
       complete: input.clientTrainingCompleted,
       detail: "توثيق تدريب ممثل العميل على المشاهدة والتشغيل والإبلاغ عن الأعطال.",
     },
     {
-      id: "acceptance", label: "اعتماد العميل",
+      id: "acceptance",
+      label: "اعتماد العميل",
       complete: input.clientAcceptanceSigned && hasText(input.acceptanceReference),
       detail: "تسجيل رقم أو مرجع محضر استلام موقع من العميل.",
     },
@@ -182,11 +270,40 @@ export function evaluateHandover(
 }
 export function handoverCsv(data: HandoverData): string {
   const rows = [
-    ["Camera ID", "Placed device ID", "Area", "Model", "Serial No", "MAC Address",
-      "IP Address", "Switch", "Switch Port", "Tested By", "Test Date", "Video", "Audio", "PoE", "Notes"],
-    ...data.cameras.map((r) => [r.cameraId, r.placedDeviceId, r.area, r.model,
-      r.serialNumber, r.macAddress, r.ipAddress, r.switchName, r.switchPort,
-      r.verifiedBy, r.verifiedAt, r.video, r.audio, r.poe, r.notes]),
+    [
+      "Camera ID",
+      "Placed device ID",
+      "Area",
+      "Model",
+      "Serial No",
+      "MAC Address",
+      "IP Address",
+      "Switch",
+      "Switch Port",
+      "Tested By",
+      "Test Date",
+      "Video",
+      "Audio",
+      "PoE",
+      "Notes",
+    ],
+    ...data.cameras.map((r) => [
+      r.cameraId,
+      r.placedDeviceId,
+      r.area,
+      r.model,
+      r.serialNumber,
+      r.macAddress,
+      r.ipAddress,
+      r.switchName,
+      r.switchPort,
+      r.verifiedBy,
+      r.verifiedAt,
+      r.video,
+      r.audio,
+      r.poe,
+      r.notes,
+    ]),
   ];
   // Formula-injection safe for spreadsheets: keep leading =,+,-,@ as literal text.
   const cell = (value: string) => {

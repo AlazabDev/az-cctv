@@ -157,7 +157,8 @@ export function isScaleCalibrated(
   const evidence = plan.scaleCalibration;
   if (!evidence) return false;
   if (!(evidence.pixelDistance > 0) || !(evidence.realDistanceM > 0)) return false;
-  if (!Number.isFinite(evidence.pixelDistance) || !Number.isFinite(evidence.realDistanceM)) return false;
+  if (!Number.isFinite(evidence.pixelDistance) || !Number.isFinite(evidence.realDistanceM))
+    return false;
   if (!Number.isFinite(plan.pxPerMeter) || !(plan.pxPerMeter > 0)) return false;
   const expected = evidence.pixelDistance / evidence.realDistanceM;
   return Math.abs(expected - plan.pxPerMeter) <= Math.max(1e-6, expected * 1e-6);

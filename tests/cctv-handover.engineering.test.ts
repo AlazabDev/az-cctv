@@ -1,13 +1,23 @@
 import { describe, expect, it } from "vitest";
 import { handoverReportHtml } from "../src/lib/cctv/handover-report";
 import {
-  emptyCameraHandover, evaluateHandover, handoverCsv, normalizeHandover,
+  emptyCameraHandover,
+  evaluateHandover,
+  handoverCsv,
+  normalizeHandover,
 } from "../src/lib/cctv/handover";
 import type { PlacedDevice } from "../src/lib/cctv/types";
 
 const devices: PlacedDevice[] = Array.from({ length: 22 }, (_, i) => ({
-  id: `device-${i + 1}`, kind: "camera", specId: "real-product-id", name: `CAM-${i + 1}`,
-  x: i * 10, y: i * 4, rotation: 0, heightM: 3, tilt: 20,
+  id: `device-${i + 1}`,
+  kind: "camera",
+  specId: "real-product-id",
+  name: `CAM-${i + 1}`,
+  x: i * 10,
+  y: i * 4,
+  rotation: 0,
+  heightM: 3,
+  tilt: 20,
 }));
 function verified() {
   const handover = normalizeHandover(null, 22);
@@ -31,7 +41,19 @@ function verified() {
   handover.clientTrainingCompleted = true;
   handover.clientAcceptanceSigned = true;
   handover.acceptanceReference = "SIGNED-REFERENCE";
-  const layouts = [{ floorplanPath: "customer/file.png", planApproved: true, pxPerMeter: 40, scaleCalibration: { pixelDistance: 800, realDistanceM: 20, calibratedAt: new Date().toISOString() }, devices }];
+  const layouts = [
+    {
+      floorplanPath: "customer/file.png",
+      planApproved: true,
+      pxPerMeter: 40,
+      scaleCalibration: {
+        pixelDistance: 800,
+        realDistanceM: 20,
+        calibratedAt: new Date().toISOString(),
+      },
+      devices,
+    },
+  ];
   const topology = { parents: Object.fromEntries(devices.map((d) => [d.id, "switch-verified"])) };
   return { handover, layouts, topology };
 }
@@ -48,8 +70,12 @@ describe("CCTV client handover gate", () => {
   });
   it("requires a verified physical drawing and approved calibration", () => {
     const { handover, layouts, topology } = verified();
-    expect(evaluateHandover(handover, [{ ...layouts[0], floorplanPath: null }], topology).ready).toBe(false);
-    expect(evaluateHandover(handover, [{ ...layouts[0], planApproved: false }], topology).ready).toBe(false);
+    expect(
+      evaluateHandover(handover, [{ ...layouts[0], floorplanPath: null }], topology).ready,
+    ).toBe(false);
+    expect(
+      evaluateHandover(handover, [{ ...layouts[0], planApproved: false }], topology).ready,
+    ).toBe(false);
   });
   it("rejects an uncalibrated default scale and a manual change after field calibration", () => {
     const { handover, layouts, topology } = verified();
@@ -61,10 +87,16 @@ describe("CCTV client handover gate", () => {
   it("rejects duplicate physical identifiers and duplicate placed-device links", () => {
     const { handover, layouts, topology } = verified();
     handover.cameras[1].serialNumber = handover.cameras[0].serialNumber;
-    expect(evaluateHandover(handover, layouts, topology).findings.find((x) => x.id === "identity")?.complete).toBe(false);
+    expect(
+      evaluateHandover(handover, layouts, topology).findings.find((x) => x.id === "identity")
+        ?.complete,
+    ).toBe(false);
     handover.cameras[1].serialNumber = "UNIQUE-REPLACEMENT";
     handover.cameras[1].placedDeviceId = handover.cameras[0].placedDeviceId;
-    expect(evaluateHandover(handover, layouts, topology).findings.find((x) => x.id === "mapping")?.complete).toBe(false);
+    expect(
+      evaluateHandover(handover, layouts, topology).findings.find((x) => x.id === "mapping")
+        ?.complete,
+    ).toBe(false);
   });
   it("requires an identified technician and verified test date", () => {
     const { handover, layouts, topology } = verified();
