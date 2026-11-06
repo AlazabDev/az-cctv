@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { handoverReportHtml } from "../src/lib/cctv/handover-report";
 import {
   emptyCameraHandover, evaluateHandover, handoverCsv, normalizeHandover,
 } from "../src/lib/cctv/handover";
@@ -92,5 +93,13 @@ describe("CCTV client handover gate", () => {
     expect(csv).toContain("'=HYPERLINK");
     expect(csv).toContain('""example""');
     expect(csv.split("\r\n")).toHaveLength(24);
+  });
+  it("keeps incomplete handover reports visibly marked as draft and escapes client text", () => {
+    const handover = normalizeHandover(null, 22);
+    const review = evaluateHandover(handover, [], { parents: {} });
+    const report = handoverReportHtml("<script>alert(1)</script>", "حضانة بدر", handover, review);
+    expect(report).toContain("مسودة غير معتمدة");
+    expect(report).toContain("&lt;script&gt;");
+    expect(report).not.toContain("<script>alert(1)</script>");
   });
 });
