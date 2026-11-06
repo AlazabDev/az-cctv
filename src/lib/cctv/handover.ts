@@ -13,6 +13,8 @@ export interface CameraHandoverRecord {
   ipAddress: string;
   switchName: string;
   switchPort: string;
+  verifiedBy: string;
+  verifiedAt: string;
   video: Verification;
   audio: Verification;
   poe: Verification;
@@ -47,6 +49,7 @@ export function emptyCameraHandover(index: number): CameraHandoverRecord {
   return {
     cameraId: idOf(index), placedDeviceId: "", area: "", model: "", serialNumber: "",
     macAddress: "", ipAddress: "", switchName: "", switchPort: "",
+    verifiedBy: "", verifiedAt: "",
     video: "pending", audio: "pending", poe: "pending", notes: "",
   };
 }
@@ -61,7 +64,7 @@ export function normalizeHandover(input: unknown, expectedCount = 22): HandoverD
     if (!item) return base;
     const output = { ...base };
     for (const key of ["placedDeviceId", "area", "model", "serialNumber", "macAddress",
-      "ipAddress", "switchName", "switchPort", "notes"] as const) {
+      "ipAddress", "switchName", "switchPort", "verifiedBy", "verifiedAt", "notes"] as const) {
       output[key] = typeof item[key] === "string" ? item[key] : "";
     }
     for (const key of ["video", "audio", "poe"] as const) {
@@ -130,8 +133,10 @@ export function evaluateHandover(
     },
     {
       id: "tests", label: "اختبار الصوت والصورة والطاقة",
-      complete: records.every((r) => r.video === "pass" && r.audio === "pass" && r.poe === "pass"),
-      detail: "تحتاج كل كاميرا إلى نتائج PASS موثقة للفيديو والصوت وPoE.",
+      complete: records.every((r) => r.video === "pass" && r.audio === "pass" && r.poe === "pass" &&
+        hasText(r.verifiedBy) && /^\\d{4}-\\d{2}-\\d{2}$/.test(r.verifiedAt) &&
+        Number.isFinite(Date.parse(r.verifiedAt)) && Date.parse(r.verifiedAt) <= Date.now()),
+      detail: "تحتاج كل كاميرا إلى PASS للفيديو والصوت وPoE مع اسم الفاحص وتاريخ الفحص.",
     },
     {
       id: "links", label: "الربط الفعلي بالشبكة",
@@ -170,10 +175,10 @@ export function evaluateHandover(
 export function handoverCsv(data: HandoverData): string {
   const rows = [
     ["Camera ID", "Placed device ID", "Area", "Model", "Serial No", "MAC Address",
-      "IP Address", "Switch", "Switch Port", "Video", "Audio", "PoE", "Notes"],
+      "IP Address", "Switch", "Switch Port", "Tested By", "Test Date", "Video", "Audio", "PoE", "Notes"],
     ...data.cameras.map((r) => [r.cameraId, r.placedDeviceId, r.area, r.model,
       r.serialNumber, r.macAddress, r.ipAddress, r.switchName, r.switchPort,
-      r.video, r.audio, r.poe, r.notes]),
+      r.verifiedBy, r.verifiedAt, r.video, r.audio, r.poe, r.notes]),
   ];
   // Formula-injection safe for spreadsheets: keep leading =,+,-,@ as literal text.
   const cell = (value: string) => {
