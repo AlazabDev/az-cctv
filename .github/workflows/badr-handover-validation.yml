@@ -10,7 +10,7 @@ on:
       - 'src/components/cctv/CctvProjectEditorV2.tsx'
       - 'tests/cctv-handover.engineering.test.ts'
 permissions:
-  contents: write
+  contents: read
 jobs:
   handover:
     runs-on: ubuntu-latest
@@ -24,31 +24,19 @@ jobs:
         with:
           node-version: '22'
           cache: pnpm
-      # The pre-existing main pnpm-lock is missing @radix-ui/react-toast.
-      # Install with manifest reconciliation for this branch until the lockfile is regenerated.
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
       - name: Generate route tree and production build
         run: pnpm build
       - name: TypeScript after generated routes
         run: pnpm exec tsc --noEmit
       - name: Engineering tests
         run: pnpm test
-      - name: Normalize previously failing formatting checks
+      - name: Check formatting of integration surfaces
         run: |
-          pnpm exec prettier --write \
+          pnpm exec prettier --check \
             src/components/cctv/CctvProjectEditorV2.tsx \
             src/routes/_authenticated/projects.tsx \
             src/routes/cart.tsx src/routes/quote.tsx \
             src/routes/_authenticated/finance.tsx \
             src/routes/store.tsx src/lib/store/catalog.ts
-      - name: Commit synchronized lockfile after successful validation
-        if: github.ref == 'refs/heads/badr-delivery-20261107'
-        run: |
-          if ! git diff --quiet -- pnpm-lock.yaml src/routeTree.gen.ts src/components/cctv/CctvProjectEditorV2.tsx src/routes/_authenticated/projects.tsx src/routes/cart.tsx src/routes/quote.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add pnpm-lock.yaml src/routeTree.gen.ts src/components/cctv/CctvProjectEditorV2.tsx src/routes/_authenticated/projects.tsx src/routes/cart.tsx src/routes/quote.tsx src/routes/_authenticated/finance.tsx src/routes/store.tsx src/lib/store/catalog.ts
-            git commit -m "style(ci): enforce Prettier formatting on validated project and store modules"
-            git push origin HEAD:badr-delivery-20261107
-          fi
