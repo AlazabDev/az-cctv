@@ -19,6 +19,8 @@ function verified() {
     camera.ipAddress = `10.0.1.${i + 1}`;
     camera.switchName = "verified-switch";
     camera.switchPort = String(i + 1);
+    camera.verifiedBy = "Site test engineer";
+    camera.verifiedAt = new Date().toISOString().slice(0, 10);
     camera.video = camera.audio = camera.poe = "pass";
   });
   handover.networkVerified = true;
@@ -55,6 +57,14 @@ describe("CCTV client handover gate", () => {
     handover.cameras[1].serialNumber = "UNIQUE-REPLACEMENT";
     handover.cameras[1].placedDeviceId = handover.cameras[0].placedDeviceId;
     expect(evaluateHandover(handover, layouts, topology).findings.find((x) => x.id === "mapping")?.complete).toBe(false);
+  });
+  it("requires an identified technician and verified test date", () => {
+    const { handover, layouts, topology } = verified();
+    handover.cameras[3].verifiedBy = "";
+    expect(evaluateHandover(handover, layouts, topology).ready).toBe(false);
+    handover.cameras[3].verifiedBy = "On-site inspector";
+    handover.cameras[3].verifiedAt = "2099-01-01";
+    expect(evaluateHandover(handover, layouts, topology).ready).toBe(false);
   });
   it("requires camera audio, video and PoE tests to be passed explicitly", () => {
     const { handover, layouts, topology } = verified();
