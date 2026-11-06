@@ -100,7 +100,7 @@ function ProjectsDashboard() {
     [projects, search],
   );
 
-  async function createProject() {
+  async function createProject(template: "blank" | "badr" = "blank") {
     if (creating) return;
     setCreating(true);
     try {
@@ -109,9 +109,33 @@ function ProjectsDashboard() {
         toast.error("انتهت جلسة الدخول. سجّل الدخول مجددًا.");
         return;
       }
+      const isBadr = template === "badr";
+      const projectName = isBadr ? "حضانة بدر - نظام كاميرات المراقبة" : "مشروع جديد";
+      if (isBadr) {
+        const { data: existing, error: lookupError } = await supabase
+          .from("cctv_projects")
+          .select("id")
+          .eq("user_id", auth.user.id)
+          .eq("name", projectName)
+          .limit(1)
+          .maybeSingle();
+        if (lookupError) throw lookupError;
+        if (existing) {
+          toast.info("مشروع حضانة بدر موجود بالفعل؛ تم فتحه دون إنشاء نسخة مكررة.");
+          navigate({ to: "/editor/$id", params: { id: existing.id } });
+          return;
+        }
+      }
+      // Do not fabricate camera coordinates or serial identifiers before the site survey.
+      const initialPlan = isBadr ? { ...emptyPlan, layoutName: "المخطط العام - في انتظار الرفع والمعايرة" } : emptyPlan;
       const { data, error } = await supabase
         .from("cctv_projects")
-        .insert({ user_id: auth.user.id, name: "مشروع جديد", data: emptyPlan as never })
+        .insert({
+          user_id: auth.user.id,
+          name: projectName,
+          client_name: isBadr ? "حضانة بدر" : null,
+          data: initialPlan as never,
+        })
         .select("id")
         .single();
       if (error || !data) throw error ?? new Error("تعذّر إنشاء المشروع");
@@ -169,19 +193,28 @@ function ProjectsDashboard() {
           <Button
             type="button"
             disabled={creating}
-            onClick={createProject}
+            onClick={() => void createProject()}
             className="h-12 gap-2 bg-[#030957] px-6 font-black text-white hover:bg-[#172675]"
           >
             <Plus className="h-5 w-5" /> {creating ? "جارٍ إنشاء المشروع…" : "مشروع جديد"}
           </Button>
         </div>
 
+        <section aria-label="بدء مشروع حضانة بدر" className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#FFB900]/50 bg-white p-5 shadow-sm">
+          <div>
+            <h2 className="font-black text-[#030957]">المشروع الأول للتسليم: حضانة بدر</h2>
+            <p className="mt-1 text-sm text-slate-600">إنشاء أو فتح ملف العميل، ثم إضافة المخططات ومواقع الكاميرات الـ22 وبيانات الأجهزة الفعلية بعد التحقق الميداني.</p>
+          </div>
+          <Button type="button" disabled={creating} onClick={() => void createProject("badr")} className="bg-[#FFB900] font-black text-[#030957] hover:bg-[#ffd04a]">
+            <FolderKanban className="ml-2 h-4 w-4" /> {creating ? "جارٍ تجهيز المشروع…" : "إنشاء / فتح حضانة بدر"}
+          </Button>
+        </section>
         <nav aria-label="اختصارات مساحة العمل" className="mb-8 flex flex-wrap gap-3">
           <Link
-            to="/catalog"
+            to="/store"
             className="rounded-xl border border-[#dce3ef] bg-white px-5 py-3 text-sm font-bold text-[#030957] transition hover:border-[#FFB900]"
           >
-            كتالوج الكاميرات
+            المتجر / كتالوج المنتجات
           </Link>
           <Link
             to="/calculator"
