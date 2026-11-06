@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { handoverReportHtml } from "@/lib/cctv/handover-report";
 import type { PlacedDevice } from "@/lib/cctv/types";
 import type { TopologyData } from "@/lib/cctv/topology";
 import {
@@ -9,6 +10,8 @@ import {
 type Layout = { id: string; layoutName: string; floorplanPath?: string | null; planApproved?: boolean; devices: PlacedDevice[] };
 interface Props {
   data: HandoverData;
+  projectName: string;
+  clientName: string;
   layouts: Layout[];
   topology: Pick<TopologyData, "parents">;
   onChange: (next: HandoverData) => void;
@@ -24,7 +27,7 @@ const checklist = [
   ["clientAcceptanceSigned", "تم توقيع محضر استلام العميل"],
 ] as const;
 const tests = ["pending", "pass", "fail"] as const;
-export function HandoverWorkspace({ data, layouts, topology, onChange, saveState, onSave }: Props) {
+export function HandoverWorkspace({ data, projectName, clientName, layouts, topology, onChange, saveState, onSave }: Props) {
   const [opened, setOpened] = useState<string>("CAM-01");
   const review = useMemo(() => evaluateHandover(data, layouts, topology), [data, layouts, topology]);
   const placements = layouts.flatMap((layout) => layout.devices.filter((device) => device.kind === "camera")
@@ -40,6 +43,16 @@ export function HandoverWorkspace({ data, layouts, topology, onChange, saveState
     anchor.download = "badr-nursery-camera-commissioning.csv";
     anchor.click();
     URL.revokeObjectURL(url);
+  };
+  const printReport = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      window.alert("المتصفح منع فتح نافذة التقرير. اسمح بالنوافذ المنبثقة وحاول مرة أخرى.");
+      return;
+    }
+    printWindow.document.open();
+    printWindow.document.write(handoverReportHtml(projectName, clientName, data, review));
+    printWindow.document.close();
   };
   const field = (record: CameraHandoverRecord, key: keyof CameraHandoverRecord, title: string) => (
     <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700" key={key}>
@@ -77,6 +90,7 @@ export function HandoverWorkspace({ data, layouts, topology, onChange, saveState
           <h3 className="font-black">سجل الكاميرات — {data.cameras.length} خانة تحقق</h3>
           <div className="flex gap-2">
             <button type="button" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold" onClick={exportRegister}>تصدير سجل CSV</button>
+            <button type="button" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold" onClick={printReport}>تقرير فحص للطباعة / PDF</button>
             <button type="button" className="rounded-lg bg-[#030957] px-4 py-2 text-sm font-bold text-white" onClick={() => void onSave()}>حفظ السجل</button>
           </div>
         </div>
