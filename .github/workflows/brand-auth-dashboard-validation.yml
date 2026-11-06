@@ -7,6 +7,10 @@ on:
       - 'src/components/SiteHeader.tsx'
       - 'src/lib/brand-assets.ts'
       - 'src/routes/**'
+      - 'src/lib/store/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'vite.config.ts'
       - '.github/workflows/brand-auth-dashboard-validation.yml'
   pull_request:
     paths:
@@ -14,6 +18,10 @@ on:
       - 'src/components/SiteHeader.tsx'
       - 'src/lib/brand-assets.ts'
       - 'src/routes/**'
+      - 'src/lib/store/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'vite.config.ts'
       - '.github/workflows/brand-auth-dashboard-validation.yml'
 permissions:
   contents: read
