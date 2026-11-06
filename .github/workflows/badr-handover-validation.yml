@@ -37,10 +37,10 @@ jobs:
       - name: Commit synchronized lockfile after successful validation
         if: github.ref == 'refs/heads/badr-delivery-20261107'
         run: |
-          if ! git diff --quiet -- pnpm-lock.yaml; then
+          if ! git diff --quiet -- pnpm-lock.yaml src/routeTree.gen.ts; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add pnpm-lock.yaml
-            git commit -m "fix(deps): regenerate pnpm lockfile after validated integration"
+            git add pnpm-lock.yaml src/routeTree.gen.ts
+            git commit -m "fix(build): synchronize dependencies and generated TanStack routes"
             git push origin HEAD:badr-delivery-20261107
           fi
