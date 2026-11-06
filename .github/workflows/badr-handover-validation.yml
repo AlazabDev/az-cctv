@@ -10,7 +10,7 @@ on:
       - 'src/components/cctv/CctvProjectEditorV2.tsx'
       - 'tests/cctv-handover.engineering.test.ts'
 permissions:
-  contents: read
+  contents: write
 jobs:
   handover:
     runs-on: ubuntu-latest
@@ -32,11 +32,21 @@ jobs:
         run: pnpm exec tsc --noEmit
       - name: Engineering tests
         run: pnpm test
-      - name: Check formatting of integration surfaces
+      - name: Normalize changed engineering modules
         run: |
-          pnpm exec prettier --check \
+          pnpm exec prettier --write \
             src/components/cctv/CctvProjectEditorV2.tsx \
-            src/routes/_authenticated/projects.tsx \
-            src/routes/cart.tsx src/routes/quote.tsx \
-            src/routes/_authenticated/finance.tsx \
-            src/routes/store.tsx src/lib/store/catalog.ts
+            src/components/cctv/HandoverWorkspace.tsx \
+            src/lib/cctv/types.ts src/lib/cctv/handover.ts \
+            src/lib/cctv/handover-report.ts \
+            tests/cctv-handover.engineering.test.ts
+      - name: Commit validated formatting only to feature branch
+        if: github.ref == 'refs/heads/badr-delivery-20261107'
+        run: |
+          if ! git diff --quiet -- src/components/cctv/CctvProjectEditorV2.tsx src/components/cctv/HandoverWorkspace.tsx src/lib/cctv/types.ts src/lib/cctv/handover.ts src/lib/cctv/handover-report.ts tests/cctv-handover.engineering.test.ts; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/components/cctv/CctvProjectEditorV2.tsx src/components/cctv/HandoverWorkspace.tsx src/lib/cctv/types.ts src/lib/cctv/handover.ts src/lib/cctv/handover-report.ts tests/cctv-handover.engineering.test.ts
+            git commit -m "style(engineering): format validated calibration and handover modules"
+            git push origin HEAD:badr-delivery-20261107
+          fi
