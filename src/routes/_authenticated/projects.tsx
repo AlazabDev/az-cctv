@@ -138,6 +138,21 @@ function ProjectsDashboard() {
         })
         .select("id")
         .single();
+      if (isBadr && error?.code === "23505") {
+        // Concurrent browser sessions may both miss the initial lookup.
+        // The database unique index is authoritative: open the existing record.
+        const { data: existing, error: retryError } = await supabase
+          .from("cctv_projects")
+          .select("id")
+          .eq("user_id", auth.user.id)
+          .eq("name", projectName)
+          .maybeSingle();
+        if (retryError) throw retryError;
+        if (existing) {
+          navigate({ to: "/editor/$id", params: { id: existing.id } });
+          return;
+        }
+      }
       if (error || !data) throw error ?? new Error("تعذّر إنشاء المشروع");
       await qc.invalidateQueries({ queryKey: ["projects"] });
       navigate({ to: "/editor/$id", params: { id: data.id } });
