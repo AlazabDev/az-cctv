@@ -134,7 +134,7 @@ export function evaluateHandover(
     {
       id: "tests", label: "اختبار الصوت والصورة والطاقة",
       complete: records.every((r) => r.video === "pass" && r.audio === "pass" && r.poe === "pass" &&
-        hasText(r.verifiedBy) && /^\\d{4}-\\d{2}-\\d{2}$/.test(r.verifiedAt) &&
+        hasText(r.verifiedBy) && /^\d{4}-\d{2}-\d{2}$/.test(r.verifiedAt) &&
         Number.isFinite(Date.parse(r.verifiedAt)) && Date.parse(r.verifiedAt) <= Date.now()),
       detail: "تحتاج كل كاميرا إلى PASS للفيديو والصوت وPoE مع اسم الفاحص وتاريخ الفحص.",
     },
