@@ -47,11 +47,8 @@ export function SiteHeader() {
           <Link to="/" className={navClass}>
             الرئيسية
           </Link>
-          <Link to="/catalog" className={navClass}>
-            كتالوج الأجهزة
-          </Link>
           <Link to="/store" className={navClass}>
-            متجر المعدات
+            المتجر / كتالوج المنتجات
           </Link>
           <Link to="/calculator" className={navClass}>
             الحاسبة
@@ -102,8 +99,7 @@ export function SiteHeader() {
         >
           {[
             { title: "الرئيسية", to: "/" },
-            { title: "كتالوج الأجهزة", to: "/catalog" },
-            { title: "متجر المعدات", to: "/store" },
+            { title: "المتجر / كتالوج المنتجات", to: "/store" },
             { title: "الحاسبة", to: "/calculator" },
             {
               title: signedIn ? "لوحة التحكم" : "تسجيل الدخول",
