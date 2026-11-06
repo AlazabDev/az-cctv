@@ -31,7 +31,7 @@ function verified() {
   handover.clientTrainingCompleted = true;
   handover.clientAcceptanceSigned = true;
   handover.acceptanceReference = "SIGNED-REFERENCE";
-  const layouts = [{ floorplanPath: "customer/file.png", planApproved: true, devices }];
+  const layouts = [{ floorplanPath: "customer/file.png", planApproved: true, pxPerMeter: 40, scaleCalibration: { pixelDistance: 800, realDistanceM: 20, calibratedAt: new Date().toISOString() }, devices }];
   const topology = { parents: Object.fromEntries(devices.map((d) => [d.id, "switch-verified"])) };
   return { handover, layouts, topology };
 }
@@ -50,6 +50,13 @@ describe("CCTV client handover gate", () => {
     const { handover, layouts, topology } = verified();
     expect(evaluateHandover(handover, [{ ...layouts[0], floorplanPath: null }], topology).ready).toBe(false);
     expect(evaluateHandover(handover, [{ ...layouts[0], planApproved: false }], topology).ready).toBe(false);
+  });
+  it("rejects an uncalibrated default scale and a manual change after field calibration", () => {
+    const { handover, layouts, topology } = verified();
+    const uncalibrated = [{ ...layouts[0], scaleCalibration: undefined }];
+    expect(evaluateHandover(handover, uncalibrated, topology).ready).toBe(false);
+    const changedRatio = [{ ...layouts[0], pxPerMeter: 45 }];
+    expect(evaluateHandover(handover, changedRatio, topology).ready).toBe(false);
   });
   it("rejects duplicate physical identifiers and duplicate placed-device links", () => {
     const { handover, layouts, topology } = verified();
