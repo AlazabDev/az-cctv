@@ -103,6 +103,12 @@ export function HandoverWorkspace({ data, layouts, topology, onChange, saveState
                 {field(record, "ipAddress", "IP Address")}
                 {field(record, "switchName", "اسم السويتش")}
                 {field(record, "switchPort", "رقم المنفذ")}
+                {field(record, "verifiedBy", "اسم الفني القائم بالفحص")}
+                <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">تاريخ الفحص
+                  <input type="date" value={record.verifiedAt} max={new Date().toISOString().slice(0,10)}
+                    onChange={(e) => updateRow(record.cameraId, { verifiedAt: e.target.value })}
+                    className="rounded-md border border-slate-300 bg-white p-2 text-sm" />
+                </label>
                 {(["video", "audio", "poe"] as const).map((key) => <label key={key} className="flex flex-col gap-1 text-xs font-semibold">{key === "video" ? "اختبار الصورة" : key === "audio" ? "اختبار الصوت" : "اختبار PoE"}
                   <select className="rounded-md border border-slate-300 bg-white p-2 text-sm" value={record[key]} onChange={(e) => updateRow(record.cameraId, { [key]: e.target.value as Verification })}>
                     {tests.map((t) => <option value={t} key={t}>{t === "pass" ? "PASS — ناجح" : t === "fail" ? "FAIL — فشل" : "لم يختبر"}</option>)}
