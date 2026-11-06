@@ -1,7 +1,7 @@
 import type { Tables } from "@/integrations/supabase/types";
 
 export type StoreProduct = Tables<"products">;
-export const STORE_SELECT = "id,brand,model,sku,name_en,name_ar,product_name,description,product_type,category,subcategory,current_price,old_price,currency,image_url,is_active,source_url,metadata,specifications,created_at" as const;
+export const STORE_SELECT = "id,brand,model,sku,name_en,name_ar,product_name,description,product_type,category,subcategory,current_price,old_price,currency,image_url,is_active,source_url,metadata,specifications,in_stock,stock_checked_at,created_at" as const;
 export const productTitle = (p: StoreProduct) => p.product_name?.trim() || p.name_ar?.trim() || p.name_en?.trim() || [p.brand,p.model].filter(Boolean).join(" ");
 export const productPrice = (p: StoreProduct) => p.current_price == null ? "اسأل عن السعر" : new Intl.NumberFormat("ar-EG",{style:"currency",currency:p.currency||"EGP",maximumFractionDigits:2}).format(p.current_price);
 export const productImages = (p: StoreProduct): string[] => {
@@ -9,9 +9,12 @@ export const productImages = (p: StoreProduct): string[] => {
  const imgs = "images" in value && Array.isArray(value.images) ? value.images.filter((x):x is string=>typeof x==="string" && x.startsWith("https://")) : [];
  return [...new Set([p.image_url,...imgs].filter((x):x is string=>typeof x==="string"&&x.startsWith("https://")))];
 };
+/** Only a recent, timestamped supplier inventory check is evidence of availability. */
 export const isAvailable = (p: StoreProduct): boolean | null => {
- const value = p.metadata && typeof p.metadata === "object" && !Array.isArray(p.metadata) ? p.metadata : {};
- return typeof value.available === "boolean" ? value.available : null;
+ const checked = p.stock_checked_at ? new Date(p.stock_checked_at).getTime() : NaN;
+ const ageMs = Date.now() - checked;
+ return Number.isFinite(ageMs) && ageMs >= 0 && ageMs <= 48 * 60 * 60 * 1000
+   && typeof p.in_stock === "boolean" ? p.in_stock : null;
 };
 export const compareStorageKey = "azcctv-store-comparison";
 export function trackStoreEvent(event: string, productId?:string) {
