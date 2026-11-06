@@ -93,6 +93,15 @@ const ipv4Valid = (ip: string) => {
 };
 const uniqueNonempty = (values: string[]) =>
   values.length === new Set(values.map((value) => value.trim().toLowerCase())).size;
+const cairoToday = () => new Intl.DateTimeFormat("sv-SE", {
+  timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit",
+}).format(new Date());
+const validInspectionDate = (day: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const date = new Date(day + "T00:00:00Z");
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === day &&
+    day <= cairoToday();
+};
 export function evaluateHandover(
   input: HandoverData,
   layouts: Array<{ floorplanPath?: string | null; planApproved?: boolean; devices: PlacedDevice[] }>,
@@ -134,8 +143,7 @@ export function evaluateHandover(
     {
       id: "tests", label: "اختبار الصوت والصورة والطاقة",
       complete: records.every((r) => r.video === "pass" && r.audio === "pass" && r.poe === "pass" &&
-        hasText(r.verifiedBy) && /^\d{4}-\d{2}-\d{2}$/.test(r.verifiedAt) &&
-        Number.isFinite(Date.parse(r.verifiedAt)) && Date.parse(r.verifiedAt) <= Date.now()),
+        hasText(r.verifiedBy) && validInspectionDate(r.verifiedAt)),
       detail: "تحتاج كل كاميرا إلى PASS للفيديو والصوت وPoE مع اسم الفاحص وتاريخ الفحص.",
     },
     {
