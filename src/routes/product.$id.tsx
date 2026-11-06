@@ -30,10 +30,10 @@ function ProductPage(){
  const designFromStore=useDesignFromStore();
  const cart=useStoreCart();
  const [selected,setSelected]=useState(0);
- const [broken,setBroken]=useState(false);
+ 
  const [saved,setSaved]=useState(false);
  useEffect(()=>{if(product)trackStoreEvent("product_view",product.id)},[product]);
- useEffect(()=>{setSelected(0);setBroken(false)},[product?.id]);
+ useEffect(()=>{setSelected(0)},[product?.id]);
  if(!product) return <div className="min-h-screen bg-[#f5f7fb]"><SiteHeader/><main className="mx-auto max-w-5xl p-12 text-center"><h1 className="text-2xl font-bold">المنتج غير موجود أو غير متاح</h1><Link to="/store" className="mt-6 inline-block rounded-lg bg-[#030957] px-6 py-3 text-white">العودة للمتجر</Link></main></div>;
  const images=productImages(product);
  const availability=isAvailable(product);
@@ -57,9 +57,9 @@ function ProductPage(){
   <div className="grid overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm lg:grid-cols-2">
    <section aria-label="صور المنتج" className="bg-[#f8faff] p-5 sm:p-9">
     <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl border border-slate-100 bg-white p-6">
-     {images[selected]&&!broken?<img src={images[selected]} onError={()=>setBroken(true)} alt={`${name} - صورة ${selected+1}`} className="h-full w-full object-contain" loading="eager"/>:<div className="flex flex-col items-center gap-2 text-slate-400"><ImageOff size={42}/><p>الصورة غير متاحة</p></div>}
+     {images[selected]?<img src={images[selected]} onError={()=>setSelected(i=>i+1)} alt={`${name} - صورة ${selected+1}`} className="h-full w-full object-contain" loading="eager"/>:<div className="flex flex-col items-center gap-2 text-slate-400"><ImageOff size={42}/><p>الصورة غير متاحة</p></div>}
     </div>
-    {images.length>1&&<div className="mt-4 flex gap-3 overflow-x-auto pb-2">{images.map((img,i)=><button key={img} aria-label={`عرض الصورة ${i+1}`} onClick={()=>{setSelected(i);setBroken(false)}} className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-white p-2 ${selected===i?"border-[#030957]":"border-transparent"}`}><img src={img} loading="lazy" alt="" className="h-full w-full object-contain" onError={e=>{e.currentTarget.style.visibility="hidden"}}/></button>)}</div>}
+    {images.length>1&&<div className="mt-4 flex gap-3 overflow-x-auto pb-2">{images.map((img,i)=><button key={img} aria-label={`عرض الصورة ${i+1}`} onClick={()=>setSelected(i)} className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-white p-2 ${selected===i?"border-[#030957]":"border-transparent"}`}><img src={img} loading="lazy" alt="" className="h-full w-full object-contain" onError={e=>{e.currentTarget.style.visibility="hidden"}}/></button>)}</div>}
     <p className="mt-3 text-center text-xs text-slate-500">{images.length} {images.length===1?"صورة":"صور"} لهذا المنتج</p>
    </section>
    <section className="p-6 sm:p-10">
