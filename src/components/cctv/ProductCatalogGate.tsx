@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { Tables } from "@/integrations/supabase/types";
 import { StoreDesignSelection } from "@/components/store/StoreDesignSelection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,16 +10,27 @@ export function ProductCatalogGate({ projectId }: { projectId: string }) {
   const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["cctv-product-catalog"],
     queryFn: async () => {
-      const { data: products, error: queryError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("category", { ascending: true })
-        .order("brand", { ascending: true })
-        .order("model", { ascending: true });
-
-      if (queryError) throw queryError;
-      return products ?? [];
+      // Supabase defaults to 1,000 rows per query. A partial equipment master
+      // must never silently appear complete to an engineering project.
+      const products: Tables<"products">[] = [];
+      const pageSize = 500;
+      for (let page = 0; page < 200; page += 1) {
+        const from = page * pageSize;
+        const { data, error: queryError } = await supabase
+          .from("products")
+          .select("*")
+          .eq("is_active", true)
+          .eq("published", true)
+          .order("category", { ascending: true })
+          .order("brand", { ascending: true })
+          .order("model", { ascending: true })
+          .order("id", { ascending: true })
+          .range(from, from + pageSize - 1);
+        if (queryError) throw queryError;
+        products.push(...(data ?? []));
+        if (!data || data.length < pageSize) return products;
+      }
+      throw new Error("تعذّر تحميل كتالوج المنتجات بالكامل؛ العدد تجاوز الحد المسموح.");
     },
     staleTime: 5 * 60 * 1000,
   });
