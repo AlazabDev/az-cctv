@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { compareStorageKey, productTitle, trackStoreEvent } from "@/lib/store/catalog";
+import { compareStorageKey, productImages, productTitle, trackStoreEvent } from "@/lib/store/catalog";
 import { useStoreCart } from "@/hooks/use-store-cart";
 import { ArrowLeft, ArrowUpRight, Camera, ChevronLeft, ChevronRight, ImageOff, Layers3, Search, SlidersHorizontal, Wifi } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -27,11 +27,18 @@ function availability(p: Product): boolean | undefined {
   const m = p.metadata && typeof p.metadata === "object" && !Array.isArray(p.metadata) ? p.metadata : {};
   return "available" in m && typeof m.available === "boolean" ? m.available : undefined;
 }
-function ProductImage({ src, alt, className }: { src: string | undefined; alt: string; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
-  return src && !failed ? <img src={src} alt={alt} className={className} loading="lazy" onError={() => setFailed(true)} /> :
-    <span className="flex h-full w-full items-center justify-center text-slate-400"><ImageOff className="h-9 w-9" aria-label="الصورة غير متاحة" /></span>;
+function ProductImage({ sources, alt, className }: { sources: string[]; alt: string; className?: string }) {
+  const [index, setIndex] = useState(0);
+  const signature = sources.join("|");
+  useEffect(() => setIndex(0), [signature]);
+  const src = sources[index];
+  return src ? (
+    <img src={src} alt={alt} className={className} loading="lazy" onError={() => setIndex((previous) => previous + 1)} />
+  ) : (
+    <span className="flex h-full w-full items-center justify-center text-slate-400">
+      <ImageOff className="h-9 w-9" aria-label="الصورة غير متاحة" />
+    </span>
+  );
 }
 function StorePage() {
   const cart = useStoreCart();
@@ -116,7 +123,7 @@ function StorePage() {
         const stock = availability(p);
         return <article key={p.id} className="group overflow-hidden rounded-2xl border border-slate-200 bg-white text-right shadow-sm transition hover:-translate-y-1 hover:border-[#FFB900] hover:shadow-xl">
           <Link to="/product/$id" params={{id:p.id}} onClick={()=>trackStoreEvent("product_open",p.id)} className="block focus-visible:outline-2 focus-visible:outline-[#030957]">
-           <div className="relative flex aspect-square items-center justify-center bg-white p-4"><ProductImage src={p.image_url || undefined} alt={productTitle(p)} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"/><span className={`absolute right-3 top-3 rounded-full px-2 py-1 text-[10px] font-bold ${stock === true ? "bg-emerald-50 text-emerald-700" : stock === false ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>{stock === true ? "متوفر" : stock === false ? "غير متوفر" : "التوفر غير مؤكد"}</span></div>
+           <div className="relative flex aspect-square items-center justify-center bg-white p-4"><ProductImage sources={productImages(p)} alt={productTitle(p)} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"/><span className={`absolute right-3 top-3 rounded-full px-2 py-1 text-[10px] font-bold ${stock === true ? "bg-emerald-50 text-emerald-700" : stock === false ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>{stock === true ? "متوفر" : stock === false ? "غير متوفر" : "التوفر غير مؤكد"}</span></div>
            <div className="border-t border-slate-100 px-3 pt-3 sm:px-4 sm:pt-4"><p className="mb-2 text-xs font-bold text-[#42639a]">{p.brand || "—"}</p><h3 className="line-clamp-2 min-h-12 text-sm font-bold leading-6">{productTitle(p)}</h3><p className="mt-1 truncate font-mono text-[11px] text-slate-400" dir="ltr">{p.model}</p><div className="mt-4 flex items-end justify-between gap-1"><strong className="text-sm font-black text-[#030957] sm:text-base">{money(p.current_price,p.currency)}</strong><span className="rounded-full bg-[#FFB900] p-2 text-[#030957]"><ArrowLeft size={15}/></span></div></div>
           </Link>
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 px-3 py-3 sm:px-4"><button type="button" onClick={()=>cart.add(p.id)} className="rounded-lg bg-[#FFB900] px-3 py-2 text-xs font-black text-[#030957]">أضف للسلة</button><button type="button" onClick={()=>toggleCompare(p.id)} className={`rounded-lg px-3 py-2 text-xs font-bold ${compareIds.includes(p.id)?"bg-[#030957] text-white":"bg-slate-100 text-[#030957]"}`}>{compareIds.includes(p.id)?"✓ تمت الإضافة":"أضف للمقارنة"}</button><Link to="/product/$id" params={{id:p.id}} className="text-xs font-bold text-[#030957]">التفاصيل</Link></div>
