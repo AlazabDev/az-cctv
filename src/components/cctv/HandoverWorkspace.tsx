@@ -119,7 +119,7 @@ export function HandoverWorkspace({ data, projectName, clientName, layouts, topo
                 {field(record, "switchPort", "رقم المنفذ")}
                 {field(record, "verifiedBy", "اسم الفني القائم بالفحص")}
                 <label className="flex flex-col gap-1 text-xs font-semibold text-slate-700">تاريخ الفحص
-                  <input type="date" value={record.verifiedAt} max={new Date().toISOString().slice(0,10)}
+                  <input type="date" value={record.verifiedAt} max={new Intl.DateTimeFormat("sv-SE", { timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())}
                     onChange={(e) => updateRow(record.cameraId, { verifiedAt: e.target.value })}
                     className="rounded-md border border-slate-300 bg-white p-2 text-sm" />
                 </label>
