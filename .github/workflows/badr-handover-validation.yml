@@ -1,0 +1,36 @@
+name: AZ-CCTV Badr handover validation
+on:
+  push:
+    branches: [badr-delivery-20261107]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/lib/cctv/handover.ts'
+      - 'src/components/cctv/HandoverWorkspace.tsx'
+      - 'src/components/cctv/CctvProjectEditorV2.tsx'
+      - 'tests/cctv-handover.engineering.test.ts'
+permissions:
+  contents: read
+jobs:
+  handover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      # The pre-existing main pnpm-lock is missing @radix-ui/react-toast.
+      # Install with manifest reconciliation for this branch until the lockfile is regenerated.
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+      - name: Engineering tests
+        run: pnpm test
+      - name: Production build
+        run: pnpm build
