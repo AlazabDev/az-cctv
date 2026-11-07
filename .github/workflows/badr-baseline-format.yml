@@ -40,6 +40,9 @@ jobs:
             'src/routes/_authenticated/editor.$id.tsx' \
             'src/lib/cctv/product-catalog.ts' \
             'src/lib/cctv/normalized-layouts.ts' \
+            'src/components/cctv/PlanCanvas.tsx' \
+            'src/lib/cctv/wall-editor.ts' \
+            'tests/wall-editor.engineering.test.ts' \
             'src/components/cctv/CctvProjectEditorV2.tsx' \
             'src/components/ui/badge.tsx' \
             'src/components/ui/badge-variants.ts' \
