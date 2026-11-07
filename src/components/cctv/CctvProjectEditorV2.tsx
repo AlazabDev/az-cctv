@@ -1002,6 +1002,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             onChange={setHandover}
             onClose={() => setHandoverOpen(false)}
             projectName={name}
+            clientName={clientName}
             placedCameras={layouts.flatMap((layout) =>
               layout.devices
                 .filter((device) => device.kind === "camera")
