@@ -62,7 +62,7 @@ export function inspectBadrNetwork(
         );
     });
   }
-  const connected = cameras.filter((camera) => ids.has(parents[camera.id])).length;
+  const connected = cameras.filter((camera) => ids.has(parents[camera.id] ?? "")).length;
   if (connected !== cameras.length)
     issues.push(`${cameras.length - connected} كاميرا ليس لها ربط مباشر بسويتش في المخطط.`);
   if (connected !== 22) issues.push("تسليم الـ22 كاميرا يتطلب تسجيل رابط شبكة مباشر لكل كاميرا.");
