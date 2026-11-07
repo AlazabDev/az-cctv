@@ -71,13 +71,15 @@ function ComparePage() {
     return () => {
       live = false;
     };
-  }, [ids.join(",")]);
+  }, [ids]);
   function remove(id: string) {
     const next = ids.filter((x) => x !== id);
     setIds(next);
     try {
       localStorage.setItem(compareStorageKey, JSON.stringify(next));
-    } catch {}
+    } catch {
+      // Shared comparison still updates without local storage.
+    }
     const u = new URL(window.location.href);
     u.searchParams.delete("ids");
     window.history.replaceState({}, "", u);
