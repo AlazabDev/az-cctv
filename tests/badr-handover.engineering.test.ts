@@ -10,7 +10,7 @@ import {
 } from "../src/lib/cctv/handover";
 
 describe("first customer handover — evidence and integrity", () => {
-  const placed = () => Array.from({ length: 22 }, (_, i) => ({ id: `design-${i + 1}` }));
+  const placed = () => Array.from({ length: 22 }, (_, i) => ({ id: `design-${i + 1}`, model: "DS-2CD1123G2-LIU" }));
   it("creates exactly 22 empty identification slots, not fabricated equipment", () => {
     const h = makeBadrHandover();
     expect(h.inspections).toHaveLength(22);
@@ -66,6 +66,13 @@ describe("first customer handover — evidence and integrity", () => {
     expect(evaluateHandover(h, placed(), 0, 1).ready).toBe(false);
     h.inspections[0].designDeviceId = "design-2";
     expect(evaluateHandover(h, placed(), 0, 1).ready).toBe(false);
+  });
+
+  it("rejects actual model mismatches against the device selected on the drawing", () => {
+    const h = prepared();
+    h.inspections[0].model = "DS-2CD1021G0-I";
+    expect(evaluateHandover(h, placed(), 0, 1).ready).toBe(false);
+    expect(evaluateHandover(h, placed(), 0, 1).verifiedCameras).toBe(21);
   });
 
   it("detects duplicate MAC, IP and serial identifiers", () => {
