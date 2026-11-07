@@ -44,6 +44,7 @@ jobs:
             'src/lib/cctv/wall-editor.ts' \
             'tests/wall-editor.engineering.test.ts' \
             'src/components/cctv/CctvProjectEditorV2.tsx' \
+            'src/components/cctv/offer-pdf.ts' \
             'src/components/ui/badge.tsx' \
             'src/components/ui/badge-variants.ts' \
             'src/components/ui/button.tsx' \
