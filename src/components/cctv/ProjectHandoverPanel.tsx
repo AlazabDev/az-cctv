@@ -130,13 +130,25 @@ export function ProjectHandoverPanel({
           />
           <Metric title="حالة جاهزية التسليم" value={report.ready ? "اجتاز الفحص" : "غير مكتمل"} />
         </div>
-        <section className="rounded-2xl border border-slate-200 bg-white p-4" aria-label="مرجع تسلسل السويتشات">
-          <h3 className="font-black text-[#030957]">مرجع التوصيل المبلغ من الموقع — وليس مخطط As-built معتمدًا</h3>
-          <p className="mt-1 text-xs text-slate-500">أربعة سويتشات متسلسلة، وعدد الكاميرات المباشرة على الترتيب 4 / 6 / 6 / 6. يتم فحص المطابقة تلقائيًا مقابل توصيلات محرر الشبكة.</p>
+        <section
+          className="rounded-2xl border border-slate-200 bg-white p-4"
+          aria-label="مرجع تسلسل السويتشات"
+        >
+          <h3 className="font-black text-[#030957]">
+            مرجع التوصيل المبلغ من الموقع — وليس مخطط As-built معتمدًا
+          </h3>
+          <p className="mt-1 text-xs text-slate-500">
+            أربعة سويتشات متسلسلة، وعدد الكاميرات المباشرة على الترتيب 4 / 6 / 6 / 6. يتم فحص
+            المطابقة تلقائيًا مقابل توصيلات محرر الشبكة.
+          </p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {([4, 6, 6, 6] as const).map((count, index) => (
               <div className="flex items-center gap-3" key={index}>
-                {index > 0 && <span className="text-xl font-black text-[#030957]" aria-hidden="true">←</span>}
+                {index > 0 && (
+                  <span className="text-xl font-black text-[#030957]" aria-hidden="true">
+                    ←
+                  </span>
+                )}
                 <div className="min-w-28 rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
                   <div className="text-xs font-bold text-slate-500">SW-0{index + 1}</div>
                   <div className="text-lg font-black text-[#030957]">{count} كاميرات</div>
@@ -144,7 +156,12 @@ export function ProjectHandoverPanel({
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs font-semibold text-slate-600">نتيجة مطابقة الشبكة: {networkIssues.length === 0 ? "لا توجد أخطاء في الهيكل المحدد" : `${networkIssues.length} مخالفة معلقة`}</p>
+          <p className="mt-3 text-xs font-semibold text-slate-600">
+            نتيجة مطابقة الشبكة:{" "}
+            {networkIssues.length === 0
+              ? "لا توجد أخطاء في الهيكل المحدد"
+              : `${networkIssues.length} مخالفة معلقة`}
+          </p>
         </section>
         {!report.ready && (
           <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4">

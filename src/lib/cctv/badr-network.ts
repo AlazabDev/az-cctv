@@ -24,8 +24,10 @@ export function inspectBadrNetwork(
   const switches = devices.filter((device) => device.kind === "switch");
   const ids = new Set(switches.map((device) => device.id));
   const issues: string[] = [];
-  if (switches.length !== 4) issues.push(`المخطط يتضمن ${switches.length} سويتش، بينما التنفيذ المبلغ يتضمن 4.`);
-  if (cameras.length !== 22) issues.push(`المخطط يتضمن ${cameras.length} كاميرا، بينما المشروع يتضمن 22.`);
+  if (switches.length !== 4)
+    issues.push(`المخطط يتضمن ${switches.length} سويتش، بينما التنفيذ المبلغ يتضمن 4.`);
+  if (cameras.length !== 22)
+    issues.push(`المخطط يتضمن ${cameras.length} كاميرا، بينما المشروع يتضمن 22.`);
 
   const rootSwitches = switches.filter((sw) => parents[sw.id] === ROUTER_ID);
   if (rootSwitches.length !== 1)
@@ -49,19 +51,20 @@ export function inspectBadrNetwork(
     if (ordered.length !== switches.length || ordered.length !== 4)
       issues.push("السويتشات الأربعة لا تكوّن سلسلة اتصال واحدة مكتملة.");
   }
-  const directCameras = ordered.map((sw) =>
-    cameras.filter((camera) => parents[camera.id] === sw.id).length,
+  const directCameras = ordered.map(
+    (sw) => cameras.filter((camera) => parents[camera.id] === sw.id).length,
   );
   if (ordered.length === 4) {
     BADR_DIRECT_CAMERAS.forEach((target, index) => {
       if (directCameras[index] !== target)
-        issues.push(`السويتش ${index + 1} عليه ${directCameras[index]} كاميرا مباشرة؛ العدد المبلغ به ${target}.`);
+        issues.push(
+          `السويتش ${index + 1} عليه ${directCameras[index]} كاميرا مباشرة؛ العدد المبلغ به ${target}.`,
+        );
     });
   }
   const connected = cameras.filter((camera) => ids.has(parents[camera.id])).length;
   if (connected !== cameras.length)
     issues.push(`${cameras.length - connected} كاميرا ليس لها ربط مباشر بسويتش في المخطط.`);
-  if (connected !== 22)
-    issues.push("تسليم الـ22 كاميرا يتطلب تسجيل رابط شبكة مباشر لكل كاميرا.");
+  if (connected !== 22) issues.push("تسليم الـ22 كاميرا يتطلب تسجيل رابط شبكة مباشر لكل كاميرا.");
   return { cameraCount: cameras.length, switchCount: switches.length, directCameras, issues };
 }
