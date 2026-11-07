@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { emptyPlan } from "@/lib/cctv/types";
+import { makeBadrHandover } from "@/lib/cctv/handover";
 import { SiteHeader } from "@/components/SiteHeader";
 import { brandLogoUrl } from "@/lib/brand-assets";
 
@@ -127,7 +128,9 @@ function ProjectsDashboard() {
         }
       }
       // Do not fabricate camera coordinates or serial identifiers before the site survey.
-      const initialPlan = isBadr ? { ...emptyPlan, layoutName: "المخطط العام - في انتظار الرفع والمعايرة" } : emptyPlan;
+      const initialPlan = isBadr
+        ? { ...emptyPlan, layoutName: "المخطط العام - في انتظار الرفع والمعايرة", handover: makeBadrHandover() }
+        : emptyPlan;
       const { data, error } = await supabase
         .from("cctv_projects")
         .insert({
