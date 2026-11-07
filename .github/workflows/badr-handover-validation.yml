@@ -1,0 +1,42 @@
+name: AZ-CCTV Badr handover validation
+on:
+  push:
+    branches: [badr-delivery-20261107]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/lib/cctv/handover.ts'
+      - 'src/components/cctv/HandoverWorkspace.tsx'
+      - 'src/components/cctv/CctvProjectEditorV2.tsx'
+      - 'tests/cctv-handover.engineering.test.ts'
+permissions:
+  contents: read
+jobs:
+  handover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate route tree and production build
+        run: pnpm build
+      - name: TypeScript after generated routes
+        run: pnpm exec tsc --noEmit
+      - name: Engineering tests
+        run: pnpm test
+      - name: Check changed engineering module formatting
+        run: |
+          pnpm exec prettier --check \
+            src/components/cctv/CctvProjectEditorV2.tsx \
+            src/components/cctv/HandoverWorkspace.tsx \
+            src/lib/cctv/types.ts src/lib/cctv/handover.ts \
+            src/lib/cctv/handover-report.ts \
+            tests/cctv-handover.engineering.test.ts

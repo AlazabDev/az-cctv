@@ -128,10 +128,19 @@ export interface RoomLabel {
   fontSize: number;
 }
 
+export interface ScaleCalibration {
+  /** Pixel distance of the reference segment measured on the actual drawing. */
+  pixelDistance: number;
+  /** Site-verified real distance in metres for the same segment. */
+  realDistanceM: number;
+  calibratedAt: string;
+}
+
 export interface PlanData {
   layoutName: string;
   ceilingHeightM: number;
   pxPerMeter: number;
+  scaleCalibration?: ScaleCalibration;
   devices: PlacedDevice[];
   cables: CableRun[];
   walls: WallSegment[];
@@ -139,6 +148,20 @@ export interface PlanData {
   showCoverage: boolean;
   imageWidth?: number;
   imageHeight?: number;
+}
+
+/** Explicit drawing-scale evidence is required before engineering approval. */
+export function isScaleCalibrated(
+  plan: Pick<PlanData, "pxPerMeter" | "scaleCalibration">,
+): boolean {
+  const evidence = plan.scaleCalibration;
+  if (!evidence) return false;
+  if (!(evidence.pixelDistance > 0) || !(evidence.realDistanceM > 0)) return false;
+  if (!Number.isFinite(evidence.pixelDistance) || !Number.isFinite(evidence.realDistanceM))
+    return false;
+  if (!Number.isFinite(plan.pxPerMeter) || !(plan.pxPerMeter > 0)) return false;
+  const expected = evidence.pixelDistance / evidence.realDistanceM;
+  return Math.abs(expected - plan.pxPerMeter) <= Math.max(1e-6, expected * 1e-6);
 }
 
 export const emptyPlan: PlanData = {

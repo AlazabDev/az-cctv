@@ -127,7 +127,9 @@ function ProjectsDashboard() {
         }
       }
       // Do not fabricate camera coordinates or serial identifiers before the site survey.
-      const initialPlan = isBadr ? { ...emptyPlan, layoutName: "المخطط العام - في انتظار الرفع والمعايرة" } : emptyPlan;
+      const initialPlan = isBadr
+        ? { ...emptyPlan, layoutName: "المخطط العام - في انتظار الرفع والمعايرة" }
+        : emptyPlan;
       const { data, error } = await supabase
         .from("cctv_projects")
         .insert({
@@ -138,6 +140,21 @@ function ProjectsDashboard() {
         })
         .select("id")
         .single();
+      if (isBadr && error?.code === "23505") {
+        // Concurrent browser sessions may both miss the initial lookup.
+        // The database unique index is authoritative: open the existing record.
+        const { data: existing, error: retryError } = await supabase
+          .from("cctv_projects")
+          .select("id")
+          .eq("user_id", auth.user.id)
+          .eq("name", projectName)
+          .maybeSingle();
+        if (retryError) throw retryError;
+        if (existing) {
+          navigate({ to: "/editor/$id", params: { id: existing.id } });
+          return;
+        }
+      }
       if (error || !data) throw error ?? new Error("تعذّر إنشاء المشروع");
       await qc.invalidateQueries({ queryKey: ["projects"] });
       navigate({ to: "/editor/$id", params: { id: data.id } });
@@ -200,13 +217,25 @@ function ProjectsDashboard() {
           </Button>
         </div>
 
-        <section aria-label="بدء مشروع حضانة بدر" className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#FFB900]/50 bg-white p-5 shadow-sm">
+        <section
+          aria-label="بدء مشروع حضانة بدر"
+          className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#FFB900]/50 bg-white p-5 shadow-sm"
+        >
           <div>
             <h2 className="font-black text-[#030957]">المشروع الأول للتسليم: حضانة بدر</h2>
-            <p className="mt-1 text-sm text-slate-600">إنشاء أو فتح ملف العميل، ثم إضافة المخططات ومواقع الكاميرات الـ22 وبيانات الأجهزة الفعلية بعد التحقق الميداني.</p>
+            <p className="mt-1 text-sm text-slate-600">
+              إنشاء أو فتح ملف العميل، ثم إضافة المخططات ومواقع الكاميرات الـ22 وبيانات الأجهزة
+              الفعلية بعد التحقق الميداني.
+            </p>
           </div>
-          <Button type="button" disabled={creating} onClick={() => void createProject("badr")} className="bg-[#FFB900] font-black text-[#030957] hover:bg-[#ffd04a]">
-            <FolderKanban className="ml-2 h-4 w-4" /> {creating ? "جارٍ تجهيز المشروع…" : "إنشاء / فتح حضانة بدر"}
+          <Button
+            type="button"
+            disabled={creating}
+            onClick={() => void createProject("badr")}
+            className="bg-[#FFB900] font-black text-[#030957] hover:bg-[#ffd04a]"
+          >
+            <FolderKanban className="ml-2 h-4 w-4" />{" "}
+            {creating ? "جارٍ تجهيز المشروع…" : "إنشاء / فتح حضانة بدر"}
           </Button>
         </section>
         <nav aria-label="اختصارات مساحة العمل" className="mb-8 flex flex-wrap gap-3">
@@ -306,7 +335,7 @@ function ProjectsDashboard() {
                 {search ? "جرّب كلمة بحث مختلفة." : "أنشئ مشروعًا وارفع مخططًا لتبدأ التصميم."}
               </p>
               {!search && (
-                <Button onClick={createProject} className="bg-[#030957] text-white">
+                <Button onClick={() => void createProject()} className="bg-[#030957] text-white">
                   إنشاء مشروع
                 </Button>
               )}

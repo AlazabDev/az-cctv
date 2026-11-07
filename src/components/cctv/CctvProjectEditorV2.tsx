@@ -41,6 +41,9 @@ import { AgentPanel } from "@/components/cctv/AgentPanel";
 import { AgentDesignReview } from "@/components/cctv/AgentDesignReview";
 import { AiSiteDesignerPanel } from "@/components/cctv/AiSiteDesignerPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
+import { HandoverWorkspace } from "@/components/cctv/HandoverWorkspace";
+import { normalizeHandover } from "@/lib/cctv/handover";
+import type { HandoverData } from "@/lib/cctv/handover";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
 import { FloorplanUploadDialog } from "@/components/cctv/FloorplanUploadDialog";
@@ -72,6 +75,7 @@ import {
 import { distanceForPpm, formatMoney, polylineLengthMeters, ppmLevels } from "@/lib/cctv/geometry";
 import {
   emptyPlan,
+  isScaleCalibrated,
   type PlanData,
   type PlacedDevice,
   type RoomLabel,
@@ -168,6 +172,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [offer, setOffer] = useState<OfferSettings>(defaultOffer);
   const [topology, setTopology] = useState<TopologyData>(emptyTopology);
   const [siteMap, setSiteMap] = useState<SiteMapData>(emptySiteMap);
+  const [handover, setHandover] = useState<HandoverData>(() => normalizeHandover(null, 22));
+  const [showHandover, setShowHandover] = useState(false);
   const [activeModule, setActiveModule] = useState<ModuleId>("plan");
   const [serviceSidebarOpen, setServiceSidebarOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -226,6 +232,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       activeLayoutId?: string;
       topology?: Partial<TopologyData>;
       siteMap?: Partial<SiteMapData>;
+      handover?: HandoverData;
     };
     const list: ProjectLayout[] = stored.layouts?.length
       ? stored.layouts.map((l) => normalizeLayout(l))
@@ -249,6 +256,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     });
     setTopology(normalizeTopology(stored.topology));
     setSiteMap(normalizeSiteMap(stored.siteMap));
+    setHandover(normalizeHandover(stored.handover, 22));
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "EGP");
@@ -283,7 +291,13 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       setLayouts((prev) =>
         prev.map((layout) =>
           layout.id === activeLayoutId
-            ? { ...layout, ...updater(layout), planApproved: false, id: layout.id, floorplanPath: layout.floorplanPath }
+            ? {
+                ...layout,
+                ...updater(layout),
+                planApproved: false,
+                id: layout.id,
+                floorplanPath: layout.floorplanPath,
+              }
             : layout,
         ),
       );
@@ -531,7 +545,15 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const nextLayouts: ProjectLayout[] = dialogTargetId
       ? layouts.map((l) =>
           l.id === targetId
-            ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, planApproved: false, ...size }
+            ? {
+                ...l,
+                layoutName,
+                ceilingHeightM,
+                floorplanPath: path,
+                planApproved: false,
+                scaleCalibration: undefined,
+                ...size,
+              }
             : l,
         )
       : [
@@ -601,6 +623,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       offer,
       topology,
       siteMap,
+      ...(clientName === "حضانة بدر" || name.includes("حضانة بدر") ? { handover } : {}),
     };
   }
 
@@ -640,8 +663,13 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   async function approveActiveLayout(): Promise<boolean> {
-    if (!plan.imageWidth || !plan.imageHeight || !(plan.pxPerMeter > 0) || plan.walls.length === 0) {
-      toast.error("اعتماد الوكيل يتطلب مخططًا بأبعاد ومقياس حقيقي وجدران مرسومة");
+    if (
+      !plan.imageWidth ||
+      !plan.imageHeight ||
+      !isScaleCalibrated(plan) ||
+      plan.walls.length === 0
+    ) {
+      toast.error("لا يمكن اعتماد المخطط قبل رفعه ومعايرة مقياسه من ضلع بطول معلوم ورسم الجدران.");
       return false;
     }
     const nextLayouts = layouts.map((layout) =>
@@ -670,7 +698,18 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     }, 1200);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layouts, activeLayoutId, offer, topology, siteMap, name, clientName, currency, loaded]);
+  }, [
+    layouts,
+    activeLayoutId,
+    offer,
+    topology,
+    siteMap,
+    handover,
+    name,
+    clientName,
+    currency,
+    loaded,
+  ]);
 
   function exportCsv() {
     const summary = calculateOffer(boq, offer);
@@ -833,7 +872,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 chooseTool("label", "annotation");
                 break;
               case "product-master":
-                navigate({ to: "/catalog" });
+                navigate({ to: "/store" });
                 break;
               default:
                 // Coverage remains visible through the existing system workspace.
@@ -885,6 +924,16 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
               <Bot className="h-4 w-4" />
               المساعد
             </Button>
+            {(clientName === "حضانة بدر" || name.includes("حضانة بدر")) && (
+              <Button
+                type="button"
+                variant={showHandover ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowHandover((open) => !open)}
+              >
+                {showHandover ? "العودة للتصميم" : "سجل الفحص والتسليم"}
+              </Button>
+            )}
             <Button variant="secondary" size="sm" onClick={exportPdf}>
               <FileText className="h-4 w-4" />
               PDF
@@ -913,17 +962,51 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         </header>
 
         {aiProposals?.length ? (
-          <div dir="rtl" className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-[#030957]/20 bg-[#030957]/5 px-4 py-2 text-xs">
-            <span>معاينة هندسية نشطة — {aiProposals.length} كاميرا مقترحة. لم تُحفظ الأجهزة بعد.</span>
+          <div
+            dir="rtl"
+            className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-[#030957]/20 bg-[#030957]/5 px-4 py-2 text-xs"
+          >
+            <span>
+              معاينة هندسية نشطة — {aiProposals.length} كاميرا مقترحة. لم تُحفظ الأجهزة بعد.
+            </span>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => setActiveModule("plan")}>عرض المقترحات على المخطط</Button>
-              <Button size="sm" variant="outline" onClick={() => setActiveModule("agent")}>مراجعة أسباب الاختيار</Button>
-              <Button size="sm" onClick={() => { if(window.confirm("هل تعتمد تطبيق جميع الكاميرات الموجودة في المعاينة مع توليد مسارات الكابلات؟"))applyAutoDesign(); }}>اعتماد التوزيع</Button>
-              <Button size="sm" variant="ghost" onClick={() => setAiProposals(null)}>إلغاء المعاينة</Button>
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("plan")}>
+                عرض المقترحات على المخطط
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("agent")}>
+                مراجعة أسباب الاختيار
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "هل تعتمد تطبيق جميع الكاميرات الموجودة في المعاينة مع توليد مسارات الكابلات؟",
+                    )
+                  )
+                    applyAutoDesign();
+                }}
+              >
+                اعتماد التوزيع
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setAiProposals(null)}>
+                إلغاء المعاينة
+              </Button>
             </div>
           </div>
         ) : null}
-        {activeModule === "plan" ? (
+        {showHandover && (clientName === "حضانة بدر" || name.includes("حضانة بدر")) ? (
+          <HandoverWorkspace
+            data={handover}
+            projectName={name}
+            clientName={clientName}
+            layouts={layouts}
+            topology={topology}
+            onChange={setHandover}
+            saveState={saveStatus}
+            onSave={save}
+          />
+        ) : activeModule === "plan" ? (
           <PlanDesignWorkspace
             layouts={layouts}
             activeLayoutId={activeLayoutId}
@@ -1040,7 +1123,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
               layoutId={activeLayoutId}
               proposals={aiProposals}
               onSave={() => persist()}
-              onPreview={(next) => {setAiProposals(next);setActiveModule("plan");}}
+              onPreview={(next) => {
+                setAiProposals(next);
+                setActiveModule("plan");
+              }}
               onApply={(next) => applyAutoDesign(next)}
               onReject={() => setAiProposals(null)}
               onFocusPlan={() => setActiveModule("plan")}
@@ -1086,7 +1172,15 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 event.preventDefault();
                 const meters = Number(calibrationMeters);
                 if (!(meters > 0) || !Number.isFinite(meters)) return;
-                update((prev) => ({ ...prev, pxPerMeter: calibrationPixels / meters }));
+                update((prev) => ({
+                  ...prev,
+                  pxPerMeter: calibrationPixels / meters,
+                  scaleCalibration: {
+                    pixelDistance: calibrationPixels,
+                    realDistanceM: meters,
+                    calibratedAt: new Date().toISOString(),
+                  },
+                }));
                 setCalibrationPixels(null);
                 setScaleDraft([]);
                 setMode("select");
@@ -1349,7 +1443,12 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
         </div>
         <div className="mt-3 rounded-lg border border-border p-3">
           <div className="flex items-center justify-between text-xs">
-            <span>Scale Calibration</span>
+            <span>
+              Scale Calibration —{" "}
+              {isScaleCalibrated(props.plan)
+                ? "معاير من قياس موثق"
+                : "غير معاير؛ المقياس المعروض افتراضي"}
+            </span>
             <Ruler className="h-4 w-4 text-muted-foreground" />
           </div>
           <Button
@@ -1364,7 +1463,11 @@ function PlanDesignWorkspace(props: PlanWorkspaceProps) {
             type="number"
             value={Number(props.plan.pxPerMeter.toFixed(2))}
             onChange={(event) =>
-              props.onUpdate((prev) => ({ ...prev, pxPerMeter: Number(event.target.value) || 1 }))
+              props.onUpdate((prev) => ({
+                ...prev,
+                pxPerMeter: Number(event.target.value) || 1,
+                scaleCalibration: undefined,
+              }))
             }
             className="mt-2 h-8"
           />
