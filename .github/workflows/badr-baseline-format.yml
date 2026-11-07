@@ -56,6 +56,12 @@ jobs:
             'src/components/ui/toggle-variants.ts' \
             'src/lib/store/catalog.ts' \
             'src/routes/store.tsx' \
+            'src/routes/cart.tsx' \
+            'src/routes/quote.tsx' \
+            'src/routes/_authenticated/finance.tsx' \
+            'src/routes/my-quotes.tsx' \
+            'src/lib/store/checkout.ts' \
+            'src/components/store/KimoSyncPanel.tsx' \
             'src/lib/cctv/handover.ts' \
             'src/components/cctv/ProjectHandoverPanel.tsx' \
             'tests/badr-handover.engineering.test.ts'
