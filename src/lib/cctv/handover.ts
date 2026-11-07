@@ -4,6 +4,8 @@ export type InspectionResult = "pending" | "pass" | "fail" | "not_applicable";
 
 export interface CameraInspection {
   id: string;
+  /** Exact placed camera id within the saved design (not a product SKU). */
+  designDeviceId: string;
   area: string;
   model: string;
   serial: string;
@@ -50,7 +52,7 @@ export interface ProjectHandover {
 }
 
 export const blankInspection = (id: string): CameraInspection => ({
-  id, area: "", model: "", serial: "", mac: "", ip: "", switchId: "", port: "",
+  id, designDeviceId: "", area: "", model: "", serial: "", mac: "", ip: "", switchId: "", port: "",
   video: "pending", audio: "pending", poe: "pending", testedAt: "", note: "",
 });
 
@@ -79,7 +81,7 @@ export function normalizeHandover(value: unknown): ProjectHandover | null {
     const item = source.find(x => x?.id === id);
     const clean = blankInspection(id);
     if (!item || typeof item !== "object") return clean;
-    for (const field of ["area", "model", "serial", "mac", "ip", "switchId", "port", "testedAt", "note"] as const)
+    for (const field of ["designDeviceId", "area", "model", "serial", "mac", "ip", "switchId", "port", "testedAt", "note"] as const)
       clean[field] = text(item[field]);
     for (const field of ["video", "audio", "poe"] as const)
       clean[field] = results.includes(item[field]) ? item[field] : "pending";
@@ -104,21 +106,23 @@ export interface ReadinessReport {
 
 export function evaluateHandover(
   handover: ProjectHandover,
-  placedCameras: number,
+  placedCameras: Array<{ id: string }>,
   topologyErrorCount: number,
   layoutCount: number,
 ): ReadinessReport {
   const issues: string[] = [];
   if (handover.inspections.length !== handover.expectedCameras)
     issues.push("عدد سجلات الأجهزة لا يطابق العدد المخطط.");
-  if (placedCameras !== handover.expectedCameras)
-    issues.push(`المخطط يحوي ${placedCameras} كاميرا، بينما المطلوب توثيق ${handover.expectedCameras}.`);
+  if (placedCameras.length !== handover.expectedCameras)
+    issues.push(`المخطط يحوي ${placedCameras.length} كاميرا، بينما المطلوب توثيق ${handover.expectedCameras}.`);
   if (layoutCount < 1) issues.push("لا توجد مخططات مسجلة للمشروع.");
   if (topologyErrorCount > 0) issues.push(`هناك ${topologyErrorCount} خطأ في التوصيلات يلزم حله.`);
 
   const serials = new Set<string>();
   const macs = new Set<string>();
   const ips = new Set<string>();
+  const linked = new Set<string>();
+  const eligible = new Set(placedCameras.map(device => device.id));
   let verifiedCameras = 0;
   for (const row of handover.inspections) {
     const detail = [row.area, row.model, row.serial, row.mac, row.ip, row.switchId, row.port, row.testedAt];
@@ -126,14 +130,17 @@ export function evaluateHandover(
     const mac = row.mac.trim().toLowerCase().replace(/-/g, ":");
     const serial = row.serial.trim().toLowerCase();
     const ip = row.ip.trim();
-    const duplicate = (Boolean(serial) && serials.has(serial)) ||
+    const designId = row.designDeviceId.trim();
+    const duplicate = (Boolean(designId) && linked.has(designId)) ||
+      (Boolean(serial) && serials.has(serial)) ||
       (Boolean(mac) && macs.has(mac)) || (Boolean(ip) && ips.has(ip));
+    if (designId) linked.add(designId);
     if (serial) serials.add(serial);
     if (mac) macs.add(mac);
     if (ip) ips.add(ip);
     const testsPassed = row.video === "pass" && row.poe === "pass" &&
       (row.audio === "pass" || (row.audio === "not_applicable" && Boolean(row.note.trim())));
-    if (complete && validMAC(row.mac) && validIPv4(ip) && !duplicate && testsPassed) verifiedCameras++;
+    if (complete && eligible.has(designId) && validMAC(row.mac) && validIPv4(ip) && !duplicate && testsPassed) verifiedCameras++;
     else issues.push(`${row.id}: بيانات التعريف أو نتائج الاختبارات غير مكتملة/متعارضة.`);
   }
 
@@ -152,9 +159,9 @@ const csvCell = (value: string) => {
 };
 
 export function handoverCSV(data: ProjectHandover): string {
-  const header = ["Camera ID","Area","Model","Serial","MAC","IP","Switch","Port","Video","Audio","PoE","Tested At","Notes"];
+  const header = ["Camera ID","Design Device ID","Area","Model","Serial","MAC","IP","Switch","Port","Video","Audio","PoE","Tested At","Notes"];
   const rows = data.inspections.map(r => [
-    r.id,r.area,r.model,r.serial,r.mac,r.ip,r.switchId,r.port,r.video,r.audio,r.poe,r.testedAt,r.note,
+    r.id,r.designDeviceId,r.area,r.model,r.serial,r.mac,r.ip,r.switchId,r.port,r.video,r.audio,r.poe,r.testedAt,r.note,
   ]);
   return "\uFEFF" + [header,...rows].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
