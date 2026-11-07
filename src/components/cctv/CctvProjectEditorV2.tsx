@@ -791,8 +791,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const onDelete = (event: KeyboardEvent) => {
       if (
         event.key !== "Delete" ||
+        handoverOpen ||
         event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLElement && event.target.isContentEditable)
       )
         return;
       if (selectedId) {
@@ -817,7 +820,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     };
     window.addEventListener("keydown", onDelete);
     return () => window.removeEventListener("keydown", onDelete);
-  }, [selectedId, selectedLabelId, selectedWallId, update]);
+  }, [handoverOpen, selectedId, selectedLabelId, selectedWallId, update]);
 
   if (isLoading) return <div className="p-10 text-muted-foreground">جارٍ تحميل المشروع…</div>;
   if (!project)
