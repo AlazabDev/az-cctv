@@ -103,7 +103,9 @@ function StorePage() {
     setCompareIds(next);
     try {
       localStorage.setItem(compareStorageKey, JSON.stringify(next));
-    } catch {}
+    } catch {
+      // Storage may be disabled; comparison remains available in memory.
+    }
     trackStoreEvent("compare_toggle", id);
   }
   useEffect(() => {
