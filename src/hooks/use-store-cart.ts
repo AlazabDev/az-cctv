@@ -40,7 +40,9 @@ export function useStoreCart() {
     try {
       localStorage.setItem(STORE_CART_KEY, JSON.stringify(next));
       window.dispatchEvent(new Event("azcctv:cart-updated"));
-    } catch {}
+    } catch {
+      // Cart remains functional in memory when browser storage is disabled.
+    }
     setItems(next);
   }, []);
   const add = useCallback(
