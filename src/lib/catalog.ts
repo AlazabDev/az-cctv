@@ -135,7 +135,7 @@ export interface SpecRow {
 /** Splits the raw vendor description into label/value spec rows. */
 export function parseSpecs(description?: string | null): SpecRow[] {
   if (!description) return [];
-  const re = /(?:^|\s)([A-Z][A-Za-z0-9&\/. +\-']{1,32}?)\s*:\s*/g;
+  const re = /(?:^|\s)([A-Z][A-Za-z0-9&/. +\-']{1,32}?)\s*:\s*/g;
   const rows: SpecRow[] = [];
   const matches: { label: string; start: number; end: number }[] = [];
   let m: RegExpExecArray | null;
