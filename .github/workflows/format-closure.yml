@@ -1,37 +1,8 @@
-name: Develop ESLint fix closure (LF normalized)
+name: One-time source formatter (retired)
 on:
-  push:
-    branches: [develop]
-    paths: ['.github/workflows/format-closure.yml']
-permissions:
-  contents: write
+  workflow_dispatch:
 jobs:
-  fix:
+  completed:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.12.4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Apply ESLint's real source fixes including Prettier
-        shell: bash
-        run: |
-          pnpm exec eslint . --fix || true
-          git diff --check
-      - name: Save only changed tracked files on develop
-        run: |
-          git add -u -- . ':(exclude).github/workflows/**'
-          if ! git diff --cached --quiet; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "style(develop): apply repo-wide ESLint autofixes while preserving rule set"
-            git push origin HEAD:develop
-          fi
+      - run: echo 'Formatting has been completed; manual check only.'
