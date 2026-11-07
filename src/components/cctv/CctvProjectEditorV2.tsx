@@ -747,16 +747,30 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       ["VAT/GST", "", "", "", `${offer.taxPercent}%`, String(summary.taxValue)],
       ["Grand Total", "", "", "", "", String(summary.total)],
     ];
-    const csv = "\uFEFF" + rows.map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
+    const safeCsv = (input: string) => {
+      const guarded = /^\\s*[=+@-]/.test(input) ? "'" + input : input;
+      return '"' + guarded.replace(/"/g, '""') + '"';
+    };
+    const csv = "\uFEFF" + rows.map((row) => row.map(safeCsv).join(",")).join("\r\n") + "\r\n";
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = `${name}-offer.csv`;
+    document.body.appendChild(anchor);
     anchor.click();
-    URL.revokeObjectURL(url);
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
   async function exportPdf() {
+    if (!name.trim() || !clientName.trim()) {
+      toast.error("أدخل اسم المشروع واسم العميل قبل إصدار مسودة العرض.");
+      return;
+    }
+    if (boq.cameras < 1 || boq.lines.length === 0) {
+      toast.error("أضف الكاميرات وأكمل جدول الكميات قبل إنشاء مسودة عرض السعر.");
+      return;
+    }
     const summary = calculateOffer(boq, offer);
     const { data: auth } = await supabase.auth.getUser();
     const { data: profile } = auth.user
