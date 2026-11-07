@@ -67,6 +67,8 @@ jobs:
             'src/components/store/KimoSyncPanel.tsx' \
             'src/lib/cctv/handover.ts' \
             'src/lib/cctv/handover-report.ts' \
+            'src/lib/cctv/badr-network.ts' \
+            'tests/badr-network.engineering.test.ts' \
             'src/components/cctv/ProjectHandoverPanel.tsx' \
             'tests/badr-handover.engineering.test.ts'
       - name: Apply safe autofixes to zero-warning UI components
