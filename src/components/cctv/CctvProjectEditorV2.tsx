@@ -753,6 +753,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   async function exportPdf() {
+    if (!name.trim() || !clientName.trim()) { toast.error("أدخل اسم المشروع والعميل أولاً."); return; }
+    if (boq.cameras < 1 || boq.lines.length === 0 || boq.unresolvedSpecs.length > 0) {
+      toast.error("لا يمكن إصدار مسودة عرض بسجل أجهزة أو كميات غير مكتملة.");
+      return;
+    }
     const summary = calculateOffer(boq, offer);
     const { data: auth } = await supabase.auth.getUser();
     const { data: profile } = auth.user
@@ -788,8 +793,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const onDelete = (event: KeyboardEvent) => {
       if (
         event.key !== "Delete" ||
+        showHandover ||
         event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLElement && event.target.isContentEditable)
       )
         return;
       if (selectedId) {
@@ -814,7 +822,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     };
     window.addEventListener("keydown", onDelete);
     return () => window.removeEventListener("keydown", onDelete);
-  }, [selectedId, selectedLabelId, selectedWallId, update]);
+  }, [showHandover, selectedId, selectedLabelId, selectedWallId, update]);
 
   if (isLoading) return <div className="p-10 text-muted-foreground">جارٍ تحميل المشروع…</div>;
   if (!project)

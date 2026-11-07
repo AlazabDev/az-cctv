@@ -43,6 +43,7 @@ function addCableMeters(target: Map<string, number>, typeId: string, meters: num
 
 export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBoqOptions = {}) {
   const lines: BoqLine[] = [];
+  const unresolvedSpecs: string[] = [];
   const cameras = plan.devices.filter((d) => d.kind === "camera");
 
   const cameraGroups = new Map<string, typeof cameras>();
@@ -54,7 +55,10 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
   for (const grouped of cameraGroups.values()) {
     const sample = grouped[0]!;
     const spec = cameraById(sample.specId);
-    if (!spec) continue;
+    if (!spec) {
+      unresolvedSpecs.push(`Unresolved camera specification: ${sample.name} (${sample.specId}) x ${grouped.length}`);
+      continue;
+    }
     lines.push({
       label: `${spec.label} — ${spec.model}`,
       qty: grouped.length,
@@ -76,7 +80,10 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
   for (const grouped of hardwareGroups.values()) {
     const sample = grouped[0]!;
     const spec = hardwareById(sample.specId);
-    if (!spec) continue;
+    if (!spec) {
+      unresolvedSpecs.push(`Unresolved hardware specification: ${sample.name} (${sample.specId}) x ${grouped.length}`);
+      continue;
+    }
     lines.push({
       label: spec.label,
       qty: grouped.length,
@@ -181,7 +188,7 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
     (sum, camera) => sum + (cameraById(camera.specId)?.poeWatt ?? 0),
     0,
   );
-  return { lines, grand, cameras: cameras.length, totalBitrate, neededTb, poeLoad };
+  return { lines, grand, cameras: cameras.length, totalBitrate, neededTb, poeLoad, unresolvedSpecs };
 }
 
 export function suggestHardware(cameraCount: number) {

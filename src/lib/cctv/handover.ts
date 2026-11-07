@@ -1,5 +1,6 @@
 import { isScaleCalibrated, type PlacedDevice, type ScaleCalibration } from "./types";
 import type { TopologyData } from "./topology";
+import { inspectBadrNetwork } from "./badr-network";
 
 /** Physical commissioning evidence, separate from a commercial product specification. */
 export type Verification = "pending" | "pass" | "fail";
@@ -152,6 +153,7 @@ export function evaluateHandover(
     devices: PlacedDevice[];
   }>,
   topology: Pick<TopologyData, "parents">,
+  siteProfile?: "badr-four-switch",
 ): HandoverReview {
   const cameras = layouts.flatMap((layout) => layout.devices.filter((d) => d.kind === "camera"));
   const ids = new Set(cameras.map((camera) => camera.id));
@@ -179,6 +181,7 @@ export function evaluateHandover(
     linked.length === input.targetCameraCount &&
     linked.every((id) => ids.has(id)) &&
     uniqueNonempty(linked);
+  const badrNetwork = siteProfile === "badr-four-switch" ? inspectBadrNetwork(layouts, topology.parents) : null;
   const findings: HandoverFinding[] = [
     {
       id: "floorplans",
@@ -234,6 +237,12 @@ export function evaluateHandover(
         input.networkVerified,
       detail: "توثيق مسارات الربط في CCTV Network وإقرار اختبارها ميدانيًا.",
     },
+    ...(badrNetwork ? [{
+      id: "badr_physical_network",
+      label: "مطابقة السويتشات الأربعة 4 / 6 / 6 / 6",
+      complete: badrNetwork.issues.length === 0,
+      detail: badrNetwork.issues.length ? badrNetwork.issues.join("؛ ") : "تطابق التوصيل المتسلسل المبلغ من الموقع.",
+    }] : []),
     {
       id: "cables",
       label: "اختبارات الكابلات",

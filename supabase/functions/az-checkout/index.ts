@@ -20,11 +20,11 @@ Deno.serve(async(req)=>{
  const quantities=new Map<string,number>();
  for(const item of input.items){if(!item||typeof item.id!=="string"||!(/^[a-f0-9-]{36}$/i.test(item.id))||!Number.isInteger(item.quantity)||item.quantity<1||item.quantity>100||quantities.has(item.id))return json({error:"Invalid cart item"},400);quantities.set(item.id,item.quantity)}
  const db=admin();
- const {data:products,error:productError}=await db.from("products").select("id,model,product_name,name_ar,current_price,currency,is_active,published,in_stock,sku,image_url").in("id",[...quantities.keys()]).eq("is_active",true).eq("published",true);
+ const {data:products,error:productError}=await db.from("products").select("id,model,product_name,name_ar,current_price,currency,is_active,published,in_stock,stock_checked_at,sku,image_url").in("id",[...quantities.keys()]).eq("is_active",true).eq("published",true);
  if(productError||!products||products.length!==quantities.size)return json({error:"Some products are unavailable"},409);
  const snapshot=[] as Array<{id:string;name:string;quantity:number;unit_price:number;sku:string|null;image_url:string|null;model:string|null}>;
  let cents=0;
- for(const p of products){const price=Number(p.current_price);if(p.currency!=="EGP"||!Number.isFinite(price)||price<=0||Math.abs(Math.round(price*100)-price*100)>1e-6||p.in_stock===false)return json({error:"Price or stock unavailable"},409);const quantity=quantities.get(p.id)!;cents+=Math.round(price*100)*quantity;snapshot.push({id:p.id,name:p.product_name||p.name_ar||p.model,quantity,unit_price:price,sku:p.sku||null,model:p.model||null,image_url:p.image_url||null})}
+ for(const p of products){const price=Number(p.current_price);if(p.currency!=="EGP"||!Number.isFinite(price)||price<=0||Math.abs(Math.round(price*100)-price*100)>1e-6||p.in_stock!==true||!p.stock_checked_at||!Number.isFinite(new Date(p.stock_checked_at).getTime())||Date.now()-new Date(p.stock_checked_at).getTime()<0||Date.now()-new Date(p.stock_checked_at).getTime()>48*60*60*1000)return json({error:"Price or verified stock unavailable"},409);const quantity=quantities.get(p.id)!;cents+=Math.round(price*100)*quantity;snapshot.push({id:p.id,name:p.product_name||p.name_ar||p.model,quantity,unit_price:price,sku:p.sku||null,model:p.model||null,image_url:p.image_url||null})}
  if(!Number.isSafeInteger(cents)||cents<=0)return json({error:"Invalid cart total"},409);
  const amount=cents/100;
  const {data:payment,error:insertError}=await db.from("store_checkout_payments").insert({customer_name:name,customer_phone:phone,customer_email:email||null,cart:input.items,items_snapshot:snapshot,amount,currency:"EGP"}).select("id").single();
