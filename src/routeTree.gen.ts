@@ -15,7 +15,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as CatalogRouteImport } from './routes/catalog'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CompareRouteImport } from './routes/compare'
+import { Route as MyQuotesRouteImport } from './routes/my-quotes'
+import { Route as Order_managementRouteImport } from './routes/order_management'
 import { Route as QuoteRouteImport } from './routes/quote'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -24,6 +27,8 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedFinanceRouteImport } from './routes/_authenticated/finance'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as CheckoutResultRouteImport } from './routes/checkout/result'
+import { Route as InvoiceTokenRouteImport } from './routes/invoice.$token'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as AuthenticatedEditorIdRouteImport } from './routes/_authenticated/editor.$id'
 import { Route as StoreFeedsGoogleDotxmlRouteImport } from './routes/store.feeds.google[.]xml'
@@ -58,9 +63,24 @@ const CatalogRoute = CatalogRouteImport.update({
   path: '/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CompareRoute = CompareRouteImport.update({
   id: '/compare',
   path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyQuotesRoute = MyQuotesRouteImport.update({
+  id: '/my-quotes',
+  path: '/my-quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Order_managementRoute = Order_managementRouteImport.update({
+  id: '/order_management',
+  path: '/order_management',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuoteRoute = QuoteRouteImport.update({
@@ -103,6 +123,16 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutResultRoute = CheckoutResultRouteImport.update({
+  id: '/result',
+  path: '/result',
+  getParentRoute: () => CheckoutRoute,
+} as any)
+const InvoiceTokenRoute = InvoiceTokenRouteImport.update({
+  id: '/invoice/$token',
+  path: '/invoice/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -130,7 +160,10 @@ export interface FileRoutesByFullPath {
   '/calculator': typeof CalculatorRoute
   '/cart': typeof CartRoute
   '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/compare': typeof CompareRoute
+  '/my-quotes': typeof MyQuotesRoute
+  '/order_management': typeof Order_managementRoute
   '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -139,6 +172,8 @@ export interface FileRoutesByFullPath {
   '/finance': typeof AuthenticatedFinanceRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/checkout/result': typeof CheckoutResultRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
   '/product/$id': typeof ProductIdRoute
   '/editor/$id': typeof AuthenticatedEditorIdRoute
   '/store/feeds/google.xml': typeof StoreFeedsGoogleDotxmlRoute
@@ -150,7 +185,10 @@ export interface FileRoutesByTo {
   '/calculator': typeof CalculatorRoute
   '/cart': typeof CartRoute
   '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/compare': typeof CompareRoute
+  '/my-quotes': typeof MyQuotesRoute
+  '/order_management': typeof Order_managementRoute
   '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -159,6 +197,8 @@ export interface FileRoutesByTo {
   '/finance': typeof AuthenticatedFinanceRoute
   '/projects': typeof AuthenticatedProjectsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/checkout/result': typeof CheckoutResultRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
   '/product/$id': typeof ProductIdRoute
   '/editor/$id': typeof AuthenticatedEditorIdRoute
   '/store/feeds/google.xml': typeof StoreFeedsGoogleDotxmlRoute
@@ -172,7 +212,10 @@ export interface FileRoutesById {
   '/calculator': typeof CalculatorRoute
   '/cart': typeof CartRoute
   '/catalog': typeof CatalogRoute
+  '/checkout': typeof CheckoutRouteWithChildren
   '/compare': typeof CompareRoute
+  '/my-quotes': typeof MyQuotesRoute
+  '/order_management': typeof Order_managementRoute
   '/quote': typeof QuoteRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -181,6 +224,8 @@ export interface FileRoutesById {
   '/_authenticated/finance': typeof AuthenticatedFinanceRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/checkout/result': typeof CheckoutResultRoute
+  '/invoice/$token': typeof InvoiceTokenRoute
   '/product/$id': typeof ProductIdRoute
   '/_authenticated/editor/$id': typeof AuthenticatedEditorIdRoute
   '/store/feeds/google.xml': typeof StoreFeedsGoogleDotxmlRoute
@@ -194,7 +239,10 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/cart'
     | '/catalog'
+    | '/checkout'
     | '/compare'
+    | '/my-quotes'
+    | '/order_management'
     | '/quote'
     | '/reset-password'
     | '/sitemap.xml'
@@ -203,6 +251,8 @@ export interface FileRouteTypes {
     | '/finance'
     | '/projects'
     | '/category/$slug'
+    | '/checkout/result'
+    | '/invoice/$token'
     | '/product/$id'
     | '/editor/$id'
     | '/store/feeds/google.xml'
@@ -214,7 +264,10 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/cart'
     | '/catalog'
+    | '/checkout'
     | '/compare'
+    | '/my-quotes'
+    | '/order_management'
     | '/quote'
     | '/reset-password'
     | '/sitemap.xml'
@@ -223,6 +276,8 @@ export interface FileRouteTypes {
     | '/finance'
     | '/projects'
     | '/category/$slug'
+    | '/checkout/result'
+    | '/invoice/$token'
     | '/product/$id'
     | '/editor/$id'
     | '/store/feeds/google.xml'
@@ -235,7 +290,10 @@ export interface FileRouteTypes {
     | '/calculator'
     | '/cart'
     | '/catalog'
+    | '/checkout'
     | '/compare'
+    | '/my-quotes'
+    | '/order_management'
     | '/quote'
     | '/reset-password'
     | '/sitemap.xml'
@@ -244,6 +302,8 @@ export interface FileRouteTypes {
     | '/_authenticated/finance'
     | '/_authenticated/projects'
     | '/category/$slug'
+    | '/checkout/result'
+    | '/invoice/$token'
     | '/product/$id'
     | '/_authenticated/editor/$id'
     | '/store/feeds/google.xml'
@@ -257,12 +317,16 @@ export interface RootRouteChildren {
   CalculatorRoute: typeof CalculatorRoute
   CartRoute: typeof CartRoute
   CatalogRoute: typeof CatalogRoute
+  CheckoutRoute: typeof CheckoutRouteWithChildren
   CompareRoute: typeof CompareRoute
+  MyQuotesRoute: typeof MyQuotesRoute
+  Order_managementRoute: typeof Order_managementRoute
   QuoteRoute: typeof QuoteRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoreRoute: typeof StoreRouteWithChildren
   CategorySlugRoute: typeof CategorySlugRoute
+  InvoiceTokenRoute: typeof InvoiceTokenRoute
   ProductIdRoute: typeof ProductIdRoute
 }
 
@@ -310,11 +374,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/compare': {
       id: '/compare'
       path: '/compare'
       fullPath: '/compare'
       preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-quotes': {
+      id: '/my-quotes'
+      path: '/my-quotes'
+      fullPath: '/my-quotes'
+      preLoaderRoute: typeof MyQuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order_management': {
+      id: '/order_management'
+      path: '/order_management'
+      fullPath: '/order_management'
+      preLoaderRoute: typeof Order_managementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quote': {
@@ -373,6 +458,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/result': {
+      id: '/checkout/result'
+      path: '/result'
+      fullPath: '/checkout/result'
+      preLoaderRoute: typeof CheckoutResultRouteImport
+      parentRoute: typeof CheckoutRoute
+    }
+    '/invoice/$token': {
+      id: '/invoice/$token'
+      path: '/invoice/$token'
+      fullPath: '/invoice/$token'
+      preLoaderRoute: typeof InvoiceTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -421,6 +520,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CheckoutRouteChildren {
+  CheckoutResultRoute: typeof CheckoutResultRoute
+}
+
+const CheckoutRouteChildren: CheckoutRouteChildren = {
+  CheckoutResultRoute: CheckoutResultRoute,
+}
+
+const CheckoutRouteWithChildren = CheckoutRoute._addFileChildren(
+  CheckoutRouteChildren,
+)
+
 interface StoreRouteChildren {
   StoreFeedsGoogleDotxmlRoute: typeof StoreFeedsGoogleDotxmlRoute
   StoreFeedsMetaDotcsvRoute: typeof StoreFeedsMetaDotcsvRoute
@@ -440,12 +551,16 @@ const rootRouteChildren: RootRouteChildren = {
   CalculatorRoute: CalculatorRoute,
   CartRoute: CartRoute,
   CatalogRoute: CatalogRoute,
+  CheckoutRoute: CheckoutRouteWithChildren,
   CompareRoute: CompareRoute,
+  MyQuotesRoute: MyQuotesRoute,
+  Order_managementRoute: Order_managementRoute,
   QuoteRoute: QuoteRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoreRoute: StoreRouteWithChildren,
   CategorySlugRoute: CategorySlugRoute,
+  InvoiceTokenRoute: InvoiceTokenRoute,
   ProductIdRoute: ProductIdRoute,
 }
 export const routeTree = rootRouteImport

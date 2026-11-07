@@ -129,7 +129,11 @@ function ProjectsDashboard() {
       }
       // Do not fabricate camera coordinates or serial identifiers before the site survey.
       const initialPlan = isBadr
-        ? { ...emptyPlan, layoutName: "المخطط العام - في انتظار الرفع والمعايرة", handover: makeBadrHandover() }
+        ? {
+            ...emptyPlan,
+            layoutName: "المخطط العام - في انتظار الرفع والمعايرة",
+            handover: makeBadrHandover(),
+          }
         : emptyPlan;
       const { data, error } = await supabase
         .from("cctv_projects")
@@ -203,13 +207,25 @@ function ProjectsDashboard() {
           </Button>
         </div>
 
-        <section aria-label="بدء مشروع حضانة بدر" className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#FFB900]/50 bg-white p-5 shadow-sm">
+        <section
+          aria-label="بدء مشروع حضانة بدر"
+          className="mb-7 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#FFB900]/50 bg-white p-5 shadow-sm"
+        >
           <div>
             <h2 className="font-black text-[#030957]">المشروع الأول للتسليم: حضانة بدر</h2>
-            <p className="mt-1 text-sm text-slate-600">إنشاء أو فتح ملف العميل، ثم إضافة المخططات ومواقع الكاميرات الـ22 وبيانات الأجهزة الفعلية بعد التحقق الميداني.</p>
+            <p className="mt-1 text-sm text-slate-600">
+              إنشاء أو فتح ملف العميل، ثم إضافة المخططات ومواقع الكاميرات الـ22 وبيانات الأجهزة
+              الفعلية بعد التحقق الميداني.
+            </p>
           </div>
-          <Button type="button" disabled={creating} onClick={() => void createProject("badr")} className="bg-[#FFB900] font-black text-[#030957] hover:bg-[#ffd04a]">
-            <FolderKanban className="ml-2 h-4 w-4" /> {creating ? "جارٍ تجهيز المشروع…" : "إنشاء / فتح حضانة بدر"}
+          <Button
+            type="button"
+            disabled={creating}
+            onClick={() => void createProject("badr")}
+            className="bg-[#FFB900] font-black text-[#030957] hover:bg-[#ffd04a]"
+          >
+            <FolderKanban className="ml-2 h-4 w-4" />{" "}
+            {creating ? "جارٍ تجهيز المشروع…" : "إنشاء / فتح حضانة بدر"}
           </Button>
         </section>
         <nav aria-label="اختصارات مساحة العمل" className="mb-8 flex flex-wrap gap-3">

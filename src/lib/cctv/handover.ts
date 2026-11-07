@@ -52,36 +52,65 @@ export interface ProjectHandover {
 }
 
 export const blankInspection = (id: string): CameraInspection => ({
-  id, designDeviceId: "", area: "", model: "", serial: "", mac: "", ip: "", switchId: "", port: "",
-  video: "pending", audio: "pending", poe: "pending", testedAt: "", note: "",
+  id,
+  designDeviceId: "",
+  area: "",
+  model: "",
+  serial: "",
+  mac: "",
+  ip: "",
+  switchId: "",
+  port: "",
+  video: "pending",
+  audio: "pending",
+  poe: "pending",
+  testedAt: "",
+  note: "",
 });
 
 export const makeBadrHandover = (): ProjectHandover => ({
   expectedCameras: 22,
-  inspections: Array.from({ length: 22 }, (_, index) => blankInspection(`CAM-${String(index + 1).padStart(2, "0")}`)),
+  inspections: Array.from({ length: 22 }, (_, index) =>
+    blankInspection(`CAM-${String(index + 1).padStart(2, "0")}`),
+  ),
   checks: {},
 });
 
 const results: InspectionResult[] = ["pending", "pass", "fail", "not_applicable"];
-const text = (value: unknown): string => typeof value === "string" ? value.trim() : "";
+const text = (value: unknown): string => (typeof value === "string" ? value.trim() : "");
 const validIPv4 = (s: string) => {
   const parts = s.split(".");
-  return parts.length === 4 && parts.every(part => /^\d{1,3}$/.test(part) && Number(part) <= 255);
+  return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
 };
 const validMAC = (s: string) => /^(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}$/i.test(s);
 
 export function normalizeHandover(value: unknown): ProjectHandover | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Partial<ProjectHandover>;
-  const expected = Number.isInteger(raw.expectedCameras) && (raw.expectedCameras ?? 0) > 0 && (raw.expectedCameras ?? 0) <= 256
-    ? raw.expectedCameras! : 22;
+  const expected =
+    Number.isInteger(raw.expectedCameras) &&
+    (raw.expectedCameras ?? 0) > 0 &&
+    (raw.expectedCameras ?? 0) <= 256
+      ? raw.expectedCameras!
+      : 22;
   const source = Array.isArray(raw.inspections) ? raw.inspections : [];
   const rows = Array.from({ length: expected }, (_, index) => {
     const id = `CAM-${String(index + 1).padStart(2, "0")}`;
-    const item = source.find(x => x?.id === id);
+    const item = source.find((x) => x?.id === id);
     const clean = blankInspection(id);
     if (!item || typeof item !== "object") return clean;
-    for (const field of ["designDeviceId", "area", "model", "serial", "mac", "ip", "switchId", "port", "testedAt", "note"] as const)
+    for (const field of [
+      "designDeviceId",
+      "area",
+      "model",
+      "serial",
+      "mac",
+      "ip",
+      "switchId",
+      "port",
+      "testedAt",
+      "note",
+    ] as const)
       clean[field] = text(item[field]);
     for (const field of ["video", "audio", "poe"] as const)
       clean[field] = results.includes(item[field]) ? item[field] : "pending";
@@ -91,7 +120,11 @@ export function normalizeHandover(value: unknown): ProjectHandover | null {
   for (const { id } of HANDOVER_CHECKS) {
     const item = raw.checks?.[id];
     if (item && ["pending", "pass", "fail"].includes(item.result)) {
-      checks[id] = { result: item.result, evidence: text(item.evidence), checkedAt: text(item.checkedAt) };
+      checks[id] = {
+        result: item.result,
+        evidence: text(item.evidence),
+        checkedAt: text(item.checkedAt),
+      };
     }
   }
   return { expectedCameras: expected, inspections: rows, checks };
@@ -114,7 +147,9 @@ export function evaluateHandover(
   if (handover.inspections.length !== handover.expectedCameras)
     issues.push("عدد سجلات الأجهزة لا يطابق العدد المخطط.");
   if (placedCameras.length !== handover.expectedCameras)
-    issues.push(`المخطط يحوي ${placedCameras.length} كاميرا، بينما المطلوب توثيق ${handover.expectedCameras}.`);
+    issues.push(
+      `المخطط يحوي ${placedCameras.length} كاميرا، بينما المطلوب توثيق ${handover.expectedCameras}.`,
+    );
   if (layoutCount < 1) issues.push("لا توجد مخططات مسجلة للمشروع.");
   if (topologyErrorCount > 0) issues.push(`هناك ${topologyErrorCount} خطأ في التوصيلات يلزم حله.`);
 
@@ -122,25 +157,46 @@ export function evaluateHandover(
   const macs = new Set<string>();
   const ips = new Set<string>();
   const linked = new Set<string>();
-  const eligible = new Set(placedCameras.map(device => device.id));
+  const eligible = new Set(placedCameras.map((device) => device.id));
   let verifiedCameras = 0;
   for (const row of handover.inspections) {
-    const detail = [row.area, row.model, row.serial, row.mac, row.ip, row.switchId, row.port, row.testedAt];
-    const complete = detail.every(x => Boolean(x.trim()));
+    const detail = [
+      row.area,
+      row.model,
+      row.serial,
+      row.mac,
+      row.ip,
+      row.switchId,
+      row.port,
+      row.testedAt,
+    ];
+    const complete = detail.every((x) => Boolean(x.trim()));
     const mac = row.mac.trim().toLowerCase().replace(/-/g, ":");
     const serial = row.serial.trim().toLowerCase();
     const ip = row.ip.trim();
     const designId = row.designDeviceId.trim();
-    const duplicate = (Boolean(designId) && linked.has(designId)) ||
+    const duplicate =
+      (Boolean(designId) && linked.has(designId)) ||
       (Boolean(serial) && serials.has(serial)) ||
-      (Boolean(mac) && macs.has(mac)) || (Boolean(ip) && ips.has(ip));
+      (Boolean(mac) && macs.has(mac)) ||
+      (Boolean(ip) && ips.has(ip));
     if (designId) linked.add(designId);
     if (serial) serials.add(serial);
     if (mac) macs.add(mac);
     if (ip) ips.add(ip);
-    const testsPassed = row.video === "pass" && row.poe === "pass" &&
+    const testsPassed =
+      row.video === "pass" &&
+      row.poe === "pass" &&
       (row.audio === "pass" || (row.audio === "not_applicable" && Boolean(row.note.trim())));
-    if (complete && eligible.has(designId) && validMAC(row.mac) && validIPv4(ip) && !duplicate && testsPassed) verifiedCameras++;
+    if (
+      complete &&
+      eligible.has(designId) &&
+      validMAC(row.mac) &&
+      validIPv4(ip) &&
+      !duplicate &&
+      testsPassed
+    )
+      verifiedCameras++;
     else issues.push(`${row.id}: بيانات التعريف أو نتائج الاختبارات غير مكتملة/متعارضة.`);
   }
 
@@ -149,7 +205,12 @@ export function evaluateHandover(
     if (record?.result !== "pass" || !record.evidence.trim() || !record.checkedAt.trim())
       issues.push(`${check.title}: يحتاج إثباتًا وتاريخًا ونتيجة ناجحة.`);
   }
-  return { verifiedCameras, expectedCameras: handover.expectedCameras, issues, ready: issues.length === 0 };
+  return {
+    verifiedCameras,
+    expectedCameras: handover.expectedCameras,
+    issues,
+    ready: issues.length === 0,
+  };
 }
 
 const csvCell = (value: string) => {
@@ -159,9 +220,39 @@ const csvCell = (value: string) => {
 };
 
 export function handoverCSV(data: ProjectHandover): string {
-  const header = ["Camera ID","Design Device ID","Area","Model","Serial","MAC","IP","Switch","Port","Video","Audio","PoE","Tested At","Notes"];
-  const rows = data.inspections.map(r => [
-    r.id,r.designDeviceId,r.area,r.model,r.serial,r.mac,r.ip,r.switchId,r.port,r.video,r.audio,r.poe,r.testedAt,r.note,
+  const header = [
+    "Camera ID",
+    "Design Device ID",
+    "Area",
+    "Model",
+    "Serial",
+    "MAC",
+    "IP",
+    "Switch",
+    "Port",
+    "Video",
+    "Audio",
+    "PoE",
+    "Tested At",
+    "Notes",
+  ];
+  const rows = data.inspections.map((r) => [
+    r.id,
+    r.designDeviceId,
+    r.area,
+    r.model,
+    r.serial,
+    r.mac,
+    r.ip,
+    r.switchId,
+    r.port,
+    r.video,
+    r.audio,
+    r.poe,
+    r.testedAt,
+    r.note,
   ]);
-  return "\uFEFF" + [header,...rows].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
+  return (
+    "\uFEFF" + [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n") + "\r\n"
+  );
 }

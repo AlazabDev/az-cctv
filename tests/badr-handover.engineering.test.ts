@@ -10,7 +10,7 @@ import {
 } from "../src/lib/cctv/handover";
 
 describe("first customer handover — evidence and integrity", () => {
-  const placed = () => Array.from({ length: 22 }, (_, i) => ({ id: `design-${i+1}` }));
+  const placed = () => Array.from({ length: 22 }, (_, i) => ({ id: `design-${i + 1}` }));
   it("creates exactly 22 empty identification slots, not fabricated equipment", () => {
     const h = makeBadrHandover();
     expect(h.inspections).toHaveLength(22);
@@ -22,7 +22,7 @@ describe("first customer handover — evidence and integrity", () => {
   it("never approves a job based only on camera count", () => {
     const h = makeBadrHandover();
     expect(evaluateHandover(h, placed(), 0, 1).verifiedCameras).toBe(0);
-    expect(evaluateHandover(h, [], 0, 1).issues.some(i => i.includes("المخطط"))).toBe(true);
+    expect(evaluateHandover(h, [], 0, 1).issues.some((i) => i.includes("المخطط"))).toBe(true);
   });
 
   function prepared(): ProjectHandover {
@@ -50,7 +50,9 @@ describe("first customer handover — evidence and integrity", () => {
   it("requires verified device identity, passing tests, network review and all sign-offs", () => {
     const h = prepared();
     expect(evaluateHandover(h, placed(), 0, 1)).toMatchObject({
-      ready: true, verifiedCameras: 22, expectedCameras: 22,
+      ready: true,
+      verifiedCameras: 22,
+      expectedCameras: 22,
     });
     expect(evaluateHandover(h, placed(), 1, 1).ready).toBe(false);
     expect(evaluateHandover(h, placed().slice(0, 21), 0, 1).ready).toBe(false);
@@ -85,7 +87,10 @@ describe("first customer handover — evidence and integrity", () => {
 
   it("normalizes untrusted persisted records without inventing verification", () => {
     expect(normalizeHandover(null)).toBeNull();
-    const h = normalizeHandover({ expectedCameras: 22, inspections: [{ id: "CAM-01", video: "pass" }] });
+    const h = normalizeHandover({
+      expectedCameras: 22,
+      inspections: [{ id: "CAM-01", video: "pass" }],
+    });
     expect(h?.inspections).toHaveLength(22);
     expect(h?.inspections[0].video).toBe("pass");
     expect(h?.inspections[0].serial).toBe("");

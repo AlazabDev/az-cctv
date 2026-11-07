@@ -62,7 +62,13 @@ import {
   normalizeSiteMap,
   type SiteMapData,
 } from "@/lib/cctv/site-map";
-import { collectNodes, emptyTopology, normalizeTopology, validateTopology, type TopologyData } from "@/lib/cctv/topology";
+import {
+  collectNodes,
+  emptyTopology,
+  normalizeTopology,
+  validateTopology,
+  type TopologyData,
+} from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import {
   cableTypes,
@@ -289,7 +295,13 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       setLayouts((prev) =>
         prev.map((layout) =>
           layout.id === activeLayoutId
-            ? { ...layout, ...updater(layout), planApproved: false, id: layout.id, floorplanPath: layout.floorplanPath }
+            ? {
+                ...layout,
+                ...updater(layout),
+                planApproved: false,
+                id: layout.id,
+                floorplanPath: layout.floorplanPath,
+              }
             : layout,
         ),
       );
@@ -537,7 +549,14 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     const nextLayouts: ProjectLayout[] = dialogTargetId
       ? layouts.map((l) =>
           l.id === targetId
-            ? { ...l, layoutName, ceilingHeightM, floorplanPath: path, planApproved: false, ...size }
+            ? {
+                ...l,
+                layoutName,
+                ceilingHeightM,
+                floorplanPath: path,
+                planApproved: false,
+                ...size,
+              }
             : l,
         )
       : [
@@ -647,7 +666,12 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   async function approveActiveLayout(): Promise<boolean> {
-    if (!plan.imageWidth || !plan.imageHeight || !(plan.pxPerMeter > 0) || plan.walls.length === 0) {
+    if (
+      !plan.imageWidth ||
+      !plan.imageHeight ||
+      !(plan.pxPerMeter > 0) ||
+      plan.walls.length === 0
+    ) {
       toast.error("اعتماد الوكيل يتطلب مخططًا بأبعاد ومقياس حقيقي وجدران مرسومة");
       return false;
     }
@@ -677,7 +701,18 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     }, 1200);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layouts, activeLayoutId, offer, topology, siteMap, handover, name, clientName, currency, loaded]);
+  }, [
+    layouts,
+    activeLayoutId,
+    offer,
+    topology,
+    siteMap,
+    handover,
+    name,
+    clientName,
+    currency,
+    loaded,
+  ]);
 
   function exportCsv() {
     const summary = calculateOffer(boq, offer);
@@ -925,13 +960,36 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
         </header>
 
         {aiProposals?.length ? (
-          <div dir="rtl" className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-[#030957]/20 bg-[#030957]/5 px-4 py-2 text-xs">
-            <span>معاينة هندسية نشطة — {aiProposals.length} كاميرا مقترحة. لم تُحفظ الأجهزة بعد.</span>
+          <div
+            dir="rtl"
+            className="no-print flex flex-wrap items-center justify-between gap-2 border-b border-[#030957]/20 bg-[#030957]/5 px-4 py-2 text-xs"
+          >
+            <span>
+              معاينة هندسية نشطة — {aiProposals.length} كاميرا مقترحة. لم تُحفظ الأجهزة بعد.
+            </span>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => setActiveModule("plan")}>عرض المقترحات على المخطط</Button>
-              <Button size="sm" variant="outline" onClick={() => setActiveModule("agent")}>مراجعة أسباب الاختيار</Button>
-              <Button size="sm" onClick={() => { if(window.confirm("هل تعتمد تطبيق جميع الكاميرات الموجودة في المعاينة مع توليد مسارات الكابلات؟"))applyAutoDesign(); }}>اعتماد التوزيع</Button>
-              <Button size="sm" variant="ghost" onClick={() => setAiProposals(null)}>إلغاء المعاينة</Button>
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("plan")}>
+                عرض المقترحات على المخطط
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setActiveModule("agent")}>
+                مراجعة أسباب الاختيار
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "هل تعتمد تطبيق جميع الكاميرات الموجودة في المعاينة مع توليد مسارات الكابلات؟",
+                    )
+                  )
+                    applyAutoDesign();
+                }}
+              >
+                اعتماد التوزيع
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setAiProposals(null)}>
+                إلغاء المعاينة
+              </Button>
             </div>
           </div>
         ) : null}
@@ -941,9 +999,21 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             onChange={setHandover}
             onClose={() => setHandoverOpen(false)}
             projectName={name}
-            placedCameras={layouts.flatMap(layout => layout.devices.filter(device => device.kind === "camera").map(device => ({ id: device.id, name: device.name, layoutName: layout.layoutName })))}
+            placedCameras={layouts.flatMap((layout) =>
+              layout.devices
+                .filter((device) => device.kind === "camera")
+                .map((device) => ({
+                  id: device.id,
+                  name: device.name,
+                  layoutName: layout.layoutName,
+                })),
+            )}
             layoutCount={layouts.length}
-            topologyErrorCount={validateTopology(topology, collectNodes(layouts), layouts).filter(issue => issue.level === "error").length}
+            topologyErrorCount={
+              validateTopology(topology, collectNodes(layouts), layouts).filter(
+                (issue) => issue.level === "error",
+              ).length
+            }
           />
         ) : activeModule === "plan" ? (
           <PlanDesignWorkspace
@@ -1062,7 +1132,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
               layoutId={activeLayoutId}
               proposals={aiProposals}
               onSave={() => persist()}
-              onPreview={(next) => {setAiProposals(next);setActiveModule("plan");}}
+              onPreview={(next) => {
+                setAiProposals(next);
+                setActiveModule("plan");
+              }}
               onApply={(next) => applyAutoDesign(next)}
               onReject={() => setAiProposals(null)}
               onFocusPlan={() => setActiveModule("plan")}
