@@ -79,13 +79,21 @@ const definitions = [
     },
   },
 ];
-function textOf(r: any): string {
-  if (typeof r?.output_text === "string") return r.output_text;
-  return (r?.output || [])
-    .filter((x: any) => x.type === "message")
-    .flatMap((x: any) => x.content || [])
-    .map((x: any) => x.text || "")
-    .filter(Boolean)
+type JsonRecord = Record<string, unknown>;
+function asRecord(input: unknown): JsonRecord {
+  return input !== null && typeof input === "object" && !Array.isArray(input)
+    ? input as JsonRecord
+    : {};
+}
+function textOf(value: unknown): string {
+  const response = asRecord(value);
+  if (typeof response.output_text === "string") return response.output_text;
+  return (Array.isArray(response.output) ? response.output : [])
+    .map(asRecord)
+    .filter(item => item.type === "message")
+    .flatMap(item => Array.isArray(item.content) ? item.content : [])
+    .map(item => asRecord(item).text)
+    .filter((item): item is string => typeof item === "string" && item.length > 0)
     .join("\n");
 }
 function clean(s: unknown, len = 100): string {
@@ -99,7 +107,7 @@ function clean(s: unknown, len = 100): string {
 function validId(s: unknown): s is string {
   return typeof s === "string" && /^[0-9a-f-]{36}$/i.test(s);
 }
-function estimate(arg: any) {
+function estimate(arg: JsonRecord) {
   const sqm = Math.max(10, Math.min(200000, Number(arg.site_area_sqm) || 100));
   const mp = Math.max(2, Math.min(12, Number(arg.camera_resolution_mp) || 4));
   const days = Math.max(1, Math.min(90, Number(arg.recording_days) || 30));
@@ -168,7 +176,7 @@ Deno.serve(async (req) => {
     agent_name: name,
     agent_version: version,
   });
-  async function execute(tool: string, args: any): Promise<unknown> {
+  async function execute(tool: string, args: JsonRecord): Promise<unknown> {
     if (tool === "calculate_system") return estimate(args);
     if (tool === "create_quotation")
       return {
@@ -213,7 +221,12 @@ Deno.serve(async (req) => {
     }
     return { error: "unknown_tool" };
   }
-  let payload: any = {
+  let payload: {
+    agent: { type: string; name: string; version: string };
+    input: unknown[];
+    tools: typeof definitions;
+    previous_response_id?: string;
+  } = {
     agent: { type: "agent_reference", name, version },
     input: [
       {
@@ -226,8 +239,8 @@ Deno.serve(async (req) => {
     tools: definitions,
   };
   if (previous) payload.previous_response_id = previous;
-  let result: any,
-    turns = 0;
+  let result: JsonRecord = {};
+  let turns = 0;
   try {
     do {
       const upstream = await fetch(endpoint + "/openai/v1/responses", {
@@ -237,32 +250,35 @@ Deno.serve(async (req) => {
         signal: AbortSignal.timeout(90000),
       });
       if (!upstream.ok) throw new Error("Foundry unavailable: " + upstream.status);
-      result = await upstream.json();
-      const calls = (result.output || [])
-        .filter((x: any) => x.type === "function_call")
+      result = asRecord(await upstream.json());
+      const calls = (Array.isArray(result.output) ? result.output : [])
+        .map(asRecord)
+        .filter(item => item.type === "function_call")
         .slice(0, 6);
       if (!calls.length) break;
       const outs = [];
       for (const call of calls) {
-        let args: any = {};
+        let args: JsonRecord = {};
         try {
-          args = JSON.parse(call.arguments || "{}");
-        } catch {}
+          args = asRecord(JSON.parse(typeof call.arguments === "string" ? call.arguments : "{}"));
+        } catch {
+          // Reject malformed function arguments by executing with an empty, validated object.
+        }
         let output: unknown;
         try {
-          output = await execute(call.name, args);
+          output = await execute(typeof call.name === "string" ? call.name : "", args);
         } catch {
           output = { error: "tool_execution_failed" };
         }
         outs.push({
           type: "function_call_output",
-          call_id: call.call_id,
+          call_id: typeof call.call_id === "string" ? call.call_id : "",
           output: JSON.stringify(output),
         });
       }
       payload = {
         agent: { type: "agent_reference", name, version },
-        previous_response_id: result.id,
+        previous_response_id: typeof result.id === "string" ? result.id : undefined,
         input: outs,
         tools: definitions,
       };
@@ -279,9 +295,9 @@ Deno.serve(async (req) => {
     content: answer,
     agent_name: name,
     agent_version: version,
-    response_id: result?.id || null,
+    response_id: typeof result.id === "string" ? result.id : null,
   });
-  if (result?.id)
+  if (typeof result.id === "string")
     await db.from("agent_threads").update({ last_response_id: result.id }).eq("id", threadId);
   return reply({ thread_id: threadId, response: answer, tool_turns: turns });
 });
