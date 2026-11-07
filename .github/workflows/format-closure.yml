@@ -23,7 +23,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Normalize all TypeScript and React source except generated router
         run: |
-          find src tests -type f \\( -name '*.ts' -o -name '*.tsx' \\) ! -name 'routeTree.gen.ts' -print0 |
+          find src tests -type f -name '*.ts' ! -name 'routeTree.gen.ts' -print0 |
+            xargs -0 -r pnpm exec prettier --write
+          find src tests -type f -name '*.tsx' -print0 |
             xargs -0 -r pnpm exec prettier --write
       - name: Commit source formatting to established develop only
         run: |
