@@ -82,7 +82,7 @@ const definitions = [
 type JsonRecord = Record<string, unknown>;
 function asRecord(input: unknown): JsonRecord {
   return input !== null && typeof input === "object" && !Array.isArray(input)
-    ? input as JsonRecord
+    ? (input as JsonRecord)
     : {};
 }
 function textOf(value: unknown): string {
@@ -90,9 +90,9 @@ function textOf(value: unknown): string {
   if (typeof response.output_text === "string") return response.output_text;
   return (Array.isArray(response.output) ? response.output : [])
     .map(asRecord)
-    .filter(item => item.type === "message")
-    .flatMap(item => Array.isArray(item.content) ? item.content : [])
-    .map(item => asRecord(item).text)
+    .filter((item) => item.type === "message")
+    .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
+    .map((item) => asRecord(item).text)
     .filter((item): item is string => typeof item === "string" && item.length > 0)
     .join("\n");
 }
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
       result = asRecord(await upstream.json());
       const calls = (Array.isArray(result.output) ? result.output : [])
         .map(asRecord)
-        .filter(item => item.type === "function_call")
+        .filter((item) => item.type === "function_call")
         .slice(0, 6);
       if (!calls.length) break;
       const outs = [];
