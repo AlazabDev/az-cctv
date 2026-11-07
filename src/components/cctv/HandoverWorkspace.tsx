@@ -53,7 +53,15 @@ export function HandoverWorkspace({
 }: Props) {
   const [opened, setOpened] = useState<string>("CAM-01");
   const review = useMemo(
-    () => evaluateHandover(data, layouts, topology, clientName === "حضانة بدر" || projectName.includes("حضانة بدر") ? "badr-four-switch" : undefined),
+    () =>
+      evaluateHandover(
+        data,
+        layouts,
+        topology,
+        clientName === "حضانة بدر" || projectName.includes("حضانة بدر")
+          ? "badr-four-switch"
+          : undefined,
+      ),
     [data, layouts, topology, clientName, projectName],
   );
   const placements = layouts.flatMap((layout) =>

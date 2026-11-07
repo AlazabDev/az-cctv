@@ -181,7 +181,8 @@ export function evaluateHandover(
     linked.length === input.targetCameraCount &&
     linked.every((id) => ids.has(id)) &&
     uniqueNonempty(linked);
-  const badrNetwork = siteProfile === "badr-four-switch" ? inspectBadrNetwork(layouts, topology.parents) : null;
+  const badrNetwork =
+    siteProfile === "badr-four-switch" ? inspectBadrNetwork(layouts, topology.parents) : null;
   const findings: HandoverFinding[] = [
     {
       id: "floorplans",
@@ -237,12 +238,18 @@ export function evaluateHandover(
         input.networkVerified,
       detail: "توثيق مسارات الربط في CCTV Network وإقرار اختبارها ميدانيًا.",
     },
-    ...(badrNetwork ? [{
-      id: "badr_physical_network",
-      label: "مطابقة السويتشات الأربعة 4 / 6 / 6 / 6",
-      complete: badrNetwork.issues.length === 0,
-      detail: badrNetwork.issues.length ? badrNetwork.issues.join("؛ ") : "تطابق التوصيل المتسلسل المبلغ من الموقع.",
-    }] : []),
+    ...(badrNetwork
+      ? [
+          {
+            id: "badr_physical_network",
+            label: "مطابقة السويتشات الأربعة 4 / 6 / 6 / 6",
+            complete: badrNetwork.issues.length === 0,
+            detail: badrNetwork.issues.length
+              ? badrNetwork.issues.join("؛ ")
+              : "تطابق التوصيل المتسلسل المبلغ من الموقع.",
+          },
+        ]
+      : []),
     {
       id: "cables",
       label: "اختبارات الكابلات",

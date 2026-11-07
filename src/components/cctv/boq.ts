@@ -56,7 +56,9 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
     const sample = grouped[0]!;
     const spec = cameraById(sample.specId);
     if (!spec) {
-      unresolvedSpecs.push(`Unresolved camera specification: ${sample.name} (${sample.specId}) x ${grouped.length}`);
+      unresolvedSpecs.push(
+        `Unresolved camera specification: ${sample.name} (${sample.specId}) x ${grouped.length}`,
+      );
       continue;
     }
     lines.push({
@@ -81,7 +83,9 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
     const sample = grouped[0]!;
     const spec = hardwareById(sample.specId);
     if (!spec) {
-      unresolvedSpecs.push(`Unresolved hardware specification: ${sample.name} (${sample.specId}) x ${grouped.length}`);
+      unresolvedSpecs.push(
+        `Unresolved hardware specification: ${sample.name} (${sample.specId}) x ${grouped.length}`,
+      );
       continue;
     }
     lines.push({
@@ -188,7 +192,15 @@ export function buildBoq(plan: PlanData, retentionDays: number, options: BuildBo
     (sum, camera) => sum + (cameraById(camera.specId)?.poeWatt ?? 0),
     0,
   );
-  return { lines, grand, cameras: cameras.length, totalBitrate, neededTb, poeLoad, unresolvedSpecs };
+  return {
+    lines,
+    grand,
+    cameras: cameras.length,
+    totalBitrate,
+    neededTb,
+    poeLoad,
+    unresolvedSpecs,
+  };
 }
 
 export function suggestHardware(cameraCount: number) {

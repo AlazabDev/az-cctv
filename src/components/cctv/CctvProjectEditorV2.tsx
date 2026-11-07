@@ -753,7 +753,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   }
 
   async function exportPdf() {
-    if (!name.trim() || !clientName.trim()) { toast.error("أدخل اسم المشروع والعميل أولاً."); return; }
+    if (!name.trim() || !clientName.trim()) {
+      toast.error("أدخل اسم المشروع والعميل أولاً.");
+      return;
+    }
     if (boq.cameras < 1 || boq.lines.length === 0 || boq.unresolvedSpecs.length > 0) {
       toast.error("لا يمكن إصدار مسودة عرض بسجل أجهزة أو كميات غير مكتملة.");
       return;
