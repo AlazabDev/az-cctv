@@ -767,6 +767,10 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       toast.error("أدخل اسم المشروع واسم العميل قبل إصدار مسودة العرض.");
       return;
     }
+    if (boq.unresolvedSpecs.length > 0) {
+      toast.error("جدول الكميات غير مكتمل: " + boq.unresolvedSpecs.join("؛ "));
+      return;
+    }
     if (boq.cameras < 1 || boq.lines.length === 0) {
       toast.error("أضف الكاميرات وأكمل جدول الكميات قبل إنشاء مسودة عرض السعر.");
       return;
