@@ -941,7 +941,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             onChange={setHandover}
             onClose={() => setHandoverOpen(false)}
             projectName={name}
-            placedCameras={layouts.reduce((total, layout) => total + layout.devices.filter(device => device.kind === "camera").length, 0)}
+            placedCameras={layouts.flatMap(layout => layout.devices.filter(device => device.kind === "camera").map(device => ({ id: device.id, name: device.name, layoutName: layout.layoutName })))}
             layoutCount={layouts.length}
             topologyErrorCount={validateTopology(topology, collectNodes(layouts), layouts).filter(issue => issue.level === "error").length}
           />
