@@ -58,7 +58,7 @@ export function openOfferPdf(o: OfferPdfInput) {
     .join("");
 
   const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/>
-<title>عرض سعر - ${esc(o.projectName)}</title>
+<title>مسودة عرض سعر غير معتمدة - ${esc(o.projectName)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet"/>
 <style>
@@ -68,6 +68,7 @@ body{font-family:Cairo,sans-serif;color:#1b2333;margin:0;font-size:12px}
 header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid #0e7490;padding-bottom:12px;margin-bottom:18px}
 .brand{font-size:24px;font-weight:800;color:#0e7490}
 .muted{color:#5b6475}
+.draft{margin:12px 0 18px;padding:10px 14px;border:2px solid #e9ad9f;background:#fff3ee;color:#9a2717;font-weight:800;font-size:13px}
 h1{font-size:18px;margin:0}
 .meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;background:#f1f5f9;padding:12px;border-radius:6px;margin-bottom:16px}
 .stats{display:flex;gap:10px;margin-bottom:16px}
@@ -90,9 +91,10 @@ tr{page-break-inside:avoid}
 </style></head><body>
 <div class="bar"><button onclick="window.print()">حفظ كـ PDF</button></div>
 <header><div><div class="brand">${esc(o.companyName)}</div><div class="muted">${esc(o.preparedBy)}</div></div>
-<div style="text-align:left"><h1>عرض سعر نظام مراقبة</h1><div class="muted">${ref} — ${date}</div></div></header>
+<div style="text-align:left"><h1>مسودة تسعير نظام مراقبة</h1><div class="muted">${ref} — ${date}</div></div></header>
+<div class="draft">مسودة غير معتمدة — الأسعار والكميات والضرائب ومدة التنفيذ تخضع للمراجعة والاعتماد الرسمي قبل تقديم أي التزام للعميل.</div>
 <div class="meta"><div><b>المشروع:</b> ${esc(o.projectName)}</div><div><b>العميل:</b> ${esc(o.clientName || "—")}</div>
-<div><b>العملة:</b> ${esc(o.currency)}</div><div><b>صلاحية العرض:</b> 15 يوماً</div></div>
+<div><b>العملة:</b> ${esc(o.currency)}</div><div><b>صلاحية الأسعار:</b> تحدد بعد الاعتماد</div></div>
 <div class="stats"><div>عدد الكاميرات<b>${o.cameras}</b></div><div>سعة التخزين<b>${o.storageTb.toFixed(1)} TB</b></div><div>حمل PoE<b>${o.poeWatt} W</b></div></div>
 <table><thead><tr><th>#</th><th>البند</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>خصم</th><th>الإجمالي</th></tr></thead><tbody>${rows || `<tr><td colspan="7">لا توجد بنود</td></tr>`}</tbody></table>
 ${fees ? `<table class="totals"><thead><tr><th>رسوم إضافية</th><th>المبلغ</th></tr></thead><tbody>${fees}</tbody></table>` : ""}
@@ -102,8 +104,8 @@ ${fees ? `<table class="totals"><thead><tr><th>رسوم إضافية</th><th>ا�
 <tr><td>الضريبة (${o.taxPercent}%)</td><td>${money(o.taxValue)}</td></tr>
 <tr class="grand"><td>الإجمالي النهائي</td><td>${money(o.total)}</td></tr></tbody></table>
 <div class="terms"><b>الشروط والأحكام:</b><ul>
-<li>الأسعار سارية لمدة 15 يوماً من تاريخ العرض.</li>
-<li>ضمان الأجهزة حسب ضمان الشركة المصنّعة.</li>
+<li>هذه مسودة هندسية غير ملزمة، ولا تصبح عرضًا معتمدًا إلا بعد مراجعة الأسعار والضريبة والشروط والتوقيع.</li>
+<li>الضمان والتوريد ومدة الصلاحية تخضع لشروط العرض المعتمد ومطابقة بيانات الأجهزة الفعلية.</li>
 <li>أطوال الكابلات تقديرية وتشمل نسبة فاقد، ويتم الحساب النهائي حسب التنفيذ الفعلي.</li></ul></div>
 <div class="sign"><div>توقيع واعتماد الشركة</div><div>توقيع العميل</div></div>
 <script>document.fonts.ready.then(()=>setTimeout(()=>window.print(),300))</script>
