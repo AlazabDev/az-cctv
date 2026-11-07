@@ -17,7 +17,7 @@ type Props = {
   onChange: (next: ProjectHandover) => void;
   onClose: () => void;
   projectName: string;
-  placedCameras: Array<{ id: string; name: string; layoutName: string }>;
+  placedCameras: Array<{ id: string; name: string; model: string; layoutName: string }>;
   layoutCount: number;
   topologyErrorCount: number;
 };
@@ -176,7 +176,7 @@ export function ProjectHandoverPanel({
                         <option value="">اختر الكاميرا المركبة في الرسم</option>
                         {placedCameras.map((camera) => (
                           <option value={camera.id} key={camera.id}>
-                            {camera.layoutName} · {camera.name} ({camera.id.slice(0, 8)})
+                            {camera.layoutName} · {camera.name} · {camera.model || "غير موثق"} ({camera.id.slice(0, 8)})
                           </option>
                         ))}
                       </select>
