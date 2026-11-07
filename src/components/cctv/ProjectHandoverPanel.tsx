@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { openHandoverPrint } from "@/lib/cctv/handover-report";
 import { AlertTriangle, CheckCircle2, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ type Props = {
   onChange: (next: ProjectHandover) => void;
   onClose: () => void;
   projectName: string;
+  clientName: string;
   placedCameras: Array<{ id: string; name: string; model: string; layoutName: string }>;
   layoutCount: number;
   topologyErrorCount: number;
@@ -44,6 +46,7 @@ export function ProjectHandoverPanel({
   onChange,
   onClose,
   projectName,
+  clientName,
   placedCameras,
   layoutCount,
   topologyErrorCount,
@@ -64,6 +67,11 @@ export function ProjectHandoverPanel({
   ) {
     const current = data.checks[id] ?? { result: "pending", evidence: "", checkedAt: "" };
     onChange({ ...data, checks: { ...data.checks, [id]: { ...current, ...patch } } });
+  }
+  function printReport() {
+    if (!openHandoverPrint(projectName, clientName, data, report)) {
+      window.alert("تعذر فتح التقرير. اسمح بالنوافذ المنبثقة للموقع ثم أعد المحاولة.");
+    }
   }
   function exportInventory() {
     const content = handoverCSV(data);
@@ -91,6 +99,9 @@ export function ProjectHandoverPanel({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="secondary" onClick={printReport}>
+              <Download className="ml-2 h-4 w-4" /> {report.ready ? "تقرير التسليم PDF" : "تقرير الفحص — مسودة"}
+            </Button>
             <Button type="button" variant="secondary" onClick={exportInventory}>
               <Download className="ml-2 h-4 w-4" /> CSV سجل الكاميرات
             </Button>
