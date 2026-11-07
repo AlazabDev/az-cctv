@@ -1,0 +1,43 @@
+name: Badr branch generated routes and formatting
+on:
+  push:
+    branches: [hardening/badr-nursery-first-client]
+    paths:
+      - .github/workflows/badr-route-synchronize.yml
+permissions:
+  contents: write
+jobs:
+  synchronize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format changed engineering modules
+        run: |
+          pnpm exec prettier --write             src/lib/cctv/handover.ts             src/components/cctv/ProjectHandoverPanel.tsx             src/components/cctv/CctvProjectEditorV2.tsx             src/routes/_authenticated/projects.tsx             tests/badr-handover.engineering.test.ts
+      - name: Generate router tree using the real project build
+        id: build
+        continue-on-error: true
+        run: pnpm build
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add             src/routeTree.gen.ts             src/lib/cctv/handover.ts             src/components/cctv/ProjectHandoverPanel.tsx             src/components/cctv/CctvProjectEditorV2.tsx             src/routes/_authenticated/projects.tsx             tests/badr-handover.engineering.test.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(badr): synchronize router tree and format inspected modules"
+            git push origin HEAD:hardening/badr-nursery-first-client
+          fi
+      - name: Respect production build result
+        if: steps.build.outcome == 'failure'
+        run: exit 1
