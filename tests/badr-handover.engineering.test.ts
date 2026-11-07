@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { renderHandoverReport } from "../src/lib/cctv/handover-report";
 import {
   blankInspection,
   evaluateHandover,
@@ -102,6 +103,18 @@ describe("first customer handover — evidence and integrity", () => {
     expect(h?.inspections[0].video).toBe("pass");
     expect(h?.inspections[0].serial).toBe("");
     expect(h?.inspections[1].video).toBe("pending");
+  });
+
+  it("labels incomplete reports as drafts and escapes customer-supplied HTML", () => {
+    const h = makeBadrHandover();
+    h.inspections[0].area = '<script>alert("test")</script>';
+    const report = evaluateHandover(h, placed(), 0, 1);
+    const html = renderHandoverReport("<onload=evil>", "حضانة بدر", h, report);
+    expect(html).toContain("مسودة غير معتمدة");
+    expect(html).not.toContain('<script>alert("test")</script>');
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).toContain("&lt;onload=evil&gt;");
+    expect(html).toContain("CAM-22");
   });
 
   it("escapes CSV and blocks spreadsheet formula injection", () => {
