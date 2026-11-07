@@ -7,7 +7,7 @@ import { QuantitySelector } from "@/components/QuantitySelector";
 import { getProductById, getRelatedProducts, parseSpecs, type Product } from "@/lib/catalog";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language-context";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 

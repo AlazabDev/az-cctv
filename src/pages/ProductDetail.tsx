@@ -11,7 +11,7 @@ import {
   type Product,
   type SortKey,
 } from "@/lib/catalog";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language-context";
 import { Button } from "@/components/ui/button";
 
 const Products = () => {

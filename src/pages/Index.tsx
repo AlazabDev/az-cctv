@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Shield, Phone, Mail, MapPin } from "lucide-react";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language-context";
 
 export const Footer = () => {
   const { t } = useLanguage();

@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { LanguageContext, fmtNumber } from "./language-context";
 
 export type Lang = "ar" | "en";
 
@@ -226,20 +227,6 @@ const categoryLabels: Record<string, { ar: string; en: string }> = {
   "Fiber Optic": { ar: "الألياف الضوئية", en: "Fiber Optic" },
 };
 
-interface LanguageContextValue {
-  lang: Lang;
-  dir: "rtl" | "ltr";
-  setLang: (lang: Lang) => void;
-  t: (key: TKey) => string;
-  catLabel: (category: string) => string;
-  fmtPrice: (price: number) => string;
-}
-
-const LanguageContext = createContext<LanguageContextValue | null>(null);
-
-export const fmtNumber = (n: number) =>
-  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(n);
-
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("az-lang") : null;
@@ -276,10 +263,4 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       {children}
     </LanguageContext.Provider>
   );
-}
-
-export function useLanguage() {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
-  return ctx;
 }

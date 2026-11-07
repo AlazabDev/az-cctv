@@ -4,7 +4,7 @@ import { Shield, ArrowRight, Truck, Award, Headphones, Percent } from "lucide-re
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { queryProducts, getCategories, type Product } from "@/lib/catalog";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language-context";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {

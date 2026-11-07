@@ -3,7 +3,7 @@ import { Search, Heart, Menu, X, Globe, Shield } from "lucide-react";
 import { useState } from "react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { CartIcon } from "@/components/CartIcon";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language-context";
 
 export const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);

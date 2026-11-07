@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { Product } from "@/lib/catalog";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "@/lib/language-context";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
