@@ -237,7 +237,7 @@ function InvoicePage() {
                 className="invoice-contact mt-9 border-t-2 border-[#030957] pt-4 text-center text-sm font-bold tracking-wider"
                 dir="ltr"
               >
-                A8/500 St Maadi Cairo　 |　 sales@alazab.com　 |　 +201004006620
+                A8/500 St Maadi Cairo  |  sales@alazab.com  |  +201004006620
               </div>
             </div>
             <div className="invoice-stripe flex h-6">
