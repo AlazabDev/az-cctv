@@ -43,7 +43,7 @@ jobs:
       - name: TypeScript strict project verification
         run: pnpm exec tsc --noEmit
       - name: Handover and site network tests
-        run: pnpm exec vitest run tests/badr-handover.engineering.test.ts tests/badr-network.engineering.test.ts
+        run: npx --yes vitest@3.2.4 run tests/badr-handover.engineering.test.ts tests/badr-network.engineering.test.ts
       - name: Full regression suite
         run: pnpm test
       - name: Check handover formatting
