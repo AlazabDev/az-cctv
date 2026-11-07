@@ -142,8 +142,9 @@ export function evaluateHandover(
   placedCameras: Array<{ id: string; model: string }>,
   topologyErrorCount: number,
   layoutCount: number,
+  networkIssues: string[],
 ): ReadinessReport {
-  const issues: string[] = [];
+  const issues: string[] = [...networkIssues];
   if (handover.inspections.length !== handover.expectedCameras)
     issues.push("عدد سجلات الأجهزة لا يطابق العدد المخطط.");
   if (placedCameras.length !== handover.expectedCameras)
