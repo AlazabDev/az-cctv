@@ -17,7 +17,7 @@ type Props = {
   onChange: (next: ProjectHandover) => void;
   onClose: () => void;
   projectName: string;
-  placedCameras: number;
+  placedCameras: Array<{ id: string; name: string; layoutName: string }>;
   layoutCount: number;
   topologyErrorCount: number;
 };
@@ -84,7 +84,7 @@ export function ProjectHandoverPanel({
           </div>
         </header>
         <div role="status" className="grid gap-3 sm:grid-cols-3">
-          <Metric title="كاميرات محددة على المخطط" value={`${placedCameras} / ${data.expectedCameras}`} />
+          <Metric title="كاميرات محددة على المخطط" value={`${placedCameras.length} / ${data.expectedCameras}`} />
           <Metric title="كاميرات مكتملة الفحص" value={`${report.verifiedCameras} / ${report.expectedCameras}`} />
           <Metric title="حالة جاهزية التسليم" value={report.ready ? "اجتاز الفحص" : "غير مكتمل"} />
         </div>
@@ -112,7 +112,7 @@ export function ProjectHandoverPanel({
             <table className="min-w-[1650px] w-full border-collapse text-xs">
               <thead className="sticky top-0 z-10 bg-slate-100 text-slate-800">
                 <tr>
-                  <th className="p-2 text-right">ID</th>
+                  <th className="p-2 text-right">ID</th><th className="p-2 text-right">الجهاز على المخطط</th>
                   {cameraFields.map(field => <th key={field.key} className="p-2 text-right">{field.title}</th>)}
                   <th className="p-2">فيديو</th><th className="p-2">صوت</th><th className="p-2">PoE</th>
                   <th className="p-2">تاريخ الفحص</th><th className="p-2 text-right">ملاحظات / سبب الاستثناء</th>
@@ -122,6 +122,12 @@ export function ProjectHandoverPanel({
                 {data.inspections.map(row => (
                   <tr key={row.id} className="border-t border-slate-200">
                     <th className="whitespace-nowrap p-2 text-right font-black">{row.id}</th>
+                    <td className="p-1">
+                      <select aria-label={`${row.id} الجهاز على المخطط`} className="h-9 min-w-48 rounded border bg-white px-2 text-xs" value={row.designDeviceId} onChange={e => updateCamera(row.id, { designDeviceId: e.target.value })}>
+                        <option value="">اختر الكاميرا المركبة في الرسم</option>
+                        {placedCameras.map(camera => <option value={camera.id} key={camera.id}>{camera.layoutName} · {camera.name} ({camera.id.slice(0,8)})</option>)}
+                      </select>
+                    </td>
                     {cameraFields.map(field => (
                       <td className="p-1" key={field.key}>
                         <Input
