@@ -100,7 +100,8 @@ export function ProjectHandoverPanel({
           </div>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={printReport}>
-              <Download className="ml-2 h-4 w-4" /> {report.ready ? "تقرير التسليم PDF" : "تقرير الفحص — مسودة"}
+              <Download className="ml-2 h-4 w-4" />{" "}
+              {report.ready ? "تقرير التسليم PDF" : "تقرير الفحص — مسودة"}
             </Button>
             <Button type="button" variant="secondary" onClick={exportInventory}>
               <Download className="ml-2 h-4 w-4" /> CSV سجل الكاميرات
@@ -187,7 +188,8 @@ export function ProjectHandoverPanel({
                         <option value="">اختر الكاميرا المركبة في الرسم</option>
                         {placedCameras.map((camera) => (
                           <option value={camera.id} key={camera.id}>
-                            {camera.layoutName} · {camera.name} · {camera.model || "غير موثق"} ({camera.id.slice(0, 8)})
+                            {camera.layoutName} · {camera.name} · {camera.model || "غير موثق"} (
+                            {camera.id.slice(0, 8)})
                           </option>
                         ))}
                       </select>

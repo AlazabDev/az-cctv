@@ -1,20 +1,18 @@
-import {
-  HANDOVER_CHECKS,
-  type ProjectHandover,
-  type ReadinessReport,
-} from "./handover";
+import { HANDOVER_CHECKS, type ProjectHandover, type ReadinessReport } from "./handover";
 
 const escapeHtml = (input: string | number) =>
-  String(input).replace(/[&<>"']/g, (char) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
+  String(input).replace(
+    /[&<>"']/g,
+    (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!,
   );
 
-const statusName = (status: string) => ({
-  pass: "ناجح",
-  fail: "غير مطابق",
-  pending: "لم يُختبر",
-  not_applicable: "غير مدعوم — راجع التبرير",
-}[status] ?? "غير موثق");
+const statusName = (status: string) =>
+  ({
+    pass: "ناجح",
+    fail: "غير مطابق",
+    pending: "لم يُختبر",
+    not_applicable: "غير مدعوم — راجع التبرير",
+  })[status] ?? "غير موثق";
 
 /**
  * A4-landscape print layout with no claimed approval or fabricated equipment.
@@ -27,12 +25,18 @@ export function renderHandoverReport(
   report: ReadinessReport,
 ): string {
   const draft = !report.ready;
-  const identityRows = data.inspections.map((r) =>
-    `<tr><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.area)}</td><td>${escapeHtml(r.model)}</td><td dir="ltr">${escapeHtml(r.serial)}</td><td dir="ltr">${escapeHtml(r.mac)}</td><td dir="ltr">${escapeHtml(r.ip)}</td><td>${escapeHtml(r.switchId)}</td><td>${escapeHtml(r.port)}</td></tr>`,
-  ).join("");
-  const testRows = data.inspections.map((r) =>
-    `<tr><td>${escapeHtml(r.id)}</td><td>${escapeHtml(statusName(r.video))}</td><td>${escapeHtml(statusName(r.audio))}</td><td>${escapeHtml(statusName(r.poe))}</td><td>${escapeHtml(r.testedAt)}</td><td>${escapeHtml(r.note)}</td></tr>`,
-  ).join("");
+  const identityRows = data.inspections
+    .map(
+      (r) =>
+        `<tr><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.area)}</td><td>${escapeHtml(r.model)}</td><td dir="ltr">${escapeHtml(r.serial)}</td><td dir="ltr">${escapeHtml(r.mac)}</td><td dir="ltr">${escapeHtml(r.ip)}</td><td>${escapeHtml(r.switchId)}</td><td>${escapeHtml(r.port)}</td></tr>`,
+    )
+    .join("");
+  const testRows = data.inspections
+    .map(
+      (r) =>
+        `<tr><td>${escapeHtml(r.id)}</td><td>${escapeHtml(statusName(r.video))}</td><td>${escapeHtml(statusName(r.audio))}</td><td>${escapeHtml(statusName(r.poe))}</td><td>${escapeHtml(r.testedAt)}</td><td>${escapeHtml(r.note)}</td></tr>`,
+    )
+    .join("");
   const checks = HANDOVER_CHECKS.map((c) => {
     const check = data.checks[c.id] ?? { result: "pending", evidence: "", checkedAt: "" };
     return `<tr><td>${escapeHtml(c.title)}</td><td>${escapeHtml(statusName(check.result))}</td><td>${escapeHtml(check.evidence)}</td><td>${escapeHtml(check.checkedAt)}</td></tr>`;

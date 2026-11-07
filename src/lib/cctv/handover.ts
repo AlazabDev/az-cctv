@@ -157,7 +157,9 @@ export function evaluateHandover(
   const macs = new Set<string>();
   const ips = new Set<string>();
   const linked = new Set<string>();
-  const eligible = new Map(placedCameras.map((device) => [device.id, device.model.trim().toLowerCase()]));
+  const eligible = new Map(
+    placedCameras.map((device) => [device.id, device.model.trim().toLowerCase()]),
+  );
   let verifiedCameras = 0;
   for (const row of handover.inspections) {
     const detail = [
@@ -184,19 +186,13 @@ export function evaluateHandover(
     if (serial) serials.add(serial);
     if (mac) macs.add(mac);
     if (ip) ips.add(ip);
-    const modelMatch = Boolean(eligible.get(designId)) && eligible.get(designId) === row.model.trim().toLowerCase();
+    const modelMatch =
+      Boolean(eligible.get(designId)) && eligible.get(designId) === row.model.trim().toLowerCase();
     const testsPassed =
       row.video === "pass" &&
       row.poe === "pass" &&
       (row.audio === "pass" || (row.audio === "not_applicable" && Boolean(row.note.trim())));
-    if (
-      complete &&
-      modelMatch &&
-      validMAC(row.mac) &&
-      validIPv4(ip) &&
-      !duplicate &&
-      testsPassed
-    )
+    if (complete && modelMatch && validMAC(row.mac) && validIPv4(ip) && !duplicate && testsPassed)
       verifiedCameras++;
     else issues.push(`${row.id}: بيانات التعريف أو نتائج الاختبارات غير مكتملة/متعارضة.`);
   }

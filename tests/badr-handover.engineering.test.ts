@@ -11,7 +11,8 @@ import {
 } from "../src/lib/cctv/handover";
 
 describe("first customer handover — evidence and integrity", () => {
-  const placed = () => Array.from({ length: 22 }, (_, i) => ({ id: `design-${i + 1}`, model: "DS-2CD1123G2-LIU" }));
+  const placed = () =>
+    Array.from({ length: 22 }, (_, i) => ({ id: `design-${i + 1}`, model: "DS-2CD1123G2-LIU" }));
   it("creates exactly 22 empty identification slots, not fabricated equipment", () => {
     const h = makeBadrHandover();
     expect(h.inspections).toHaveLength(22);
