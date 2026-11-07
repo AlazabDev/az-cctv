@@ -1,0 +1,79 @@
+name: Badr isolated baseline formatting normalization
+on:
+  push:
+    branches: [hardening/badr-nursery-first-client]
+    paths: [.github/workflows/badr-baseline-format.yml]
+permissions:
+  contents: write
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Normalize formatting of real CI-scanned sources
+        run: |
+          pnpm exec prettier --write \
+            'src/lib/brand-assets.ts' \
+            'src/components/BrandLogo.tsx' \
+            'src/components/SiteHeader.tsx' \
+            'src/routes/index.tsx' \
+            'src/routes/auth.tsx' \
+            'src/routes/_authenticated/projects.tsx' \
+            'src/lib/cctv/topology.ts' \
+            'src/lib/cctv/types.ts' \
+            'src/lib/cctv/catalog.ts' \
+            'src/components/cctv/boq.ts' \
+            'src/components/cctv/TopologyWorkspace.tsx' \
+            'src/lib/topology-ai.functions.ts' \
+            'tests/topology.engineering.test.ts' \
+            'src/components/cctv/ProductCatalogGate.tsx' \
+            'src/routes/catalog.tsx' \
+            'src/routes/_authenticated/editor.$id.tsx' \
+            'src/lib/cctv/product-catalog.ts' \
+            'src/lib/cctv/normalized-layouts.ts' \
+            'src/components/cctv/CctvProjectEditorV2.tsx' \
+            'src/components/ui/badge.tsx' \
+            'src/components/ui/badge-variants.ts' \
+            'src/components/ui/button.tsx' \
+            'src/components/ui/button-variants.ts' \
+            'src/components/ui/form.tsx' \
+            'src/components/ui/form-context.tsx' \
+            'src/components/ui/navigation-menu.tsx' \
+            'src/components/ui/navigation-menu-variants.ts' \
+            'src/components/ui/sidebar.tsx' \
+            'src/components/ui/sidebar-context.tsx' \
+            'src/components/ui/sidebar-variants.ts' \
+            'src/components/ui/toggle.tsx' \
+            'src/components/ui/toggle-variants.ts' \
+            'src/lib/store/catalog.ts' \
+            'src/routes/store.tsx' \
+            'src/lib/cctv/handover.ts' \
+            'src/components/cctv/ProjectHandoverPanel.tsx' \
+            'tests/badr-handover.engineering.test.ts'
+      - name: Apply safe autofixes to zero-warning UI components
+        run: |
+          pnpm exec eslint --fix \
+            src/components/ui/badge.tsx src/components/ui/badge-variants.ts \
+            src/components/ui/button.tsx src/components/ui/button-variants.ts \
+            src/components/ui/form.tsx src/components/ui/form-context.tsx \
+            src/components/ui/navigation-menu.tsx src/components/ui/navigation-menu-variants.ts \
+            src/components/ui/sidebar.tsx src/components/ui/sidebar-context.tsx src/components/ui/sidebar-variants.ts \
+            src/components/ui/toggle.tsx src/components/ui/toggle-variants.ts
+      - name: Commit normalized code
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib src/components src/routes tests
+          if ! git diff --cached --quiet; then
+            git commit -m "style(ci): normalize legacy CRLF and source formatting without feature changes"
+            git push origin HEAD:hardening/badr-nursery-first-client
+          fi
