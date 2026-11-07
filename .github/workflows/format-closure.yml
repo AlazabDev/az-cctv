@@ -1,4 +1,4 @@
-name: Develop ESLint fix closure
+name: Develop ESLint fix closure (LF normalized)
 on:
   push:
     branches: [develop]
