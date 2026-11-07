@@ -43,6 +43,7 @@ import { AiSiteDesignerPanel } from "@/components/cctv/AiSiteDesignerPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
 import { ProjectHandoverPanel } from "@/components/cctv/ProjectHandoverPanel";
+import { inspectBadrNetwork } from "@/lib/cctv/badr-network";
 import { normalizeHandover, type ProjectHandover } from "@/lib/cctv/handover";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
 import { FloorplanUploadDialog } from "@/components/cctv/FloorplanUploadDialog";
@@ -1014,6 +1015,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 })),
             )}
             layoutCount={layouts.length}
+            networkIssues={inspectBadrNetwork(layouts, topology.parents).issues}
             topologyErrorCount={
               validateTopology(topology, collectNodes(layouts), layouts).filter(
                 (issue) => issue.level === "error",
