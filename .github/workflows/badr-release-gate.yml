@@ -1,0 +1,74 @@
+name: Badr first-client production readiness gate
+on:
+  push:
+    branches: [hardening/badr-nursery-first-client]
+    paths:
+      - '.github/workflows/badr-release-gate.yml'
+      - 'src/lib/cctv/handover.ts'
+      - 'src/lib/cctv/handover-report.ts'
+      - 'src/lib/cctv/badr-network.ts'
+      - 'src/components/cctv/ProjectHandoverPanel.tsx'
+      - 'src/components/cctv/CctvProjectEditorV2.tsx'
+      - 'src/routes/_authenticated/projects.tsx'
+      - 'src/routeTree.gen.ts'
+      - 'tests/badr-handover.engineering.test.ts'
+      - 'tests/badr-network.engineering.test.ts'
+  pull_request:
+    paths:
+      - 'src/lib/cctv/handover.ts'
+      - 'src/lib/cctv/handover-report.ts'
+      - 'src/lib/cctv/badr-network.ts'
+      - 'src/components/cctv/ProjectHandoverPanel.tsx'
+      - 'src/components/cctv/CctvProjectEditorV2.tsx'
+      - 'src/routes/_authenticated/projects.tsx'
+      - 'tests/badr-handover.engineering.test.ts'
+      - 'tests/badr-network.engineering.test.ts'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: TypeScript strict project verification
+        run: pnpm exec tsc --noEmit
+      - name: Handover and site network tests
+        run: pnpm exec vitest run tests/badr-handover.engineering.test.ts tests/badr-network.engineering.test.ts
+      - name: Full regression suite
+        run: pnpm test
+      - name: Check handover formatting
+        run: |
+          pnpm exec prettier --check \
+            src/lib/cctv/handover.ts \
+            src/lib/cctv/handover-report.ts \
+            src/lib/cctv/badr-network.ts \
+            src/components/cctv/ProjectHandoverPanel.tsx \
+            src/components/cctv/CctvProjectEditorV2.tsx \
+            src/routes/_authenticated/projects.tsx \
+            tests/badr-handover.engineering.test.ts \
+            tests/badr-network.engineering.test.ts
+      - name: Lint first-customer modules without warnings
+        run: |
+          pnpm exec eslint --max-warnings 0 \
+            src/lib/cctv/handover.ts \
+            src/lib/cctv/handover-report.ts \
+            src/lib/cctv/badr-network.ts \
+            src/components/cctv/ProjectHandoverPanel.tsx \
+            src/components/cctv/CctvProjectEditorV2.tsx \
+            src/routes/_authenticated/projects.tsx \
+            tests/badr-handover.engineering.test.ts \
+            tests/badr-network.engineering.test.ts
+      - name: Build production client app
+        run: pnpm build
+      - name: Verify tracked TanStack routes match generated output
+        run: git diff --exit-code -- src/routeTree.gen.ts
