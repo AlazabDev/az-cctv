@@ -42,6 +42,8 @@ import { AgentDesignReview } from "@/components/cctv/AgentDesignReview";
 import { AiSiteDesignerPanel } from "@/components/cctv/AiSiteDesignerPanel";
 import { openOfferPdf } from "@/components/cctv/offer-pdf";
 import { TopologyWorkspace } from "@/components/cctv/TopologyWorkspace";
+import { ProjectHandoverPanel } from "@/components/cctv/ProjectHandoverPanel";
+import { normalizeHandover, type ProjectHandover } from "@/lib/cctv/handover";
 import { MapWorkspace } from "@/components/cctv/MapWorkspace";
 import { FloorplanUploadDialog } from "@/components/cctv/FloorplanUploadDialog";
 import { CameraDeploymentDiagram } from "@/components/cctv/CameraDeploymentDiagram";
@@ -60,7 +62,7 @@ import {
   normalizeSiteMap,
   type SiteMapData,
 } from "@/lib/cctv/site-map";
-import { emptyTopology, normalizeTopology, type TopologyData } from "@/lib/cctv/topology";
+import { collectNodes, emptyTopology, normalizeTopology, validateTopology, type TopologyData } from "@/lib/cctv/topology";
 import { buildBoq, suggestHardware } from "@/components/cctv/boq";
 import {
   cableTypes,
@@ -168,6 +170,8 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
   const [offer, setOffer] = useState<OfferSettings>(defaultOffer);
   const [topology, setTopology] = useState<TopologyData>(emptyTopology);
   const [siteMap, setSiteMap] = useState<SiteMapData>(emptySiteMap);
+  const [handover, setHandover] = useState<ProjectHandover | null>(null);
+  const [handoverOpen, setHandoverOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<ModuleId>("plan");
   const [serviceSidebarOpen, setServiceSidebarOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -226,6 +230,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       activeLayoutId?: string;
       topology?: Partial<TopologyData>;
       siteMap?: Partial<SiteMapData>;
+      handover?: ProjectHandover;
     };
     const list: ProjectLayout[] = stored.layouts?.length
       ? stored.layouts.map((l) => normalizeLayout(l))
@@ -249,6 +254,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     });
     setTopology(normalizeTopology(stored.topology));
     setSiteMap(normalizeSiteMap(stored.siteMap));
+    setHandover(normalizeHandover(stored.handover));
     setName(project.name);
     setClientName(project.client_name ?? "");
     setCurrency(project.currency ?? "EGP");
@@ -601,6 +607,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
       offer,
       topology,
       siteMap,
+      ...(handover ? { handover } : {}),
     };
   }
 
@@ -670,7 +677,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
     }, 1200);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layouts, activeLayoutId, offer, topology, siteMap, name, clientName, currency, loaded]);
+  }, [layouts, activeLayoutId, offer, topology, siteMap, handover, name, clientName, currency, loaded]);
 
   function exportCsv() {
     const summary = calculateOffer(boq, offer);
@@ -833,7 +840,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 chooseTool("label", "annotation");
                 break;
               case "product-master":
-                navigate({ to: "/catalog" });
+                navigate({ to: "/store" });
                 break;
               default:
                 // Coverage remains visible through the existing system workspace.
@@ -881,6 +888,11 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
               </select>
               <ChevronDown className="pointer-events-none absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
             </div>
+            {handover && (
+              <Button variant="outline" size="sm" onClick={() => setHandoverOpen(true)}>
+                <FileText className="h-4 w-4" /> التسليم والفحص
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setAgentOpen(true)}>
               <Bot className="h-4 w-4" />
               المساعد
@@ -923,7 +935,17 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
             </div>
           </div>
         ) : null}
-        {activeModule === "plan" ? (
+        {handoverOpen && handover ? (
+          <ProjectHandoverPanel
+            data={handover}
+            onChange={setHandover}
+            onClose={() => setHandoverOpen(false)}
+            projectName={name}
+            placedCameras={layouts.reduce((total, layout) => total + layout.devices.filter(device => device.kind === "camera").length, 0)}
+            layoutCount={layouts.length}
+            topologyErrorCount={validateTopology(topology, collectNodes(layouts), layouts).filter(issue => issue.level === "error").length}
+          />
+        ) : activeModule === "plan" ? (
           <PlanDesignWorkspace
             layouts={layouts}
             activeLayoutId={activeLayoutId}
