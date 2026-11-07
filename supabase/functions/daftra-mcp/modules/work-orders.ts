@@ -8,7 +8,8 @@ export const workOrderTools = [
   // ==========================================
   {
     name: "daftra_list_work_orders",
-    description: "استعراض والبحث في قائمة أوامر العمل (Work Orders) في دفترة مع الفلترة حسب الحالة أو الصفحة.",
+    description:
+      "استعراض والبحث في قائمة أوامر العمل (Work Orders) في دفترة مع الفلترة حسب الحالة أو الصفحة.",
     inputSchema: {
       type: "object",
       properties: {
@@ -16,9 +17,10 @@ export const workOrderTools = [
         limit: { type: "number", description: "عدد العناصر في الصفحة (الافتراضي: 20)" },
         status: {
           type: "string",
-          description: "فلترة حسب الحالة. عند تركه فارغاً يُرجع فقط المفتوحة (Open)، أو مرر '-1' لإرجاع كل الحالات."
-        }
-      }
+          description:
+            "فلترة حسب الحالة. عند تركه فارغاً يُرجع فقط المفتوحة (Open)، أو مرر '-1' لإرجاع كل الحالات.",
+        },
+      },
     },
     handler: async (args: any) => {
       const queryParams: Record<string, string | number> = {
@@ -29,7 +31,7 @@ export const workOrderTools = [
         queryParams["status"] = args.status;
       }
       return await callDaftraApi("GET", "work_orders.json", undefined, queryParams);
-    }
+    },
   },
 
   // ==========================================
@@ -41,13 +43,13 @@ export const workOrderTools = [
     inputSchema: {
       type: "object",
       properties: {
-        work_order_id: { type: "number", description: "معرف أمر العمل في دفترة (ID)" }
+        work_order_id: { type: "number", description: "معرف أمر العمل في دفترة (ID)" },
       },
-      required: ["work_order_id"]
+      required: ["work_order_id"],
     },
     handler: async (args: any) => {
       return await callDaftraApi("GET", `work_orders/${args.work_order_id}.json`);
-    }
+    },
   },
 
   // ==========================================
@@ -55,25 +57,44 @@ export const workOrderTools = [
   // ==========================================
   {
     name: "daftra_create_work_order",
-    description: "إنشاء أمر عمل جديد في دفترة وربطه بعميل وموظف وميزانية وتاريخ بدء وتسليم (يتطلب confirm=true).",
+    description:
+      "إنشاء أمر عمل جديد في دفترة وربطه بعميل وموظف وميزانية وتاريخ بدء وتسليم (يتطلب confirm=true).",
     inputSchema: {
       type: "object",
       properties: {
         title: { type: "string", description: "عنوان أمر العمل (مثال: صيانة موقع، تركيب معدات)" },
         client_id: { type: "number", description: "معرف العميل (Client ID) التابع له أمر العمل" },
-        number: { type: "string", description: "رقم أمر العمل (اختياري - يتم إنشاؤه تلقائياً إذا تُرك فارغاً)" },
-        start_date: { type: "string", description: "تاريخ البدء بصيغة YYYY-MM-DD (الافتراضي: تاريخ اليوم)" },
+        number: {
+          type: "string",
+          description: "رقم أمر العمل (اختياري - يتم إنشاؤه تلقائياً إذا تُرك فارغاً)",
+        },
+        start_date: {
+          type: "string",
+          description: "تاريخ البدء بصيغة YYYY-MM-DD (الافتراضي: تاريخ اليوم)",
+        },
         delivery_date: { type: "string", description: "تاريخ التسليم المتوقع YYYY-MM-DD" },
         description: { type: "string", description: "وصف تفصيلي لأمر العمل والمهمة" },
         budget: { type: "number", description: "الميزانية المحددة لأمر العمل" },
-        budget_currency: { type: "string", description: "رمز العملة للميزانية (مثال: EGP, SAR, USD)" },
+        budget_currency: {
+          type: "string",
+          description: "رمز العملة للميزانية (مثال: EGP, SAR, USD)",
+        },
         staff_id: { type: "number", description: "معرف الموظف المسؤول المكلف بتنفيذ أمر العمل" },
-        follow_up_status_id: { type: "number", description: "معرف حالة المتابعة (Follow-up status ID)" },
-        delivery_appointment_id: { type: "number", description: "معرف الموعد المرتبط بالتسليم (إن وجد)" },
+        follow_up_status_id: {
+          type: "number",
+          description: "معرف حالة المتابعة (Follow-up status ID)",
+        },
+        delivery_appointment_id: {
+          type: "number",
+          description: "معرف الموعد المرتبط بالتسليم (إن وجد)",
+        },
         is_draft: { type: "number", description: "مرر 1 لحفظ أمر العمل كمسودة Draft" },
-        confirm: { type: "boolean", description: "تأكيد إنشاء أمر العمل لتجنب الإنشاء غير المقصود" }
+        confirm: {
+          type: "boolean",
+          description: "تأكيد إنشاء أمر العمل لتجنب الإنشاء غير المقصود",
+        },
       },
-      required: ["title", "client_id", "confirm"]
+      required: ["title", "client_id", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
@@ -93,10 +114,10 @@ export const workOrderTools = [
           follow_up_status_id: args.follow_up_status_id,
           delivery_appointment_id: args.delivery_appointment_id,
           is_draft: args.is_draft || 0,
-        }
+        },
       };
       return await callDaftraApi("POST", "work_orders.json", payload);
-    }
+    },
   },
 
   // ==========================================
@@ -104,7 +125,8 @@ export const workOrderTools = [
   // ==========================================
   {
     name: "daftra_update_work_order",
-    description: "تعديل بيانات أمر عمل قائم في دفترة (العنوان، التواريخ، الميزانية، الموظف المسؤول، الحالة).",
+    description:
+      "تعديل بيانات أمر عمل قائم في دفترة (العنوان، التواريخ، الميزانية، الموظف المسؤول، الحالة).",
     inputSchema: {
       type: "object",
       properties: {
@@ -118,9 +140,9 @@ export const workOrderTools = [
         budget_currency: { type: "string", description: "عملة الميزانية" },
         staff_id: { type: "number", description: "الموظف المكلف الجديد" },
         follow_up_status_id: { type: "number", description: "معرف حالة المتابعة" },
-        confirm: { type: "boolean", description: "تأكيد تعديل أمر العمل" }
+        confirm: { type: "boolean", description: "تأكيد تعديل أمر العمل" },
       },
-      required: ["work_order_id", "confirm"]
+      required: ["work_order_id", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
@@ -128,16 +150,25 @@ export const workOrderTools = [
       }
       const workOrderData: Record<string, unknown> = {};
       const fields = [
-        "title", "client_id", "start_date", "delivery_date",
-        "description", "budget", "budget_currency", "staff_id", "follow_up_status_id"
+        "title",
+        "client_id",
+        "start_date",
+        "delivery_date",
+        "description",
+        "budget",
+        "budget_currency",
+        "staff_id",
+        "follow_up_status_id",
       ];
       for (const field of fields) {
         if (args[field] !== undefined) {
           workOrderData[field] = args[field];
         }
       }
-      return await callDaftraApi("PUT", `work_orders/${args.work_order_id}.json`, { WorkOrder: workOrderData });
-    }
+      return await callDaftraApi("PUT", `work_orders/${args.work_order_id}.json`, {
+        WorkOrder: workOrderData,
+      });
+    },
   },
 
   // ==========================================
@@ -150,16 +181,18 @@ export const workOrderTools = [
       type: "object",
       properties: {
         work_order_id: { type: "number", description: "معرف أمر العمل المراد حذفه" },
-        confirm: { type: "boolean", description: "تأكيد الحذف النهائي" }
+        confirm: { type: "boolean", description: "تأكيد الحذف النهائي" },
       },
-      required: ["work_order_id", "confirm"]
+      required: ["work_order_id", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
-        throw new Error("حذف أمر العمل يتطلب تأكيداً صريحاً بتمرير confirm=true لتفادي فقد البيانات.");
+        throw new Error(
+          "حذف أمر العمل يتطلب تأكيداً صريحاً بتمرير confirm=true لتفادي فقد البيانات.",
+        );
       }
       return await callDaftraApi("DELETE", `work_orders/${args.work_order_id}.json`);
-    }
+    },
   },
 
   // ==========================================
@@ -174,11 +207,11 @@ export const workOrderTools = [
         invoice_id: { type: "number", description: "معرف الفاتورة في دفترة" },
         work_order_id: {
           type: "number",
-          description: "معرف أمر العمل المراد ربطه، أو مرر 0 لفك الارتباط"
+          description: "معرف أمر العمل المراد ربطه، أو مرر 0 لفك الارتباط",
         },
-        confirm: { type: "boolean", description: "تأكيد عملية الربط" }
+        confirm: { type: "boolean", description: "تأكيد عملية الربط" },
       },
-      required: ["invoice_id", "work_order_id", "confirm"]
+      required: ["invoice_id", "work_order_id", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
@@ -186,11 +219,15 @@ export const workOrderTools = [
       }
       const payload = {
         Invoice: {
-          work_order_id: args.work_order_id
-        }
+          work_order_id: args.work_order_id,
+        },
       };
-      return await callDaftraApi("POST", `invoices/assign_work_order/${args.invoice_id}.json`, payload);
-    }
+      return await callDaftraApi(
+        "POST",
+        `invoices/assign_work_order/${args.invoice_id}.json`,
+        payload,
+      );
+    },
   },
 
   // ==========================================
@@ -206,23 +243,23 @@ export const workOrderTools = [
         partner_id: { type: "number", description: "فلترة حسب العميل (Partner ID)" },
         status_id: {
           type: "number",
-          description: "حالة الموعد: 0 مجدول (Scheduled)، 1 مكتمل (Done)، 2 ملغي/مرفوض (Dismissed)"
+          description: "حالة الموعد: 0 مجدول (Scheduled)، 1 مكتمل (Done)، 2 ملغي/مرفوض (Dismissed)",
         },
         page: { type: "number", description: "رقم الصفحة" },
-        limit: { type: "number", description: "عدد العناصر" }
-      }
+        limit: { type: "number", description: "عدد العناصر" },
+      },
     },
     handler: async (args: any) => {
       const queryParams: Record<string, string | number> = {
         page: args.page || 1,
-        limit: args.limit || 20
+        limit: args.limit || 20,
       };
       if (args.work_order_id !== undefined) queryParams["work_order_id"] = args.work_order_id;
       if (args.partner_id !== undefined) queryParams["partner_id"] = args.partner_id;
       if (args.status_id !== undefined) queryParams["status_id"] = args.status_id;
 
       return await callDaftraApi("GET", "work_order_appointments.json", undefined, queryParams);
-    }
+    },
   },
 
   // ==========================================
@@ -234,13 +271,13 @@ export const workOrderTools = [
     inputSchema: {
       type: "object",
       properties: {
-        appointment_id: { type: "number", description: "معرف الموعد" }
+        appointment_id: { type: "number", description: "معرف الموعد" },
       },
-      required: ["appointment_id"]
+      required: ["appointment_id"],
     },
     handler: async (args: any) => {
       return await callDaftraApi("GET", `work_order_appointments/${args.appointment_id}.json`);
-    }
+    },
   },
 
   // ==========================================
@@ -248,21 +285,28 @@ export const workOrderTools = [
   // ==========================================
   {
     name: "daftra_create_work_order_appointment",
-    description: "إضافة موعد أو زيارة جديدة لأمر عمل مع تحديد الوقت والمدة والموظف وملاحظات الموعد.",
+    description:
+      "إضافة موعد أو زيارة جديدة لأمر عمل مع تحديد الوقت والمدة والموظف وملاحظات الموعد.",
     inputSchema: {
       type: "object",
       properties: {
         work_order_id: { type: "number", description: "معرف أمر العمل التابع له الموعد (item_id)" },
         date: { type: "string", description: "تاريخ ووقت بدء الموعد (مثال: 2026-10-15 14:00:00)" },
-        end_date: { type: "string", description: "تاريخ ووقت انتهاء الموعد (اختياري، يتم حسابه من المدة)" },
-        duration: { type: "string", description: "مدة الموعد بالساعات أو بصيغة HH:MM (مثال: 02:00)" },
+        end_date: {
+          type: "string",
+          description: "تاريخ ووقت انتهاء الموعد (اختياري، يتم حسابه من المدة)",
+        },
+        duration: {
+          type: "string",
+          description: "مدة الموعد بالساعات أو بصيغة HH:MM (مثال: 02:00)",
+        },
         staff_id: { type: "number", description: "معرف الموظف المكلف بالموعد" },
         body: { type: "string", description: "ملاحظات وتفاصيل الموعد (بحد أقصى 1500 حرف)" },
         action_id: { type: "number", description: "معرف إجراء المتابعة (Action ID)" },
         share_with_partner: { type: "boolean", description: "مشاركة الموعد مع العميل" },
-        confirm: { type: "boolean", description: "تأكيد إضافة الموعد" }
+        confirm: { type: "boolean", description: "تأكيد إضافة الموعد" },
       },
-      required: ["work_order_id", "date", "confirm"]
+      required: ["work_order_id", "date", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
@@ -277,11 +321,11 @@ export const workOrderTools = [
           staff_id: args.staff_id,
           body: args.body,
           action_id: args.action_id,
-          share_with_partner: args.share_with_partner ? 1 : 0
-        }
+          share_with_partner: args.share_with_partner ? 1 : 0,
+        },
       };
       return await callDaftraApi("POST", "work_order_appointments.json", payload);
-    }
+    },
   },
 
   // ==========================================
@@ -300,9 +344,9 @@ export const workOrderTools = [
         duration: { type: "string", description: "المدة" },
         staff_id: { type: "number", description: "الموظف المكلف" },
         body: { type: "string", description: "الملاحظات المحدثة" },
-        confirm: { type: "boolean", description: "تأكيد تعديل الموعد" }
+        confirm: { type: "boolean", description: "تأكيد تعديل الموعد" },
       },
-      required: ["appointment_id", "confirm"]
+      required: ["appointment_id", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
@@ -314,9 +358,9 @@ export const workOrderTools = [
         if (args[f] !== undefined) apptData[f] = args[f];
       }
       return await callDaftraApi("PUT", `work_order_appointments/${args.appointment_id}.json`, {
-        WorkOrderAppointment: apptData
+        WorkOrderAppointment: apptData,
       });
-    }
+    },
   },
 
   // ==========================================
@@ -329,15 +373,15 @@ export const workOrderTools = [
       type: "object",
       properties: {
         appointment_id: { type: "number", description: "معرف الموعد المراد حذفه" },
-        confirm: { type: "boolean", description: "تأكيد الحذف" }
+        confirm: { type: "boolean", description: "تأكيد الحذف" },
       },
-      required: ["appointment_id", "confirm"]
+      required: ["appointment_id", "confirm"],
     },
     handler: async (args: any) => {
       if (!args.confirm) {
         throw new Error("حذف الموعد يتطلب تأكيداً بتمرير confirm=true.");
       }
       return await callDaftraApi("DELETE", `work_order_appointments/${args.appointment_id}.json`);
-    }
-  }
+    },
+  },
 ];

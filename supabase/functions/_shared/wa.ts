@@ -5,11 +5,9 @@ import { getMinioConfig, putObject } from "./minio.ts";
 export const GRAPH = "https://graph.facebook.com/v21.0";
 
 export function adminClient(): SupabaseClient {
-  return createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    { auth: { persistSession: false } },
-  );
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+    auth: { persistSession: false },
+  });
 }
 
 export function extFromMime(mime: string): string {
@@ -43,11 +41,18 @@ export async function archiveMedia(opts: {
   const metaRes = await fetch(`${GRAPH}/${opts.mediaId}`, {
     headers: { Authorization: `Bearer ${opts.token}` },
   });
-  if (!metaRes.ok) throw new Error(`Media metadata failed [${metaRes.status}]: ${await metaRes.text()}`);
-  const meta = await metaRes.json() as { url: string; mime_type: string; file_size?: number; sha256?: string };
+  if (!metaRes.ok)
+    throw new Error(`Media metadata failed [${metaRes.status}]: ${await metaRes.text()}`);
+  const meta = (await metaRes.json()) as {
+    url: string;
+    mime_type: string;
+    file_size?: number;
+    sha256?: string;
+  };
 
   const binRes = await fetch(meta.url, { headers: { Authorization: `Bearer ${opts.token}` } });
-  if (!binRes.ok) throw new Error(`Media download failed [${binRes.status}]: ${await binRes.text()}`);
+  if (!binRes.ok)
+    throw new Error(`Media download failed [${binRes.status}]: ${await binRes.text()}`);
   const bytes = new Uint8Array(await binRes.arrayBuffer());
 
   const mime = meta.mime_type?.split(";")[0] ?? "application/octet-stream";

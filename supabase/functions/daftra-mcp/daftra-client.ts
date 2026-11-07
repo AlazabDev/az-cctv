@@ -52,9 +52,12 @@ function makeCompact(data: unknown, fields?: string[]): unknown {
 }
 
 function buildUrl(op: Operation, args: Dict): URL {
-  const base = Deno.env.get("DAFTRA_BASE_URL") || `https://${Deno.env.get("DAFTRA_SUBDOMAIN") || ""}.daftra.com`;
+  const base =
+    Deno.env.get("DAFTRA_BASE_URL") ||
+    `https://${Deno.env.get("DAFTRA_SUBDOMAIN") || ""}.daftra.com`;
   const host = new URL(base).hostname;
-  if (!/^[a-z0-9-]+\.daftra\.com$/i.test(host)) throw new Error("DAFTRA_BASE_URL must be a tenant on daftra.com");
+  if (!/^[a-z0-9-]+\.daftra\.com$/i.test(host))
+    throw new Error("DAFTRA_BASE_URL must be a tenant on daftra.com");
   const pathArgs = isObject(args.path_params) ? args.path_params : {};
   let path = op.p.replaceAll("{format}", ".json");
   for (const match of path.matchAll(/\{([^}]+)\}/g)) {
@@ -63,7 +66,8 @@ function buildUrl(op: Operation, args: Dict): URL {
       throw new Error(`Missing or invalid path parameter: ${match[1]}`);
     path = path.replace(match[0], encodeURIComponent(String(v)));
   }
-  if (!path.startsWith("/") || path.includes("..") || path.includes("{")) throw new Error("Invalid operation path");
+  if (!path.startsWith("/") || path.includes("..") || path.includes("{"))
+    throw new Error("Invalid operation path");
   const url = new URL(path.startsWith("/v2/") ? path : `/api2${path}`, `https://${host}`);
   const query = isObject(args.query) ? { ...args.query } : {};
 
@@ -79,7 +83,8 @@ function buildUrl(op: Operation, args: Dict): URL {
   for (const [key, value] of Object.entries(query)) {
     if (value === null || value === undefined) continue;
     if (Array.isArray(value)) value.forEach((x) => url.searchParams.append(key + "[]", String(x)));
-    else if (["string", "number", "boolean"].includes(typeof value)) url.searchParams.set(key, String(value));
+    else if (["string", "number", "boolean"].includes(typeof value))
+      url.searchParams.set(key, String(value));
     else throw new Error(`Invalid query parameter: ${key}`);
   }
   return url;
@@ -88,18 +93,24 @@ function buildUrl(op: Operation, args: Dict): URL {
 export async function callDaftra(op: Operation, args: Dict): Promise<ToolResult> {
   const url = buildUrl(op, args);
   const mode = (Deno.env.get("DAFTRA_AUTH_MODE") || "apikey").toLowerCase();
-  const key = mode === "bearer" ? Deno.env.get("DAFTRA_ACCESS_TOKEN") : Deno.env.get("DAFTRA_API_KEY");
+  const key =
+    mode === "bearer" ? Deno.env.get("DAFTRA_ACCESS_TOKEN") : Deno.env.get("DAFTRA_API_KEY");
   if (!key) return toolResult(`Missing Daftra credential for ${mode}`, true);
 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (mode === "bearer") headers.Authorization = `Bearer ${key}`;
   else headers.APIKEY = key;
 
-  const timeout = Math.min(120000, Math.max(1000, Number(Deno.env.get("DAFTRA_TIMEOUT") || 60) * 1000));
+  const timeout = Math.min(
+    120000,
+    Math.max(1000, Number(Deno.env.get("DAFTRA_TIMEOUT") || 60) * 1000),
+  );
   const method = op.m.toUpperCase();
-  if (!["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method)) return toolResult("Unsupported HTTP method", true);
+  if (!["GET", "POST", "PUT", "PATCH", "DELETE"].includes(method))
+    return toolResult("Unsupported HTTP method", true);
 
-  const isWrite = method !== "GET" || /update_|convert_to_|activate|\/lock|\/unlock|\/delete\//i.test(op.p);
+  const isWrite =
+    method !== "GET" || /update_|convert_to_|activate|\/lock|\/unlock|\/delete\//i.test(op.p);
   if (isWrite && Deno.env.get("ENABLE_WRITE_TOOLS") !== "true")
     return toolResult("Write tools disabled by ENABLE_WRITE_TOOLS", true);
   if (isWrite && Deno.env.get("DRY_RUN") === "true")
@@ -146,7 +157,7 @@ export async function callDaftra(op: Operation, args: Dict): Promise<ToolResult>
       output.length > 80000
         ? { status: res.status, truncated: true, preview: output.slice(0, 80000) }
         : { status: res.status, data: processedData },
-      !res.ok
+      !res.ok,
     );
   } catch (e) {
     return toolResult({ error: e instanceof Error ? e.message : String(e) }, true);

@@ -9,14 +9,15 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_list_staff",
-    description: "استعراض والبحث في قائمة الموظفين وفريق العمل المسجلين في دفترة ومناصبهم ومعلومات الاتصال.",
+    description:
+      "استعراض والبحث في قائمة الموظفين وفريق العمل المسجلين في دفترة ومناصبهم ومعلومات الاتصال.",
     inputSchema: {
       type: "object",
       properties: {
         page: { type: "number", description: "رقم الصفحة (الافتراضي: 1)" },
         limit: { type: "number", description: "عدد الموظفين لكل صفحة (الافتراضي: 20)" },
-        role_id: { type: "number", description: "فلترة حسب الدور الوظيفي / الصلاحية" }
-      }
+        role_id: { type: "number", description: "فلترة حسب الدور الوظيفي / الصلاحية" },
+      },
     },
     handler: async (args) => {
       const queryParams: Record<string, string | number> = {
@@ -25,7 +26,7 @@ export const hrTools: McpTool[] = [
       };
       if (args.role_id) queryParams["filter[role_id]"] = args.role_id;
       return await callDaftraApi("GET", "staff.json", undefined, queryParams);
-    }
+    },
   },
 
   // ==========================================
@@ -33,17 +34,18 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_get_staff",
-    description: "جلب الملف الكامل لموظف محدد (البيانات الشخصية، الراتب/الأجر بالساعة، الفرع، الخزينة والمخزن الافتراضي).",
+    description:
+      "جلب الملف الكامل لموظف محدد (البيانات الشخصية، الراتب/الأجر بالساعة، الفرع، الخزينة والمخزن الافتراضي).",
     inputSchema: {
       type: "object",
       properties: {
-        staff_id: { type: "number", description: "معرّف الموظف في دفترة (ID)" }
+        staff_id: { type: "number", description: "معرّف الموظف في دفترة (ID)" },
       },
-      required: ["staff_id"]
+      required: ["staff_id"],
     },
     handler: async (args) => {
       return await callDaftraApi("GET", `staff/${args.staff_id}.json`);
-    }
+    },
   },
 
   // ==========================================
@@ -51,22 +53,29 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_create_staff",
-    description: "إضافة موظف جديد في دفترة وتحديد البريد والدور الوظيفي والخزينة والمخزن التابع لهما (يتطلب confirm=true).",
+    description:
+      "إضافة موظف جديد في دفترة وتحديد البريد والدور الوظيفي والخزينة والمخزن التابع لهما (يتطلب confirm=true).",
     inputSchema: {
       type: "object",
       properties: {
         name: { type: "string", description: "اسم الموظف الكامل (إجباري)" },
-        email_address: { type: "string", description: "البريد الإلكتروني لتسجيل الدخول (إجباري وفريد)" },
+        email_address: {
+          type: "string",
+          description: "البريد الإلكتروني لتسجيل الدخول (إجباري وفريد)",
+        },
         role_id: { type: "number", description: "معرّف الدور الوظيفي / الصلاحية (إجباري)" },
         mobile: { type: "string", description: "رقم الجوال" },
         hourly_rate: { type: "number", description: "معدل الأجر بالساعة" },
-        hourly_rate_currency_code: { type: "string", description: "رمز العملة للأجر (مثال: EGP, SAR)" },
+        hourly_rate_currency_code: {
+          type: "string",
+          description: "رمز العملة للأجر (مثال: EGP, SAR)",
+        },
         default_treasury_id: { type: "number", description: "الخزينة الافتراضية المرتبطة بالموظف" },
         default_store_id: { type: "number", description: "المخزن الافتراضي للموظف" },
         official_id: { type: "string", description: "الرقم القومي / رقم الهوية الوطنية" },
-        confirm: { type: "boolean", description: "تأكيد إضافة الموظف" }
+        confirm: { type: "boolean", description: "تأكيد إضافة الموظف" },
       },
-      required: ["name", "email_address", "role_id", "confirm"]
+      required: ["name", "email_address", "role_id", "confirm"],
     },
     handler: async (args) => {
       if (!args.confirm) {
@@ -83,11 +92,11 @@ export const hrTools: McpTool[] = [
           default_treasury_id: args.default_treasury_id,
           default_store_id: args.default_store_id,
           official_id: args.official_id,
-          type: "user"
-        }
+          type: "user",
+        },
       };
       return await callDaftraApi("POST", "staff.json", payload);
-    }
+    },
   },
 
   // ==========================================
@@ -100,16 +109,16 @@ export const hrTools: McpTool[] = [
       type: "object",
       properties: {
         staff_id: { type: "number", description: "معرّف الموظف" },
-        confirm: { type: "boolean", description: "تأكيد الإرسال" }
+        confirm: { type: "boolean", description: "تأكيد الإرسال" },
       },
-      required: ["staff_id", "confirm"]
+      required: ["staff_id", "confirm"],
     },
     handler: async (args) => {
       if (!args.confirm) {
         throw new Error("إرسال بيانات الدخول يتطلب تأكيداً بتمرير confirm=true.");
       }
       return await callDaftraApi("GET", `staff/send_login_details/${args.staff_id}.json`);
-    }
+    },
   },
 
   // ==========================================
@@ -117,20 +126,21 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_list_attendance_logs",
-    description: "استعراض سجلات وبصمات حضور وانصراف الموظفين في دفترة مع إمكانية الفلترة بالموظف والتاريخ.",
+    description:
+      "استعراض سجلات وبصمات حضور وانصراف الموظفين في دفترة مع إمكانية الفلترة بالموظف والتاريخ.",
     inputSchema: {
       type: "object",
       properties: {
         page: { type: "number", description: "رقم الصفحة" },
-        staff_id: { type: "number", description: "فلترة حسب معرّف الموظف" }
-      }
+        staff_id: { type: "number", description: "فلترة حسب معرّف الموظف" },
+      },
     },
     handler: async (args) => {
       return await callDaftraApi("GET", "attendance_log/list/1", undefined, {
         page: args.page || 1,
-        "filter[staff_id]": args.staff_id
+        "filter[staff_id]": args.staff_id,
       });
-    }
+    },
   },
 
   // ==========================================
@@ -145,10 +155,13 @@ export const hrTools: McpTool[] = [
         staff_id: { type: "number", description: "معرّف الموظف (إجباري)" },
         time: { type: "string", description: "توقيت الحركة بصيغة YYYY-MM-DD HH:MM:SS (إجباري)" },
         status: { type: "string", description: "الحالة (present, draft, etc.)" },
-        source_name: { type: "string", description: "مصدر البصمة (مثال: جهاز البصمة، تطبيق الهاتف، إدخال يدوي)" },
-        confirm: { type: "boolean", description: "تأكيد تسجيل البصمة" }
+        source_name: {
+          type: "string",
+          description: "مصدر البصمة (مثال: جهاز البصمة، تطبيق الهاتف، إدخال يدوي)",
+        },
+        confirm: { type: "boolean", description: "تأكيد تسجيل البصمة" },
       },
-      required: ["staff_id", "time", "confirm"]
+      required: ["staff_id", "time", "confirm"],
     },
     handler: async (args) => {
       if (!args.confirm) {
@@ -158,10 +171,10 @@ export const hrTools: McpTool[] = [
         staff_id: args.staff_id,
         time: args.time,
         status: args.status || "present",
-        source_name: args.source_name || "API Agent"
+        source_name: args.source_name || "API Agent",
       };
       return await callDaftraApi("POST", "attendance_log", payload);
-    }
+    },
   },
 
   // ==========================================
@@ -174,15 +187,15 @@ export const hrTools: McpTool[] = [
       type: "object",
       properties: {
         page: { type: "number", description: "رقم الصفحة" },
-        staff_id: { type: "number", description: "فلترة حسب الموظف" }
-      }
+        staff_id: { type: "number", description: "فلترة حسب الموظف" },
+      },
     },
     handler: async (args) => {
       return await callDaftraApi("GET", "leave_application/list/1", undefined, {
         page: args.page || 1,
-        "filter[staff_id]": args.staff_id
+        "filter[staff_id]": args.staff_id,
       });
-    }
+    },
   },
 
   // ==========================================
@@ -190,7 +203,8 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_submit_leave_application",
-    description: "تقديم طلب إجازة اعتيادية أو عارضة أو إذن تأخير/انصراف مبكر لموظف في دفترة (يتطلب confirm=true).",
+    description:
+      "تقديم طلب إجازة اعتيادية أو عارضة أو إذن تأخير/انصراف مبكر لموظف في دفترة (يتطلب confirm=true).",
     inputSchema: {
       type: "object",
       properties: {
@@ -200,15 +214,22 @@ export const hrTools: McpTool[] = [
         days: { type: "number", description: "عدد أيام الإجازة المطلوبة" },
         type: {
           type: "string",
-          description: "نوع الطلب: leave (إجازة كاملة)، half_leave (نصف يوم)، delay (تأخير)، early (انصراف مبكر)"
+          description:
+            "نوع الطلب: leave (إجازة كاملة)، half_leave (نصف يوم)، delay (تأخير)، early (انصراف مبكر)",
         },
-        leave_type_id: { type: "number", description: "معرّف نوع الإجازة في إعدادات دفترة (سنوية، مرضية...)" },
+        leave_type_id: {
+          type: "number",
+          description: "معرّف نوع الإجازة في إعدادات دفترة (سنوية، مرضية...)",
+        },
         late_time: { type: "number", description: "عدد دقائق التأخير (مطلوب إذا كان النوع delay)" },
-        early_time: { type: "number", description: "عدد دقائق الانصراف المبكر (مطلوب إذا كان النوع early)" },
+        early_time: {
+          type: "number",
+          description: "عدد دقائق الانصراف المبكر (مطلوب إذا كان النوع early)",
+        },
         description: { type: "string", description: "سبب الإجازة والملاحظات" },
-        confirm: { type: "boolean", description: "تأكيد تقديم طلب الإجازة" }
+        confirm: { type: "boolean", description: "تأكيد تقديم طلب الإجازة" },
       },
-      required: ["staff_id", "date_from", "date_to", "days", "confirm"]
+      required: ["staff_id", "date_from", "date_to", "days", "confirm"],
     },
     handler: async (args) => {
       if (!args.confirm) {
@@ -220,14 +241,14 @@ export const hrTools: McpTool[] = [
         date_to: args.date_to,
         days: args.days,
         type: args.type || "leave",
-        description: args.description
+        description: args.description,
       };
       if (args.leave_type_id) payload.leave_type_id = args.leave_type_id;
       if (args.late_time) payload.late_time = args.late_time;
       if (args.early_time) payload.early_time = args.early_time;
 
       return await callDaftraApi("POST", "leave_application", payload);
-    }
+    },
   },
 
   // ==========================================
@@ -239,12 +260,12 @@ export const hrTools: McpTool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        page: { type: "number", description: "رقم الصفحة" }
-      }
+        page: { type: "number", description: "رقم الصفحة" },
+      },
     },
     handler: async (args) => {
       return await callDaftraApi("GET", "department/list/1", undefined, { page: args.page || 1 });
-    }
+    },
   },
 
   // ==========================================
@@ -256,12 +277,15 @@ export const hrTools: McpTool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        name: { type: "string", description: "اسم القسم (مثال: المبيعات، تقنية المعلومات، الحسابات)" },
+        name: {
+          type: "string",
+          description: "اسم القسم (مثال: المبيعات، تقنية المعلومات، الحسابات)",
+        },
         branch_id: { type: "number", description: "معرّف الفرع التابع له القسم" },
         description: { type: "string", description: "وصف مهام القسم" },
-        confirm: { type: "boolean", description: "تأكيد إضافة القسم" }
+        confirm: { type: "boolean", description: "تأكيد إضافة القسم" },
       },
-      required: ["name", "confirm"]
+      required: ["name", "confirm"],
     },
     handler: async (args) => {
       if (!args.confirm) {
@@ -271,9 +295,9 @@ export const hrTools: McpTool[] = [
         name: args.name,
         branch_id: args.branch_id,
         description: args.description,
-        active: 1
+        active: 1,
       });
-    }
+    },
   },
 
   // ==========================================
@@ -281,18 +305,19 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_list_employee_assets",
-    description: "استعراض الأصول والعهد المسلمة للموظفين (لابتوب، سيارة، هاتف، عهدة مالية أو عينية).",
+    description:
+      "استعراض الأصول والعهد المسلمة للموظفين (لابتوب، سيارة، هاتف، عهدة مالية أو عينية).",
     inputSchema: {
       type: "object",
       properties: {
-        employee_id: { type: "number", description: "فلترة العهد الخاصة بموظف محدد" }
-      }
+        employee_id: { type: "number", description: "فلترة العهد الخاصة بموظف محدد" },
+      },
     },
     handler: async (args) => {
       return await callDaftraApi("GET", "employee_asset/list/2", undefined, {
-        "filter[employee_id]": args.employee_id
+        "filter[employee_id]": args.employee_id,
       });
-    }
+    },
   },
 
   // ==========================================
@@ -300,7 +325,8 @@ export const hrTools: McpTool[] = [
   // ==========================================
   {
     name: "daftra_assign_employee_asset",
-    description: "تسجيل تسليم عهدة أو أصل لموظف مع السيريال وتاريخ التسليم وتاريخ الإرجاع المتوقع (يتطلب confirm=true).",
+    description:
+      "تسجيل تسليم عهدة أو أصل لموظف مع السيريال وتاريخ التسليم وتاريخ الإرجاع المتوقع (يتطلب confirm=true).",
     inputSchema: {
       type: "object",
       properties: {
@@ -311,9 +337,9 @@ export const hrTools: McpTool[] = [
         assigned_date: { type: "string", description: "تاريخ التسليم YYYY-MM-DD" },
         expected_return_date: { type: "string", description: "تاريخ الإرجاع المتوقع YYYY-MM-DD" },
         description: { type: "string", description: "حالة الأصل والملاحظات" },
-        confirm: { type: "boolean", description: "تأكيد تسليم العهدة" }
+        confirm: { type: "boolean", description: "تأكيد تسليم العهدة" },
       },
-      required: ["employee_id", "name", "confirm"]
+      required: ["employee_id", "name", "confirm"],
     },
     handler: async (args) => {
       if (!args.confirm) {
@@ -327,8 +353,8 @@ export const hrTools: McpTool[] = [
         code: args.code,
         assigned_date: args.assigned_date || new Date().toISOString().split("T")[0],
         expected_return_date: args.expected_return_date,
-        description: args.description
+        description: args.description,
       });
-    }
-  }
+    },
+  },
 ];

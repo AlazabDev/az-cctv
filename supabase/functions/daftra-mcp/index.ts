@@ -89,7 +89,8 @@ const TOOLS = [
           type: "string",
           enum: ["compact", "full"],
           default: "compact",
-          description: "وضع العرض: 'compact' لحذف الـ nulls وتوفير التوكنز، أو 'full' للبيانات الخام",
+          description:
+            "وضع العرض: 'compact' لحذف الـ nulls وتوفير التوكنز، أو 'full' للبيانات الخام",
         },
         fields: {
           type: "array",
@@ -160,7 +161,11 @@ async function invokeTool(name: string, args: Dict): Promise<ToolResult> {
 
 async function handle(message: unknown): Promise<unknown | null> {
   if (!isObject(message) || message.jsonrpc !== "2.0" || typeof message.method !== "string")
-    return rpcError(isObject(message) && message.id !== undefined ? message.id : null, -32600, "Invalid Request");
+    return rpcError(
+      isObject(message) && message.id !== undefined ? message.id : null,
+      -32600,
+      "Invalid Request",
+    );
   if (message.id === undefined) return null;
   const id = message.id;
   if (!(typeof id === "string" || typeof id === "number" || id === null))
@@ -170,7 +175,8 @@ async function handle(message: unknown): Promise<unknown | null> {
     case "initialize": {
       const requested = isObject(message.params) ? message.params.protocolVersion : undefined;
       const supported = ["2025-03-26", "2024-11-05"];
-      const version = typeof requested === "string" && supported.includes(requested) ? requested : "2025-03-26";
+      const version =
+        typeof requested === "string" && supported.includes(requested) ? requested : "2025-03-26";
       return rpcResult(id, {
         protocolVersion: version,
         capabilities: { tools: { listChanged: false } },
@@ -187,8 +193,12 @@ async function handle(message: unknown): Promise<unknown | null> {
       if (message.params.arguments !== undefined && !isObject(message.params.arguments))
         return rpcError(id, -32602, "Expected params.arguments to be an object");
       const name = message.params.name;
-      if (!TOOLS.some((tool) => tool.name === name)) return rpcError(id, -32602, `Unknown tool: ${name}`);
-      return rpcResult(id, await invokeTool(name, isObject(message.params.arguments) ? message.params.arguments : {}));
+      if (!TOOLS.some((tool) => tool.name === name))
+        return rpcError(id, -32602, `Unknown tool: ${name}`);
+      return rpcResult(
+        id,
+        await invokeTool(name, isObject(message.params.arguments) ? message.params.arguments : {}),
+      );
     }
     default:
       return rpcError(id, -32601, `Method not found: ${message.method}`);

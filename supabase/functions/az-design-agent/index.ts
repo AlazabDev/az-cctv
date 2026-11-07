@@ -209,7 +209,6 @@ async function geometryFingerprint(plan: Record<string, unknown>): Promise<strin
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-
 // ---------------------------------------------------------------------------
 // Deterministic geometry engine — mirror of src/lib/cctv/geometry.ts
 // ---------------------------------------------------------------------------
@@ -414,13 +413,26 @@ function buildCandidates(plan: StoredPlan) {
   // The multi-layout editor stores its active plan at the root for legacy readers,
   // while keeping the authoritative per-floor record under layouts[].
   const metadata = (proposal.metrics ?? {}) as Record<string, unknown>;
-  if (metadata.geometryFingerprint && metadata.geometryFingerprint !== await geometryFingerprint(plan)) {
-    return json({ error: "proposal_stale", detail: "المخطط تغيّر بعد توليد المقترح؛ أعد إنشاء المقترح." }, 409);
+  if (
+    metadata.geometryFingerprint &&
+    metadata.geometryFingerprint !== (await geometryFingerprint(plan))
+  ) {
+    return json(
+      { error: "proposal_stale", detail: "المخطط تغيّر بعد توليد المقترح؛ أعد إنشاء المقترح." },
+      409,
+    );
   }
   const multiLayout = Array.isArray(plan.layouts) && plan.layouts.length > 0;
-  const targetLayoutId = typeof metadata.activeLayoutId === "string" ? metadata.activeLayoutId : null;
-  if (multiLayout && (!targetLayoutId || plan.activeLayoutId !== targetLayoutId || !metadata.geometryFingerprint)) {
-    return json({ error: "layout_mismatch", detail: "المقترح غير مرتبط بإصدار المخطط النشط الحالي." }, 409);
+  const targetLayoutId =
+    typeof metadata.activeLayoutId === "string" ? metadata.activeLayoutId : null;
+  if (
+    multiLayout &&
+    (!targetLayoutId || plan.activeLayoutId !== targetLayoutId || !metadata.geometryFingerprint)
+  ) {
+    return json(
+      { error: "layout_mismatch", detail: "المقترح غير مرتبط بإصدار المخطط النشط الحالي." },
+      409,
+    );
   }
   const pxPerMeter = plan.pxPerMeter || 40;
   const toM = (p: Pt) => ({ x: p.x / pxPerMeter, y: p.y / pxPerMeter });
@@ -989,7 +1001,9 @@ async function handleApply(
     ...(multiLayout
       ? {
           layouts: (plan.layouts as Array<Record<string, unknown>>).map((layout) =>
-            layout.id === targetLayoutId ? { ...layout, devices: nextDevices, planApproved: false } : layout
+            layout.id === targetLayoutId
+              ? { ...layout, devices: nextDevices, planApproved: false }
+              : layout,
           ),
           planApproved: false,
         }

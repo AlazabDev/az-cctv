@@ -4,11 +4,14 @@ export const operationIds = [
   "get_leave_application_list_1",
   "get_leave_application_ID_1",
   "post_leave_application",
-  "put_leave_application_ID"
+  "put_leave_application_ID",
 ] as const;
 const supported = new Set<string>(operationIds);
-export function supports(id:string):boolean {return supported.has(id)}
-export async function execute(operation:Operation, args:Dict) {
- if (!supports(operation.id)) throw new Error("Operation not registered in this module: " + operation.id);
- return await callDaftra(operation,args);
+export function supports(id: string): boolean {
+  return supported.has(id);
+}
+export async function execute(operation: Operation, args: Dict) {
+  if (!supports(operation.id))
+    throw new Error("Operation not registered in this module: " + operation.id);
+  return await callDaftra(operation, args);
 }
