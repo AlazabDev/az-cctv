@@ -81,8 +81,10 @@ export function ProjectHandoverPanel({
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = "badr-nursery-camera-inventory.csv";
+    document.body.appendChild(anchor);
     anchor.click();
-    URL.revokeObjectURL(url);
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
   return (
     <section
