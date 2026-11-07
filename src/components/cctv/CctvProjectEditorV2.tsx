@@ -1008,6 +1008,7 @@ export function CctvProjectEditorV2({ projectId }: { projectId: string }) {
                 .map((device) => ({
                   id: device.id,
                   name: device.name,
+                  model: cameraById(device.specId)?.model ?? "",
                   layoutName: layout.layoutName,
                 })),
             )}
