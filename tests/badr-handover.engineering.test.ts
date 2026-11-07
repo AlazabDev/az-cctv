@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderHandoverReport } from "../src/lib/cctv/handover-report";
+import { buildBoq } from "../src/components/cctv/boq";
+import { emptyPlan } from "../src/lib/cctv/types";
 import {
   blankInspection,
   evaluateHandover,
@@ -11,6 +13,21 @@ import {
 } from "../src/lib/cctv/handover";
 
 describe("first customer handover — evidence and integrity", () => {
+  it("never silently omits unresolved camera and switch specifications from client quantity review", () => {
+    const plan = {
+      ...emptyPlan,
+      devices: [
+        { id: "missing-camera", kind: "camera" as const, specId: "unverified-cam", name: "Actual site camera", x: 0, y: 0, rotation: 0, heightM: 3, tilt: 0 },
+        { id: "missing-switch", kind: "switch" as const, specId: "unverified-switch", name: "Site switch", x: 0, y: 0, rotation: 0, heightM: 3, tilt: 0 },
+      ],
+    };
+    const result = buildBoq(plan, 14);
+    expect(result.cameras).toBe(1);
+    expect(result.unresolvedSpecs).toHaveLength(2);
+    expect(result.unresolvedSpecs.join(" ")).toContain("unverified-cam");
+    expect(result.unresolvedSpecs.join(" ")).toContain("unverified-switch");
+  });
+
   const placed = () =>
     Array.from({ length: 22 }, (_, i) => ({ id: `design-${i + 1}`, model: "DS-2CD1123G2-LIU" }));
   it("creates exactly 22 empty identification slots, not fabricated equipment", () => {
