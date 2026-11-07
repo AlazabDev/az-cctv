@@ -1,11 +1,15 @@
 name: AZ-CCTV Badr handover validation
 on:
   push:
-    branches: [badr-delivery-20261107]
+    branches: [develop]
   pull_request:
-    branches: [main]
+    branches: [develop]
     paths:
       - 'src/lib/cctv/handover.ts'
+      - 'src/lib/cctv/badr-network.ts'
+      - 'src/components/cctv/boq.ts'
+      - 'supabase/functions/az-checkout/index.ts'
+      - 'tests/badr-network.engineering.test.ts'
       - 'src/components/cctv/HandoverWorkspace.tsx'
       - 'src/components/cctv/CctvProjectEditorV2.tsx'
       - 'tests/cctv-handover.engineering.test.ts'
@@ -39,4 +43,7 @@ jobs:
             src/components/cctv/HandoverWorkspace.tsx \
             src/lib/cctv/types.ts src/lib/cctv/handover.ts \
             src/lib/cctv/handover-report.ts \
+            src/lib/cctv/badr-network.ts \
+            src/components/cctv/boq.ts \
+            tests/badr-network.engineering.test.ts \
             tests/cctv-handover.engineering.test.ts
