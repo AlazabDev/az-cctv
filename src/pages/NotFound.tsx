@@ -14,9 +14,7 @@ const NotFound = () => {
             transition={{ duration: 0.5 }}
           >
             <p className="text-8xl font-serif text-muted-foreground/30 mb-4">404</p>
-            <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">
-              Page Not Found
-            </h1>
+            <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">Page Not Found</h1>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
               The page you're looking for doesn't exist or has been moved.
             </p>

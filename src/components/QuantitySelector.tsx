@@ -40,9 +40,7 @@ export const QuantitySelector = ({
       >
         <Minus className="w-4 h-4" />
       </Button>
-      <span className="w-12 text-center text-sm font-medium tabular-nums">
-        {quantity}
-      </span>
+      <span className="w-12 text-center text-sm font-medium tabular-nums">{quantity}</span>
       <Button
         variant="ghost"
         size="icon"

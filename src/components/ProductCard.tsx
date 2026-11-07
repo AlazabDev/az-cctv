@@ -40,7 +40,7 @@ export const ProductCard = ({ product, index = 0, variant = "default" }: Product
         <div
           className={cn(
             "relative overflow-hidden bg-muted/50 mb-5",
-            variant === "large" ? "aspect-[3/4]" : "aspect-[4/5]"
+            variant === "large" ? "aspect-[3/4]" : "aspect-[4/5]",
           )}
         >
           {/* Primary Image */}
@@ -51,7 +51,7 @@ export const ProductCard = ({ product, index = 0, variant = "default" }: Product
               "w-full h-full object-cover transition-all duration-[1s] ease-out",
               hasSecondImage
                 ? "group-hover:opacity-0 group-hover:scale-105"
-                : "group-hover:scale-105"
+                : "group-hover:scale-105",
             )}
           />
 
@@ -74,13 +74,13 @@ export const ProductCard = ({ product, index = 0, variant = "default" }: Product
               "absolute top-5 right-5 p-2.5 rounded-full transition-all duration-500",
               "bg-background/90 backdrop-blur-md hover:bg-background shadow-sm",
               "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0",
-              inWishlist && "opacity-100 translate-y-0"
+              inWishlist && "opacity-100 translate-y-0",
             )}
           >
             <Heart
               className={cn(
                 "w-4 h-4 transition-all duration-300",
-                inWishlist ? "fill-primary text-primary scale-110" : "text-foreground"
+                inWishlist ? "fill-primary text-primary scale-110" : "text-foreground",
               )}
             />
           </button>

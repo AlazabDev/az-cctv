@@ -24,8 +24,8 @@ const Cart = () => {
             <ShoppingBag className="w-16 h-16 mx-auto mb-6 text-muted-foreground/30" />
             <h1 className="font-serif text-4xl mb-4">Your Bag is Empty</h1>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Discover our curated collection of handcrafted home goods and find
-              pieces that speak to you.
+              Discover our curated collection of handcrafted home goods and find pieces that speak
+              to you.
             </p>
             <Button
               asChild
@@ -112,9 +112,7 @@ const Cart = () => {
                       <div className="flex items-center justify-between mt-4">
                         <QuantitySelector
                           quantity={item.quantity}
-                          onQuantityChange={(qty) =>
-                            updateQuantity(item.product.id, qty)
-                          }
+                          onQuantityChange={(qty) => updateQuantity(item.product.id, qty)}
                         />
                         <button
                           onClick={() => removeItem(item.product.id)}
@@ -154,9 +152,7 @@ const Cart = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span>
-                      {shipping === 0 ? "Complimentary" : `$${shipping}`}
-                    </span>
+                    <span>{shipping === 0 ? "Complimentary" : `$${shipping}`}</span>
                   </div>
                   {subtotal < 500 && (
                     <p className="text-xs text-muted-foreground">
@@ -189,17 +185,13 @@ const Cart = () => {
                     <p className="text-[11px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/60 mb-1">
                       Shipping
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Worldwide delivery
-                    </p>
+                    <p className="text-xs text-muted-foreground">Worldwide delivery</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/60 mb-1">
                       Returns
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      14-day policy
-                    </p>
+                    <p className="text-xs text-muted-foreground">14-day policy</p>
                   </div>
                 </div>
               </div>

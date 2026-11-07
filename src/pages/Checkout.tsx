@@ -59,9 +59,7 @@ const Checkout = () => {
     );
   }
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -75,8 +73,7 @@ const Checkout = () => {
 
     toast({
       title: "Order Request Submitted",
-      description:
-        "Thank you! We'll contact you shortly to complete your order.",
+      description: "Thank you! We'll contact you shortly to complete your order.",
     });
 
     clearCart();
@@ -105,8 +102,8 @@ const Checkout = () => {
             <p>
               <span className="font-medium">Online checkout coming soon.</span>{" "}
               <span className="text-muted-foreground">
-                Please submit your order request below and we'll contact you to
-                complete your purchase.
+                Please submit your order request below and we'll contact you to complete your
+                purchase.
               </span>
             </p>
           </div>
@@ -135,9 +132,7 @@ const Checkout = () => {
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Contact Information */}
                 <div>
-                  <h2 className="font-serif text-xl mb-6">
-                    Contact Information
-                  </h2>
+                  <h2 className="font-serif text-xl mb-6">Contact Information</h2>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label
@@ -334,12 +329,8 @@ const Checkout = () => {
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium line-clamp-1">
-                          {item.product.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Qty: {item.quantity}
-                        </p>
+                        <p className="text-sm font-medium line-clamp-1">{item.product.name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Qty: {item.quantity}</p>
                         <p className="text-sm mt-1">
                           ${(item.product.price * item.quantity).toLocaleString()}
                         </p>
@@ -355,9 +346,7 @@ const Checkout = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span>
-                      {shipping === 0 ? "Complimentary" : `$${shipping}`}
-                    </span>
+                    <span>{shipping === 0 ? "Complimentary" : `$${shipping}`}</span>
                   </div>
                 </div>
 
@@ -375,10 +364,7 @@ const Checkout = () => {
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Email us at{" "}
-                    <a
-                      href="mailto:hello@maison.com"
-                      className="text-foreground underline"
-                    >
+                    <a href="mailto:hello@maison.com" className="text-foreground underline">
                       hello@maison.com
                     </a>
                   </p>

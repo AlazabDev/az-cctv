@@ -47,10 +47,19 @@ const Index = () => {
               {t("heroSubtitle")}
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
-              <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
+              <Button
+                asChild
+                size="lg"
+                className="bg-accent text-accent-foreground hover:bg-accent/90 font-bold"
+              >
                 <Link to="/products">{t("heroCta")}</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 text-white hover:bg-primary-foreground/10">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-primary-foreground/30 text-white hover:bg-primary-foreground/10"
+              >
                 <Link to="/products?section=cctv">{t("sectionCctv")}</Link>
               </Button>
             </div>
@@ -62,7 +71,8 @@ const Index = () => {
               alt="CCTV & Networking Systems"
               className="w-full h-full object-cover"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=1200&q=80";
+                (e.currentTarget as HTMLImageElement).src =
+                  "https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=1200&q=80";
               }}
             />
           </div>
@@ -105,10 +115,15 @@ const Index = () => {
       <section className="py-14 container-full">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("categoriesTitle")}</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">
+              {t("categoriesTitle")}
+            </h2>
             <p className="text-sm text-muted-foreground mt-1">{t("categoriesSubtitle")}</p>
           </div>
-          <Link to="/products" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+          <Link
+            to="/products"
+            className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
+          >
             {t("viewAll")} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
           </Link>
         </div>
@@ -120,8 +135,12 @@ const Index = () => {
               to={`/products?category=${encodeURIComponent(c.category)}`}
               className="p-4 rounded-lg border border-border bg-card hover:border-primary hover:shadow-sm transition-all text-center flex flex-col justify-center min-h-[90px]"
             >
-              <span className="font-medium text-xs text-foreground line-clamp-2">{catLabel(c.category)}</span>
-              <span className="text-[11px] text-muted-foreground mt-1 font-mono">{c.count} {t("results")}</span>
+              <span className="font-medium text-xs text-foreground line-clamp-2">
+                {catLabel(c.category)}
+              </span>
+              <span className="text-[11px] text-muted-foreground mt-1 font-mono">
+                {c.count} {t("results")}
+              </span>
             </Link>
           ))}
         </div>
@@ -131,10 +150,15 @@ const Index = () => {
         <div className="container-full">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("featuredTitle")}</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                {t("featuredTitle")}
+              </h2>
               <p className="text-sm text-muted-foreground mt-1">870+ منتج جاهز للشحن الفوري</p>
             </div>
-            <Link to="/products" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+            <Link
+              to="/products"
+              className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
+            >
               {t("viewAll")} <ArrowRight className="w-4 h-4 rtl:rotate-180" />
             </Link>
           </div>

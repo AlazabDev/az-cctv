@@ -78,10 +78,10 @@ const Products = () => {
               {activeSectionSlug === "cctv"
                 ? t("sectionCctv")
                 : activeSectionSlug === "network"
-                ? t("sectionNetwork")
-                : activeCategory
-                ? catLabel(activeCategory)
-                : t("navProducts")}
+                  ? t("sectionNetwork")
+                  : activeCategory
+                    ? catLabel(activeCategory)
+                    : t("navProducts")}
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
               {total} {t("results")}
@@ -113,7 +113,9 @@ const Products = () => {
                 <button
                   onClick={() => updateParam("category", "")}
                   className={`w-full text-start py-1 px-2 rounded ${
-                    !activeCategory ? "bg-primary text-primary-foreground font-bold" : "hover:bg-muted"
+                    !activeCategory
+                      ? "bg-primary text-primary-foreground font-bold"
+                      : "hover:bg-muted"
                   }`}
                 >
                   {t("allCategories")}

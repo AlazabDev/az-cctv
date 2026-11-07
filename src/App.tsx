@@ -4,12 +4,7 @@ import { Shield, Truck, Heart, ArrowRight, Check } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { QuantitySelector } from "@/components/QuantitySelector";
-import {
-  getProductById,
-  getRelatedProducts,
-  parseSpecs,
-  type Product,
-} from "@/lib/catalog";
+import { getProductById, getRelatedProducts, parseSpecs, type Product } from "@/lib/catalog";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
 import { useLanguage } from "@/lib/i18n";
@@ -70,17 +65,26 @@ const ProductDetail = () => {
 
   const inWishlist = isInWishlist(product.id);
   const specs = parseSpecs(product.description);
-  const allImages = Array.from(new Set([product.image_url, ...(product.images || [])].filter(Boolean))) as string[];
+  const allImages = Array.from(
+    new Set([product.image_url, ...(product.images || [])].filter(Boolean)),
+  ) as string[];
 
   return (
     <Layout>
       <div className="container-full py-10">
         <nav className="text-xs text-muted-foreground mb-6 flex items-center gap-1.5">
-          <Link to="/" className="hover:text-foreground">{t("navHome")}</Link>
+          <Link to="/" className="hover:text-foreground">
+            {t("navHome")}
+          </Link>
           <span>/</span>
-          <Link to="/products" className="hover:text-foreground">{t("navProducts")}</Link>
+          <Link to="/products" className="hover:text-foreground">
+            {t("navProducts")}
+          </Link>
           <span>/</span>
-          <Link to={`/products?category=${encodeURIComponent(product.category)}`} className="hover:text-foreground">
+          <Link
+            to={`/products?category=${encodeURIComponent(product.category)}`}
+            className="hover:text-foreground"
+          >
             {catLabel(product.category)}
           </Link>
         </nav>
@@ -104,7 +108,9 @@ const ProductDetail = () => {
                     key={i}
                     onClick={() => setSelectedImage(img)}
                     className={`w-16 h-16 rounded border p-1 bg-card shrink-0 ${
-                      selectedImage === img ? "border-primary ring-2 ring-primary/20" : "border-border"
+                      selectedImage === img
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border"
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-contain" />
@@ -163,7 +169,9 @@ const ProductDetail = () => {
                   else addWish(product);
                 }}
               >
-                <Heart className={`w-5 h-5 ${inWishlist ? "fill-destructive text-destructive" : ""}`} />
+                <Heart
+                  className={`w-5 h-5 ${inWishlist ? "fill-destructive text-destructive" : ""}`}
+                />
               </Button>
             </div>
 

@@ -41,8 +41,7 @@ const About = () => {
               <span className="italic font-normal">for Living</span>
             </h1>
             <p className="text-base md:text-lg text-white/70 max-w-lg leading-relaxed">
-              Objects made with care, materials that age gracefully,
-              and spaces that invite pause.
+              Objects made with care, materials that age gracefully, and spaces that invite pause.
             </p>
           </motion.div>
         </div>
@@ -64,9 +63,8 @@ const About = () => {
               </span>
             </div>
             <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl text-foreground leading-[1.25] tracking-tight">
-              We believe that the objects we surround ourselves with should tell
-              stories, age beautifully, and bring quiet{" "}
-              <span className="italic">joy</span> to everyday moments.
+              We believe that the objects we surround ourselves with should tell stories, age
+              beautifully, and bring quiet <span className="italic">joy</span> to everyday moments.
             </h2>
           </motion.div>
         </div>
@@ -93,16 +91,15 @@ const About = () => {
                 <span className="italic">for Meaning</span>
               </h3>
               <p className="text-muted-foreground leading-[1.8] mb-5">
-                Maison began as a personal quest—a search for objects that felt
-                meaningful in an age of disposable everything. After years of
-                collecting and curating, we opened our doors to share these
-                discoveries with others who value craftsmanship over convenience.
+                Maison began as a personal quest—a search for objects that felt meaningful in an age
+                of disposable everything. After years of collecting and curating, we opened our
+                doors to share these discoveries with others who value craftsmanship over
+                convenience.
               </p>
               <p className="text-muted-foreground leading-[1.8]">
-                What started as a small collection has grown into a carefully
-                edited selection of home goods and lifestyle pieces, each chosen
-                for its ability to bring warmth, texture, and intention to the
-                spaces we inhabit.
+                What started as a small collection has grown into a carefully edited selection of
+                home goods and lifestyle pieces, each chosen for its ability to bring warmth,
+                texture, and intention to the spaces we inhabit.
               </p>
             </motion.div>
             <motion.div
@@ -188,16 +185,14 @@ const About = () => {
                 <span className="italic">to Home</span>
               </h3>
               <p className="text-muted-foreground leading-[1.8] mb-5">
-                Every piece in our collection passes through our hands before
-                reaching yours. We visit workshops, meet makers, and learn the
-                stories behind each object. This personal connection ensures that
-                what we offer isn't just beautiful—it's honest.
+                Every piece in our collection passes through our hands before reaching yours. We
+                visit workshops, meet makers, and learn the stories behind each object. This
+                personal connection ensures that what we offer isn't just beautiful—it's honest.
               </p>
               <p className="text-muted-foreground leading-[1.8]">
-                We prioritize natural materials, traditional techniques, and
-                makers who share our values. Whether it's a hand-thrown ceramic
-                vessel or a solid oak table built to last generations, we believe
-                in objects that get better with time, not worse.
+                We prioritize natural materials, traditional techniques, and makers who share our
+                values. Whether it's a hand-thrown ceramic vessel or a solid oak table built to last
+                generations, we believe in objects that get better with time, not worse.
               </p>
             </motion.div>
           </div>
@@ -217,9 +212,7 @@ const About = () => {
             <p className="text-[11px] font-semibold tracking-[0.3em] uppercase text-primary mb-3">
               What Guides Us
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-foreground">
-              Our Values
-            </h2>
+            <h2 className="font-serif text-4xl md:text-5xl text-foreground">Our Values</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-16 md:gap-12 lg:gap-20">
@@ -254,13 +247,9 @@ const About = () => {
                 <span className="text-[11px] font-semibold tracking-[0.3em] text-primary/50 mb-4 block">
                   {value.number}
                 </span>
-                <h3 className="font-serif text-2xl text-foreground mb-5">
-                  {value.title}
-                </h3>
+                <h3 className="font-serif text-2xl text-foreground mb-5">{value.title}</h3>
                 <div className="w-8 h-px bg-primary/30 mx-auto mb-5" />
-                <p className="text-muted-foreground leading-[1.8]">
-                  {value.description}
-                </p>
+                <p className="text-muted-foreground leading-[1.8]">{value.description}</p>
               </motion.div>
             ))}
           </div>
@@ -327,8 +316,8 @@ const About = () => {
               Have a Question?
             </h2>
             <p className="text-white/60 mb-10 max-w-md mx-auto leading-relaxed">
-              We're always happy to discuss our pieces, our makers, or help you
-              find exactly what you're looking for.
+              We're always happy to discuss our pieces, our makers, or help you find exactly what
+              you're looking for.
             </p>
             <Button
               asChild

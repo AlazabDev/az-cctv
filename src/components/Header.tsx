@@ -49,7 +49,10 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
       transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
       className="group bg-card border border-border/60 rounded-lg overflow-hidden flex flex-col hover:border-primary/40 hover:shadow-md transition-all"
     >
-      <Link to={`/product/${product.id}`} className="relative block aspect-square bg-muted/30 overflow-hidden">
+      <Link
+        to={`/product/${product.id}`}
+        className="relative block aspect-square bg-muted/30 overflow-hidden"
+      >
         <img
           src={image}
           alt={product.name}
@@ -93,16 +96,12 @@ export const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         </Link>
 
         {product.model && (
-          <span className="text-[11px] text-muted-foreground font-mono mb-2">
-            {product.model}
-          </span>
+          <span className="text-[11px] text-muted-foreground font-mono mb-2">{product.model}</span>
         )}
 
         <div className="flex items-center justify-between pt-2 border-t border-border/50 mt-auto">
           <div>
-            <span className="font-bold text-base text-primary">
-              {fmtPrice(product.price)}
-            </span>
+            <span className="font-bold text-base text-primary">{fmtPrice(product.price)}</span>
             {product.old_price && product.old_price > product.price && (
               <span className="text-xs text-muted-foreground line-through ms-2">
                 {fmtPrice(product.old_price)}

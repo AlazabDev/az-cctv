@@ -53,10 +53,7 @@ export function sectionFromSlug(slug?: string): string | undefined {
 
 export async function queryProducts(q: ProductQuery): Promise<ProductQueryResult> {
   const page = Math.max(1, q.page ?? 1);
-  let select = supabase
-    .from("products")
-    .select("*", { count: "exact" })
-    .eq("is_active", true);
+  let select = supabase.from("products").select("*", { count: "exact" }).eq("is_active", true);
 
   if (q.category) select = select.eq("category", q.category);
   if (q.section) select = select.eq("section", q.section);
@@ -77,9 +74,7 @@ export async function queryProducts(q: ProductQuery): Promise<ProductQueryResult
       select = select.order("name", { ascending: true });
       break;
     default:
-      select = select
-        .order("available", { ascending: false })
-        .order("price", { ascending: false });
+      select = select.order("available", { ascending: false }).order("price", { ascending: false });
   }
 
   const from = (page - 1) * PAGE_SIZE;
@@ -152,9 +147,10 @@ export function parseSpecs(description?: string | null): SpecRow[] {
     return [{ label: "description", value: description }];
   }
   for (let i = 0; i < matches.length; i++) {
-    const valueEnd = i + 1 < matches.length
-      ? description.lastIndexOf(" ", Math.max(matches[i].start, matches[i + 1].start - 30))
-      : description.length;
+    const valueEnd =
+      i + 1 < matches.length
+        ? description.lastIndexOf(" ", Math.max(matches[i].start, matches[i + 1].start - 30))
+        : description.length;
     const value = description
       .slice(matches[i].start, valueEnd > matches[i].start ? valueEnd : description.length)
       .trim();

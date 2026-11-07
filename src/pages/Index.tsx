@@ -15,9 +15,7 @@ export const Footer = () => {
             </div>
             <span className="font-bold text-xl tracking-tight text-white">AZ-CCTV</span>
           </div>
-          <p className="text-sm text-primary-foreground/75 leading-relaxed">
-            {t("aboutText")}
-          </p>
+          <p className="text-sm text-primary-foreground/75 leading-relaxed">{t("aboutText")}</p>
         </div>
 
         <div>
@@ -25,11 +23,31 @@ export const Footer = () => {
             {t("quickLinks")}
           </h4>
           <ul className="space-y-2 text-sm text-primary-foreground/80">
-            <li><Link to="/" className="hover:text-accent transition-colors">{t("navHome")}</Link></li>
-            <li><Link to="/products" className="hover:text-accent transition-colors">{t("navProducts")}</Link></li>
-            <li><Link to="/products?section=cctv" className="hover:text-accent transition-colors">{t("navCctv")}</Link></li>
-            <li><Link to="/products?section=network" className="hover:text-accent transition-colors">{t("navNetwork")}</Link></li>
-            <li><Link to="/about" className="hover:text-accent transition-colors">{t("navAbout")}</Link></li>
+            <li>
+              <Link to="/" className="hover:text-accent transition-colors">
+                {t("navHome")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/products" className="hover:text-accent transition-colors">
+                {t("navProducts")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/products?section=cctv" className="hover:text-accent transition-colors">
+                {t("navCctv")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/products?section=network" className="hover:text-accent transition-colors">
+                {t("navNetwork")}
+              </Link>
+            </li>
+            <li>
+              <Link to="/about" className="hover:text-accent transition-colors">
+                {t("navAbout")}
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -58,9 +76,7 @@ export const Footer = () => {
           <p className="text-xs text-primary-foreground/70 leading-relaxed mb-3">
             {t("whyGenuineText")}
           </p>
-          <span className="text-xs font-semibold text-accent block">
-            {t("whyDeliveryText")}
-          </span>
+          <span className="text-xs font-semibold text-accent block">{t("whyDeliveryText")}</span>
         </div>
       </div>
 

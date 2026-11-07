@@ -33,7 +33,11 @@ const selectCls = "h-9 w-full rounded-md border border-input bg-background px-3 
 
 function CalculatorPage() {
   const [camId, setCamId] = useState("");
-  const { data: products, isLoading, error } = useQuery({
+  const {
+    data: products,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["calculator-camera-products"],
     queryFn: async () => {
       const result = await supabase.from("products").select("*").eq("is_active", true);
@@ -41,7 +45,10 @@ function CalculatorPage() {
       return result.data ?? [];
     },
   });
-  const cameras = useMemo(() => buildProductCatalog(products ?? []).cameras.filter((c) => c.engineeringReady), [products]);
+  const cameras = useMemo(
+    () => buildProductCatalog(products ?? []).cameras.filter((c) => c.engineeringReady),
+    [products],
+  );
   const [distance, setDistance] = useState(10);
   const cam = cameras.find((c) => c.id === camId) ?? cameras[0];
   const ppm = cam ? ppmAtDistance(cam, distance) : 0;
@@ -72,7 +79,9 @@ function CalculatorPage() {
                 value={cam?.id ?? ""}
                 onChange={(e) => setCamId(e.target.value)}
               >
-                {cameras.length === 0 && <option value="">لا توجد كاميرات بمواصفات هندسية مكتملة</option>}
+                {cameras.length === 0 && (
+                  <option value="">لا توجد كاميرات بمواصفات هندسية مكتملة</option>
+                )}
                 {cameras.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
@@ -91,8 +100,16 @@ function CalculatorPage() {
               />
             </div>
           </div>
-          {isLoading && <p role="status" className="mt-3 text-sm">جارٍ تحميل كتالوج الكاميرات…</p>}
-          {error && <p role="alert" className="mt-3 text-sm text-destructive">تعذّر تحميل الكتالوج. يلزم تسجيل الدخول أو التحقق من الاتصال.</p>}
+          {isLoading && (
+            <p role="status" className="mt-3 text-sm">
+              جارٍ تحميل كتالوج الكاميرات…
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-destructive">
+              تعذّر تحميل الكتالوج. يلزم تسجيل الدخول أو التحقق من الاتصال.
+            </p>
+          )}
           <div className="mt-5 rounded-md border border-border p-4">
             <div className="text-sm text-muted-foreground">الكثافة عند هذه المسافة</div>
             <div className="text-3xl font-bold text-primary">

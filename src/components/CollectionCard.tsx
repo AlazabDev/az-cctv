@@ -9,7 +9,11 @@ interface CollectionCardProps {
   variant?: "default" | "wide" | "tall";
 }
 
-export const CollectionCard = ({ collection, index = 0, variant = "default" }: CollectionCardProps) => {
+export const CollectionCard = ({
+  collection,
+  index = 0,
+  variant = "default",
+}: CollectionCardProps) => {
   return (
     <motion.article
       initial={{ opacity: 0, y: 40 }}
@@ -17,15 +21,14 @@ export const CollectionCard = ({ collection, index = 0, variant = "default" }: C
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.8, delay: index * 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      <Link
-        to={`/products?collection=${collection.slug}`}
-        className="group block relative"
-      >
+      <Link to={`/products?collection=${collection.slug}`} className="group block relative">
         <div
           className={`relative overflow-hidden bg-muted/50 ${
-            variant === "wide" ? "aspect-[16/9]" :
-            variant === "tall" ? "aspect-[2/3]" :
-            "aspect-[3/4]"
+            variant === "wide"
+              ? "aspect-[16/9]"
+              : variant === "tall"
+                ? "aspect-[2/3]"
+                : "aspect-[3/4]"
           }`}
         >
           {/* Image with zoom on hover */}

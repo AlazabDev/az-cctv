@@ -53,11 +53,21 @@ export const Header = () => {
         </form>
 
         <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-foreground/80">
-          <Link to="/" className="hover:text-primary transition-colors">{t("navHome")}</Link>
-          <Link to="/products" className="hover:text-primary transition-colors">{t("navProducts")}</Link>
-          <Link to="/products?section=cctv" className="hover:text-primary transition-colors">{t("navCctv")}</Link>
-          <Link to="/products?section=network" className="hover:text-primary transition-colors">{t("navNetwork")}</Link>
-          <Link to="/about" className="hover:text-primary transition-colors">{t("navAbout")}</Link>
+          <Link to="/" className="hover:text-primary transition-colors">
+            {t("navHome")}
+          </Link>
+          <Link to="/products" className="hover:text-primary transition-colors">
+            {t("navProducts")}
+          </Link>
+          <Link to="/products?section=cctv" className="hover:text-primary transition-colors">
+            {t("navCctv")}
+          </Link>
+          <Link to="/products?section=network" className="hover:text-primary transition-colors">
+            {t("navNetwork")}
+          </Link>
+          <Link to="/about" className="hover:text-primary transition-colors">
+            {t("navAbout")}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -108,11 +118,37 @@ export const Header = () => {
             <Search className="w-4 h-4 text-muted-foreground absolute top-1/2 -translate-y-1/2 start-3" />
           </form>
           <div className="flex flex-col gap-2 pt-2 text-sm font-medium">
-            <Link to="/" onClick={() => setMobileOpen(false)} className="py-2 border-b border-border/40">{t("navHome")}</Link>
-            <Link to="/products" onClick={() => setMobileOpen(false)} className="py-2 border-b border-border/40">{t("navProducts")}</Link>
-            <Link to="/products?section=cctv" onClick={() => setMobileOpen(false)} className="py-2 border-b border-border/40">{t("navCctv")}</Link>
-            <Link to="/products?section=network" onClick={() => setMobileOpen(false)} className="py-2 border-b border-border/40">{t("navNetwork")}</Link>
-            <Link to="/about" onClick={() => setMobileOpen(false)} className="py-2">{t("navAbout")}</Link>
+            <Link
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              className="py-2 border-b border-border/40"
+            >
+              {t("navHome")}
+            </Link>
+            <Link
+              to="/products"
+              onClick={() => setMobileOpen(false)}
+              className="py-2 border-b border-border/40"
+            >
+              {t("navProducts")}
+            </Link>
+            <Link
+              to="/products?section=cctv"
+              onClick={() => setMobileOpen(false)}
+              className="py-2 border-b border-border/40"
+            >
+              {t("navCctv")}
+            </Link>
+            <Link
+              to="/products?section=network"
+              onClick={() => setMobileOpen(false)}
+              className="py-2 border-b border-border/40"
+            >
+              {t("navNetwork")}
+            </Link>
+            <Link to="/about" onClick={() => setMobileOpen(false)} className="py-2">
+              {t("navAbout")}
+            </Link>
           </div>
         </div>
       )}

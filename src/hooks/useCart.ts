@@ -43,7 +43,7 @@ export const useCart = create<CartState>()(
               items: state.items.map((item) =>
                 item.productId === product.id
                   ? { ...item, quantity: Math.min(item.quantity + quantity, 99) }
-                  : item
+                  : item,
               ),
             };
           }
@@ -58,9 +58,7 @@ export const useCart = create<CartState>()(
         }
         set((state) => ({
           items: state.items.map((item) =>
-            item.productId === productId
-              ? { ...item, quantity: Math.min(quantity, 99) }
-              : item
+            item.productId === productId ? { ...item, quantity: Math.min(quantity, 99) } : item,
           ),
         }));
       },
@@ -73,11 +71,10 @@ export const useCart = create<CartState>()(
 
       clearCart: () => set({ items: [] }),
 
-      getSubtotal: () =>
-        get().items.reduce((total, item) => total + item.price * item.quantity, 0),
+      getSubtotal: () => get().items.reduce((total, item) => total + item.price * item.quantity, 0),
 
       getItemCount: () => get().items.reduce((count, item) => count + item.quantity, 0),
     }),
-    { name: "az-cart" }
-  )
+    { name: "az-cart" },
+  ),
 );
