@@ -1,4 +1,30 @@
 ﻿id,name,language,status,category,header,body,footer,buttons
+1148790317835323,order_confirmation,ar,APPROVED,UTILITY,,"مرحبًا {{1}}، تم تسليم طلبك {{2}} بنجاح.
+
+يمكنك إدارة طلبك أدناه.
+",,"[{""type"": ""URL"", ""text"": ""إدارة الطلب"", ""url"": ""https://cctv.alazab.com/order_management""}]"
+1468555391946403,order_action_required,ar,APPROVED,UTILITY,,"لم نتمكن من معالجة طلبك رقم {{1}}. 
+
+يُرجى الاتصال بنا على الرقم {{2}} لمعرفة الخطوات التالية.",,"[{""type"": ""PHONE_NUMBER"", ""text"": ""اتصل بنا"", ""phone_number"": ""+201092750351""}]"
+1104631605509120,order_updat,ar,APPROVED,UTILITY,,"مرحبًا {{1}}، طلبك {{2}} في طريقه وسيصل قريبًا.
+
+التسليم التقديري: {{3}}
+
+سنقدم تحديثًا عند تسليم طلبك.",يجب أن يكون البالغ في المنزل لقبول هذه الحزمة.,"[{""type"": ""URL"", ""text"": ""تتبع الطلب"", ""url"": ""https://cctv.alazab.com/order_management""}]"
+1385824863395397,order_management,ar,APPROVED,UTILITY,تم تأكيد الطلب!,"مرحبا {{1}}،
+تم تقديم طلبك بنجاح وتجري معالجتها. رقم طلبك هو {{2}}. يمكنك الاطلاع على تفاصيل الطلب أدناه.",,"[{""type"": ""URL"", ""text"": ""عرض الطلب"", ""url"": ""https://cctv.alazab.com/order_management""}]"
+1430861702532507,payment_successful,ar_EG,APPROVED,UTILITY,تم استلام دفعتك بنجاح,"مرحبًا {{1}}،
+
+نشكر لك إتمام عملية الشراء من *AZ-CCTV | العزب*.
+
+تم استلام دفعتك بنجاح، وإصدار فاتورتك الخاصة بالطلب رقم *{{2}}*.
+
+*المبلغ المدفوع:* {{3}}
+*تاريخ الدفع:* {{4}}
+
+يمكنك الاطلاع على فاتورتك وتحميلها من خلال زر *عرض الفاتورة* أدناه.
+
+شكرًا لثقتك بنا.",العزب — شكرًا لثقتكم بنا,"[{""type"": ""URL"", ""text"": ""عرض الفاتورة"", ""url"": ""https://cctv.alazab.com/invoice/%7B%7B1%7D%7D{{1}}"", ""example"": [""https://cctv.alazab.com/invoice/INV-TEST-001""]}]"
 954405567504252,delivery_code,en_US,APPROVED,AUTHENTICATION,,Your order is arriving soon. *{{1}}* is your verification code. Please show this to the delivery associate.,Expires in 5 minutes.,"[{""type"": ""URL"", ""text"": ""Copy code"", ""url"": ""https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code_expiration_minutes=5&code=otp{{1}}"", ""example"": [""https://www.whatsapp.com/otp/code/?otp_type=COPY_CODE&code_expiration_minutes=5&code=otp123456""]}]"
 1004423828765774,uberfix_request_paid,ar,APPROVED,UTILITY,تم استلام الدفع,"مرحبًا {{1}}،
 تم استلام دفعة قيمتها {{2}} ج.م لفاتورة طلب الصيانة رقم {{3}} 💳

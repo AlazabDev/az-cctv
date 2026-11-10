@@ -1,5 +1,184 @@
 [
   {
+    "id": "1148790317835323",
+    "name": "order_confirmation",
+    "language": "ar",
+    "status": "APPROVED",
+    "category": "UTILITY",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}، تم تسليم طلبك {{2}} بنجاح.\n\nيمكنك إدارة طلبك أدناه.\n",
+        "example": {
+          "body_text": [
+            [
+              "جون",
+              "ORD1234"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "URL",
+            "text": "إدارة الطلب",
+            "url": "https://cctv.alazab.com/order_management"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1468555391946403",
+    "name": "order_action_required",
+    "language": "ar",
+    "status": "APPROVED",
+    "category": "UTILITY",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "لم نتمكن من معالجة طلبك رقم {{1}}. \n\nيُرجى الاتصال بنا على الرقم {{2}} لمعرفة الخطوات التالية.",
+        "example": {
+          "body_text": [
+            [
+              "#12345",
+              "1800-555-1234"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "PHONE_NUMBER",
+            "text": "اتصل بنا",
+            "phone_number": "+201092750351"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1104631605509120",
+    "name": "order_updat",
+    "language": "ar",
+    "status": "APPROVED",
+    "category": "UTILITY",
+    "components": [
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}، طلبك {{2}} في طريقه وسيصل قريبًا.\n\nالتسليم التقديري: {{3}}\n\nسنقدم تحديثًا عند تسليم طلبك.",
+        "example": {
+          "body_text": [
+            [
+              "Sample",
+              "Sample",
+              "Sample"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "يجب أن يكون البالغ في المنزل لقبول هذه الحزمة."
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "URL",
+            "text": "تتبع الطلب",
+            "url": "https://cctv.alazab.com/order_management"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1385824863395397",
+    "name": "order_management",
+    "language": "ar",
+    "status": "APPROVED",
+    "category": "UTILITY",
+    "components": [
+      {
+        "type": "HEADER",
+        "format": "TEXT",
+        "text": "تم تأكيد الطلب!"
+      },
+      {
+        "type": "BODY",
+        "text": "مرحبا {{1}}،\nتم تقديم طلبك بنجاح وتجري معالجتها. رقم طلبك هو {{2}}. يمكنك الاطلاع على تفاصيل الطلب أدناه.",
+        "example": {
+          "body_text": [
+            [
+              "بافان",
+              "#12345"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "URL",
+            "text": "عرض الطلب",
+            "url": "https://cctv.alazab.com/order_management"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1430861702532507",
+    "name": "payment_successful",
+    "language": "ar_EG",
+    "status": "APPROVED",
+    "category": "UTILITY",
+    "components": [
+      {
+        "type": "HEADER",
+        "format": "TEXT",
+        "text": "تم استلام دفعتك بنجاح"
+      },
+      {
+        "type": "BODY",
+        "text": "مرحبًا {{1}}،\n\nنشكر لك إتمام عملية الشراء من *AZ-CCTV | العزب*.\n\nتم استلام دفعتك بنجاح، وإصدار فاتورتك الخاصة بالطلب رقم *{{2}}*.\n\n*المبلغ المدفوع:* {{3}}\n*تاريخ الدفع:* {{4}}\n\nيمكنك الاطلاع على فاتورتك وتحميلها من خلال زر *عرض الفاتورة* أدناه.\n\nشكرًا لثقتك بنا.",
+        "example": {
+          "body_text": [
+            [
+              "أحمد محمد",
+              "AZC-2026-001",
+              "5,250.00 EGP",
+              "\t02/11/2026"
+            ]
+          ]
+        }
+      },
+      {
+        "type": "FOOTER",
+        "text": "العزب — شكرًا لثقتكم بنا"
+      },
+      {
+        "type": "BUTTONS",
+        "buttons": [
+          {
+            "type": "URL",
+            "text": "عرض الفاتورة",
+            "url": "https://cctv.alazab.com/invoice/%7B%7B1%7D%7D{{1}}",
+            "example": [
+              "https://cctv.alazab.com/invoice/INV-TEST-001"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "id": "954405567504252",
     "name": "delivery_code",
     "language": "en_US",
@@ -298,7 +477,7 @@
         "format": "IMAGE",
         "example": {
           "header_handle": [
-            "https://scontent.whatsapp.net/v/t61.29466-34/646751189_1383205120194105_2393050418691543913_n.png?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=kxlipq90aHUQ7kNvwHIr9S-&_nc_oc=AdrjNR6igDZkYZDGcxQeDMASh86AirbRdtMXDEOwnRPS3gMAePU4RFPXWHZHOWetKy8&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=0Giv4sCWAf_RcWD6DtW8jA&_nc_tpa=Q5bMBQIaix3N5QT6-UIYE9thgZcoGU6JRZ4QY1nGEWvRh5u61ChcqwmuOOgGkyeqAf7P3GQ90MiBFLtTPA&oh=01_Q5Aa6AF0sdPMhgVbSVlI7T7pe-DDyHK6LZfeJzDQmrhti-R8Cw&oe=6B0F7C33"
+            "https://scontent.whatsapp.net/v/t61.29466-34/646751189_1383205120194105_2393050418691543913_n.png?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=kxlipq90aHUQ7kNvwHIr9S-&_nc_oc=AdrjNR6igDZkYZDGcxQeDMASh86AirbRdtMXDEOwnRPS3gMAePU4RFPXWHZHOWetKy8&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=PRdyReRvqph51SWx0P65gA&_nc_tpa=Q5bMBQI3gv8R034ASUHLPZE33prE5SUOvZ3k5N9QfoyiXWzJkGtEROKxVxePMADv6k80x5lMWPAD95k_ZA&oh=01_Q5Aa6AFCYVv8C790cVRF6gYjPFXhATXQiiBEXz2xkr8Tregrww&oe=6B0FB473"
           ]
         }
       },
@@ -670,7 +849,7 @@
         "format": "IMAGE",
         "example": {
           "header_handle": [
-            "https://scontent.whatsapp.net/v/t61.29466-34/616123304_872505909091754_3259963864442867372_n.png?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=krZtbRf8SeYQ7kNvwHd4_E9&_nc_oc=AdqV48yTm76w4WvMxsctzcy40RX0_9SFE9eN881dUbD0pYzGoZ5YgpGLX3QHcji2YAg&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=0Giv4sCWAf_RcWD6DtW8jA&_nc_tpa=Q5bMBQIX5z7RkTmnqz125mlzPCniZCd1sbRVsKMP_L5V09kXEvc2_piGaMNLVtj3eaK5MwckybvomvS3bg&oh=01_Q5Aa6AEOMUg1vGq1jcbPrVwkHhEKPnbtraCAqJSIOx3hv5VgNw&oe=6B0F985A"
+            "https://scontent.whatsapp.net/v/t61.29466-34/616123304_872505909091754_3259963864442867372_n.png?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=krZtbRf8SeYQ7kNvwHd4_E9&_nc_oc=AdqV48yTm76w4WvMxsctzcy40RX0_9SFE9eN881dUbD0pYzGoZ5YgpGLX3QHcji2YAg&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=PRdyReRvqph51SWx0P65gA&_nc_tpa=Q5bMBQL9igOj3U7gIYA-nc7HY8YCKgxub9yNwpIrMhULbyAkIDU7A3i4zSAeSiAwcosHpD524WAOkdKA7A&oh=01_Q5Aa6AEyFtdSuZsggkWvreEmGpwuZsL1BkCfsbzUSiAJIDJB-Q&oe=6B0F985A"
           ]
         }
       },
@@ -692,7 +871,7 @@
         "format": "IMAGE",
         "example": {
           "header_handle": [
-            "https://scontent.whatsapp.net/v/t61.29466-34/595558608_648503891649167_4588375056619095512_n.png?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=swGgRkRiRBsQ7kNvwFf3aIN&_nc_oc=Adoky21_inWfjErCs4IVAfpkOtR9EAsm4VTi7A1wD882WoM7iZDbbWs6uP9OwgiH3B0&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=0Giv4sCWAf_RcWD6DtW8jA&_nc_tpa=Q5bMBQLc3SNtxh9mNpqEnu4e3PkD2eokVSgMMoHn7O1GZuNiwZDyj0Q_rumRckBSo7fEOSh20u5qkk3wdw&oh=01_Q5Aa6AFaildlbOHkrQF6zVb7gtdKP4j2NHLDe2UD5x0-sBwpSQ&oe=6B0F8CCC"
+            "https://scontent.whatsapp.net/v/t61.29466-34/595558608_648503891649167_4588375056619095512_n.png?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=swGgRkRiRBsQ7kNvwFf3aIN&_nc_oc=Adoky21_inWfjErCs4IVAfpkOtR9EAsm4VTi7A1wD882WoM7iZDbbWs6uP9OwgiH3B0&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=PRdyReRvqph51SWx0P65gA&_nc_tpa=Q5bMBQJvvuyhBw8reQyXHmCuc5j0lp3aCnIZe046PzcOlVREArfRy0qvmV-Sz1cLU8HscEW83P5He25Z9g&oh=01_Q5Aa6AEfBW1zjc99MonelKAblSReVrAkYgha0fr6CrlQ6OHKQg&oe=6B0F8CCC"
           ]
         }
       },
@@ -1272,7 +1451,7 @@
         "format": "IMAGE",
         "example": {
           "header_handle": [
-            "https://scontent.whatsapp.net/v/t61.29466-34/485127891_1329123058140003_965957978313151210_n.jpg?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=QRMxcg2Pyu4Q7kNvwHsQkE3&_nc_oc=AdosUQ7VgaaUv2Jx-GmpkIEmVWnXhfNfAYkl5nZcod168Z67JDF9KJb6XXx3-mKA1jw&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=0Giv4sCWAf_RcWD6DtW8jA&_nc_tpa=Q5bMBQLh1s_J6dhrGuut4jCUV35RvInlHJYizcckAmAxwnD_QrEeg7Jl2Cdg3OogmhKoJ0J1t-bY2Z2qvQ&oh=01_Q5Aa6AHviMwL-jKBTVJEGkqwtU9xHnf15mkSxSu0kvyn4TxyhQ&oe=6B0FAB14"
+            "https://scontent.whatsapp.net/v/t61.29466-34/485127891_1329123058140003_965957978313151210_n.jpg?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=QRMxcg2Pyu4Q7kNvwHsQkE3&_nc_oc=AdosUQ7VgaaUv2Jx-GmpkIEmVWnXhfNfAYkl5nZcod168Z67JDF9KJb6XXx3-mKA1jw&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=PRdyReRvqph51SWx0P65gA&_nc_tpa=Q5bMBQKsJBQLpousXjUqHyHEzkOQbhJ0BJMIDDDNLoA0JGW2ITS4YyV2eRe51Qp1d1J51kmGySU6n4wnBQ&oh=01_Q5Aa6AGZxo528IG4Xa9xslLL3kUC9XCi9XDlLA_HoCVR7p_zSQ&oe=6B0FAB14"
           ]
         }
       },
